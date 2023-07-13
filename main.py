@@ -9,7 +9,7 @@ import time
 #### CONFIG AREA #####
 
 project_id = ""
-pay_money = -1 #真实应付价格
+pay_money = -1 #此处应填入票种单价，会自动计算
 deviceId = "" #非必要
 buy_time = int(time.mktime(time.strptime("2099-12-31 23:59:59", "%Y-%m-%d %H:%M:%S")))#发售刷新开始时间点，在此时可以开始疯狂刷新开售prepare了，请注意修改
 cookie = ''
@@ -81,7 +81,7 @@ def create_order(screen_id,sku_id,token,deviceId,project_id,pay_money, count):
         "screen_id": screen_id,
         "sku_id": sku_id,
         "count": count,
-        "pay_money": pay_money,
+        "pay_money": pay_money*count,
         "order_type": "1",
         "timestamp": str(int(time.time()*1000)),
         "buyer_info": buyer_info,
