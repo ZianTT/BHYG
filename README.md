@@ -7,7 +7,7 @@ bilibili 会员购 抢票脚本
 
 本脚本懂的都懂，不做过多解释
 
-screen_id 和 sku_id 请自行到指定活动详情页f12抓包搜索
+本脚本若需自动化快速启动（免去参数配置）需要在CONFIG区填写相应参数
 
 cookie请提取show.bilibili.com 发送出去的cookie 请求头
 
