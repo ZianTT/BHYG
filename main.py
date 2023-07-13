@@ -38,7 +38,6 @@ def get_buyer_info():
     global buyer_id
     url = "https://show.bilibili.com/api/ticket/buyer/list"
     response = requests.get(url, headers=headers)
-    print(response.json())
     buyer_infos = response.json()["data"]["list"]
     buyer_info = [buyer_infos[0]]
     for i in range(len(buyer_infos)):
