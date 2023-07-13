@@ -4,21 +4,38 @@ import random
 import requests
 import time
 
+
 ######################
 #### CONFIG AREA #####
 
-project_id = "73710" #默认为bw2023
+project_id = ""
 pay_money = 12800 #真实应付价格
 deviceId = "" #非必要
-buy_time = int(time.mktime(time.strptime("2023-07-14 11:50:00", "%Y-%m-%d %H:%M:%S")))#发售刷新开始时间点，在此时可以开始疯狂刷新开售prepare了
-cookie = '' #此处填入cookie
-screen_id = "134763" #默认为7.23场
-sku_id = "398553" #默认为7.23普通票
+buy_time = int(time.mktime(time.strptime("2099-12-31 23:59:59", "%Y-%m-%d %H:%M:%S")))#发售刷新开始时间点，在此时可以开始疯狂刷新开售prepare了，请注意修改
+cookie = ''
+screen_id = ""
+sku_id = ""
+buyer_id = "" #以程序内的输入为准，如0,1
 
 ######################
-
+    
+def get_ids(project_id):
+    url = "https://show.bilibili.com/api/ticket/project/get?version=134&id="+project_id
+    response = requests.get(url).json()
+    screens = response["data"]["screen_list"]
+    for i in range(len(screens)):
+        print("["+str(i)+"] "+screens[i]["name"])
+    screen_id = input("请输入场次序号：")
+    tickets = screens[int(screen_id)]["ticket_list"]
+    for i in range(len(tickets)):
+        print("["+str(i)+"] "+tickets[i]["desc"]+" "+str(tickets[i]["price"]/100)+"元")
+    sku_id = input("请输入票档序号：")
+    ids = str(screens[int(screen_id)]["id"])+" "+str(tickets[int(sku_id)]["id"])
+    print("[INFO]您的screen_id 和 sku_id 分别为："+ids)
+    return ids
 
 def get_buyer_info():
+    global buyer_id
     url = "https://show.bilibili.com/api/ticket/buyer/list"
     response = requests.get(url, headers=headers)
     buyer_infos = response.json()["data"]["list"]
@@ -28,7 +45,8 @@ def get_buyer_info():
         if(buyer_infos[i]["is_default"] == 1):
             buyer_info = [buyer_infos[i]]
     print("[INFO] 请选择购票人，默认"+buyer_info[0]["name"])
-    buyer_id = input("请输入购票人序号：")
+    if buyer_id == "":
+        buyer_id = input("请输入购票人序号：")
     if(buyer_id != ""):
         buyerids = buyer_id.split(",")
         buyer_info = []
@@ -80,6 +98,8 @@ def get_token(screen_id,sku_id,project_id, count):
     while(info == {}):
         print("[INFO] 未开放购票")
         if(int(time.time()) < buy_time):
+            if buy_time == 4102415999:
+                continue
             print("[INFO] 等待购票开放")
             time.sleep(buy_time - int(time.time()))
             print("[INFO] 开始购票")
@@ -105,9 +125,17 @@ if(__name__ == "__main__"):
             "Origin": "https://show.bilibili.com",
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
         }
+    if buy_time == 4102415999:
+        print("[WARNING] 未设置购票时间")
+    if(cookie == ""):
+        cookie = input("请输入cookie：")
+    if(project_id == "" or screen_id == "" or sku_id == ""):
+        if(project_id == ""):
+            project_id = input("请输入项目id：")
+        ids = get_ids(project_id)
+        screen_id,sku_id = ids.split(" ")
     buyer_info = get_buyer_info()
     count = len(json.loads(buyer_info))
-    
     token=get_token(screen_id,sku_id,project_id, count)
     print("[INFO] 开始下单")
     while(1):
