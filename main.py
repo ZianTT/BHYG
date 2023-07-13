@@ -116,6 +116,11 @@ def get_token(screen_id,sku_id,project_id, count):
         pause = input("完成验证后，按回车继续")
         return get_token(screen_id,sku_id,project_id, count)
 
+def get_test_token():
+    print("[INFO] 开始准备测试（此操作有效减少抢票时被风控概率）")
+    token = get_token("133774","396602","74288","1")
+    print("[INFO] 测试完毕")
+
 if(__name__ == "__main__"):
     if buy_time == 4102415999:
         print("[WARNING] 未设置购票时间")
@@ -136,6 +141,7 @@ if(__name__ == "__main__"):
         screen_id,sku_id,pay_money = ids.split(" ")
     buyer_info = get_buyer_info()
     count = len(json.loads(buyer_info))
+    get_test_token()
     token=get_token(screen_id,sku_id,project_id, count)
     print("[INFO] 开始下单")
     while(1):
