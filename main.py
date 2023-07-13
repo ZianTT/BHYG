@@ -38,6 +38,7 @@ def get_buyer_info():
     global buyer_id
     url = "https://show.bilibili.com/api/ticket/buyer/list"
     response = requests.get(url, headers=headers)
+    print(response.json())
     buyer_infos = response.json()["data"]["list"]
     buyer_info = [buyer_infos[0]]
     for i in range(len(buyer_infos)):
@@ -117,6 +118,10 @@ def get_token(screen_id,sku_id,project_id, count):
         return get_token(screen_id,sku_id,project_id, count)
 
 if(__name__ == "__main__"):
+    if buy_time == 4102415999:
+        print("[WARNING] 未设置购票时间")
+    if(cookie == ""):
+        cookie = input("请输入cookie：")
     headers = {
             "Host": "show.bilibili.com",
             "Connection": "keep-alive",
@@ -125,10 +130,6 @@ if(__name__ == "__main__"):
             "Origin": "https://show.bilibili.com",
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
         }
-    if buy_time == 4102415999:
-        print("[WARNING] 未设置购票时间")
-    if(cookie == ""):
-        cookie = input("请输入cookie：")
     if(project_id == "" or screen_id == "" or sku_id == "" or pay_money == -1):
         if(project_id == ""):
             project_id = input("请输入项目id：")
