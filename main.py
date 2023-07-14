@@ -141,7 +141,7 @@ if(__name__ == "__main__"):
         screen_id,sku_id,pay_money = ids.split(" ")
     buyer_info = get_buyer_info()
     count = len(json.loads(buyer_info))
-    get_test_token()
+    # get_test_token()
     token=get_token(screen_id,sku_id,project_id, count)
     print("[INFO] 开始下单")
     while(1):
