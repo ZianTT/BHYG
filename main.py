@@ -16,6 +16,8 @@ cookie = ''
 screen_id = ""
 sku_id = ""
 buyer_id = "" #以程序内的输入为准，如0,1
+riskheader = "" #非必要，用于风控验证
+easy_mode = -1 #简易模式，只显示某些符号，防止重要信息被忽略。
 
 ######################
     
@@ -116,14 +118,48 @@ def get_token(screen_id,sku_id,project_id, count):
         pause = input("完成验证后，按回车继续")
         return get_token(screen_id,sku_id,project_id, count)
 
-def get_test_token():
-    print("[INFO] 开始准备测试（此操作有效减少抢票时被风控概率）")
-    token = get_token("133774","396602","74288","1")
-    print("[INFO] 测试完毕")
+def get_ticket_status(screen_id,sku_id,project_id):
+    global headers
+    url = "https://show.bilibili.com/api/ticket/project/get?version=134&id="+project_id
+    response = requests.get(url, headers=headers)
+    try:
+        screens = response.json()["data"]["screen_list"]
+        # 找到 字段id为screen_id的screen
+        screen = {}
+        for i in range(len(screens)):
+            if screens[i]["id"] == int(screen_id):
+                screen = screens[i]
+                break
+        if screen == {}:
+            print("[ERROR] 未找到场次")
+            return -1, 0
+        # 找到 字段id为sku_id的sku
+        skus = screen["ticket_list"]
+        sku = {}
+        for i in range(len(skus)):
+            if skus[i]["id"] == int(sku_id):
+                sku = skus[i]
+                break
+        if sku == {}:
+            print("[ERROR] 未找到票档")
+            return -1
+        return int(sku["sale_flag_number"]),int(sku["num"])
+    except:
+        print("[ERROR] 可能被风控")
+        return -1, 0
 
 if(__name__ == "__main__"):
     if buy_time == 0:
         print("[WARNING] 未设置购票时间")
+    if easy_mode == -1:
+        easy_mode_yn = input("是否开启简易模式？（y/n）")
+        if(easy_mode_yn == "y"):
+            easy_mode = True
+        elif(easy_mode_yn == "n"):
+            easy_mode = False
+        else:
+            print("[ERROR] 请输入y或n")
+            exit()
     if(cookie == ""):
         cookie = input("请输入cookie：")
     headers = {
@@ -134,6 +170,8 @@ if(__name__ == "__main__"):
             "Origin": "https://show.bilibili.com",
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
         }
+    if riskheader != "":
+        headers["X-Risk-Header"] = riskheader
     if(project_id == "" or screen_id == "" or sku_id == "" or pay_money == -1):
         if(project_id == ""):
             project_id = input("请输入项目id：")
@@ -141,22 +179,62 @@ if(__name__ == "__main__"):
         screen_id,sku_id,pay_money = ids.split(" ")
     buyer_info = get_buyer_info()
     count = len(json.loads(buyer_info))
-    # get_test_token()
     token=get_token(screen_id,sku_id,project_id, count)
     print("[INFO] 开始下单")
+    reset = 0
     while(1):
-        result = create_order(screen_id,sku_id,token,deviceId,project_id,pay_money, count)
-        if(result["errno"] == 100009):
-            print(".",end="",flush=True)
-        elif(result["errno"] == 100001):
-            print("[ERROR] 触发风控")
-        elif(result["errno"] == 0):
-            print("[SUCCESS] 成功下单，锁票成功！请在5分钟内完成支付操作")
-            pay_token = result["data"]["token"]
-            print("[INFO] 请打开链接或在手机上完成支付")
-            pause = input("按回车继续")
-        elif(result["errno"] == 100051):
+        if reset > 500:
             token=get_token(screen_id,sku_id,project_id, count)
+            reset = 0
+        status, num = get_ticket_status(screen_id,sku_id,project_id) # type: ignore
+        if(status == 2 or num >= 1):
+            print("[INFO] 剩余票数："+str(num))
+            for i in range(20):
+                try:
+                    result = create_order(screen_id,sku_id,token,deviceId,project_id,pay_money, count)
+                except:
+                    print("[ERROR] 可能被业务风控")
+                    print("该种业务风控请及时暂停，否则可能会引起更大问题。")
+                    exit()
+                if(result["errno"] == 100009):
+                    if(easy_mode):
+                        print("。",end="",flush=True)
+                    else:
+                        print("[INFO]无票")
+                elif(result["errno"] == 100001):
+                    if(easy_mode):
+                        print("，",end="",flush=True)
+                    else:
+                        print("[INFO] 速率限制中（小电视）")
+                elif(result["errno"] == 0):
+                    print(result)
+                    print("[SUCCESS] 成功下单，锁票成功！请在5分钟内完成支付操作")
+                    print("[SUCCESS] 成功下单，锁票成功！请在5分钟内完成支付操作")
+                    print("[SUCCESS] 成功下单，锁票成功！请在5分钟内完成支付操作")
+                    print("[SUCCESS] 成功下单，锁票成功！请在5分钟内完成支付操作")
+                    print("[SUCCESS] 成功下单，锁票成功！请在5分钟内完成支付操作")
+                    pay_token = result["data"]["token"]
+                    print("[INFO] 请打开链接或在手机上完成支付")
+                elif(result["errno"] == 100051):
+                    token=get_token(screen_id,sku_id,project_id, count)
+                else:
+                    print("[ERROR] "+str(result))
+                
+            reset += 20
+        elif(status == 1):
+            print("[INFO] 未开放购票")
+        elif(status == 8):
+            if(easy_mode):
+                print("’",end="",flush=True)
+            else:
+                print("[INFO] 已售罄")
+        elif(status == 4):
+            if(easy_mode):
+                print("”",end="",flush=True)
+            else:
+                print("[INFO] 暂时售罄，即将放票")
         else:
-            print("[ERROR] "+str(result))
-        time.sleep(.1)
+            print("[ERROR] "+str(status))
+        time.sleep(.3)
+        reset += 2
+        
