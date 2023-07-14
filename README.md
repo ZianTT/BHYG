@@ -9,6 +9,22 @@ bilibili 会员购 抢票脚本
 
 本脚本若需自动化快速启动（免去参数配置）需要在脚本CONFIG区填写相应参数
 
+## 依赖安装
+
+首先，克隆本仓库或者下载origin.py文件。
+
+本脚本基于Python编写，需要Python3来运行。运行前需要`requests`库支持。您可以使用以下代码安装
+
+```shell
+pip3 install requests
+```
+
+之后可以直接运行
+
+```shell
+python3 origin.py
+```
+
 ## 使用教程
 
 登录 show.bilibili.com ，F12打开浏览器开发者工具，选择Network(网络)选项卡，~~选一个看着像的~~点开，在标头(Header)选项卡中找到请求标头中的Cookie，整行复制并按提示输入。
