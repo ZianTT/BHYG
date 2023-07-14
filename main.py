@@ -11,7 +11,7 @@ import time
 project_id = ""
 pay_money = -1 #此处应填入票种单价，会自动计算
 deviceId = "" #非必要
-buy_time = int(time.mktime(time.strptime("2099-12-31 23:59:59", "%Y-%m-%d %H:%M:%S")))#发售刷新开始时间点，在此时可以开始疯狂刷新开售prepare了，请注意修改
+buy_time = int(time.mktime(time.strptime("1970-01-01 08:00:00", "%Y-%m-%d %H:%M:%S"))) #发售刷新开始时间点，在此时可以开始疯狂刷新开售prepare了，请注意修改
 cookie = ''
 screen_id = ""
 sku_id = ""
@@ -98,13 +98,13 @@ def get_token(screen_id,sku_id,project_id, count):
     while(info == {}):
         print("[INFO] 未开放购票")
         if(int(time.time()) < buy_time):
-            if buy_time == 4102415999:
+            if buy_time == 0:
                 continue
             print("[INFO] 等待购票开放")
             time.sleep(buy_time - int(time.time()))
             print("[INFO] 开始购票")
             continue
-        time.sleep(.1)
+        time.sleep(.5)
         info = get_prepare(screen_id,sku_id,project_id, count)
     if(info["shield"]["open"] == 0):
         print("[SUCCESS] 成功准备订单"+"https://show.bilibili.com/platform/confirmOrder.html?token="+info["token"])
@@ -122,7 +122,7 @@ def get_test_token():
     print("[INFO] 测试完毕")
 
 if(__name__ == "__main__"):
-    if buy_time == 4102415999:
+    if buy_time == 0:
         print("[WARNING] 未设置购票时间")
     if(cookie == ""):
         cookie = input("请输入cookie：")
