@@ -11,13 +11,13 @@ import time
 project_id = ""
 pay_money = -1 #此处应填入票种单价，会自动计算
 deviceId = "" #非必要
-buy_time = int(time.mktime(time.strptime("1970-01-01 08:00:00", "%Y-%m-%d %H:%M:%S"))) #发售刷新开始时间点，在此时可以开始疯狂刷新开售prepare了，请注意修改
 cookie = ''
 screen_id = ""
 sku_id = ""
 buyer_id = "" #以程序内的输入为准，如0,1
 riskheader = "" #非必要，用于风控验证
 easy_mode = -1 #简易模式，只显示某些符号，防止重要信息被忽略。
+watcher_mode = -1 #监视模式，不执行抢票操作
 
 ######################
     
@@ -95,17 +95,9 @@ def create_order(screen_id,sku_id,token,deviceId,project_id,pay_money, count):
     return response.json()
 
 def get_token(screen_id,sku_id,project_id, count):
-    global buy_time
     info = get_prepare(screen_id,sku_id,project_id, count)
     while(info == {}):
         print("[INFO] 未开放购票")
-        if(int(time.time()) < buy_time):
-            if buy_time == 0:
-                continue
-            print("[INFO] 等待购票开放")
-            time.sleep(buy_time - int(time.time()))
-            print("[INFO] 开始购票")
-            continue
         time.sleep(.5)
         info = get_prepare(screen_id,sku_id,project_id, count)
     if(info["shield"]["open"] == 0):
@@ -149,8 +141,6 @@ def get_ticket_status(screen_id,sku_id,project_id):
         return -1, 0
 
 if(__name__ == "__main__"):
-    if buy_time == 0:
-        print("[WARNING] 未设置购票时间")
     if easy_mode == -1:
         easy_mode_yn = input("是否开启简易模式？（y/n）")
         if(easy_mode_yn == "y"):
@@ -160,8 +150,17 @@ if(__name__ == "__main__"):
         else:
             print("[ERROR] 请输入y或n")
             exit()
-    if(cookie == ""):
-        cookie = input("请输入cookie：")
+    if(watcher_mode == -1):
+        watcher_mode_yn = input("是否开启仅检测模式？（y/n）")
+        if(watcher_mode_yn == "y"):
+            watcher_mode = True
+        elif(watcher_mode_yn == "n"):
+            watcher_mode = False
+        else:
+            print("[ERROR] 请输入y或n")
+            exit()
+    if(not watcher_mode and cookie == ""):
+        cookie = input("请输入cookie：").encode("utf-8")
     headers = {
             "Host": "show.bilibili.com",
             "Connection": "keep-alive",
@@ -177,17 +176,20 @@ if(__name__ == "__main__"):
             project_id = input("请输入项目id：")
         ids = get_ids(project_id)
         screen_id,sku_id,pay_money = ids.split(" ")
-    buyer_info = get_buyer_info()
-    count = len(json.loads(buyer_info))
-    token=get_token(screen_id,sku_id,project_id, count)
+    count = 0
+    token = ""
+    if not watcher_mode:
+        buyer_info = get_buyer_info()
+        count = len(json.loads(buyer_info))
+        token=get_token(screen_id,sku_id,project_id, count)
     print("[INFO] 开始下单")
     reset = 0
     while(1):
-        if reset > 500:
+        if reset > 500 and not watcher_mode:
             token=get_token(screen_id,sku_id,project_id, count)
             reset = 0
         status, num = get_ticket_status(screen_id,sku_id,project_id) # type: ignore
-        if(status == 2 or num >= 1):
+        if(not watcher_mode and status == 2 or num >= 1):
             print("[INFO] 剩余票数："+str(num))
             for i in range(20):
                 try:
@@ -227,12 +229,12 @@ if(__name__ == "__main__"):
             if(easy_mode):
                 print("’",end="",flush=True)
             else:
-                print("[INFO] 已售罄")
+                print("[INFO] 暂时售罄，即将放票")
         elif(status == 4):
             if(easy_mode):
                 print("”",end="",flush=True)
             else:
-                print("[INFO] 暂时售罄，即将放票")
+                print("[INFO] 已售罄")
         else:
             print("[ERROR] "+str(status))
         time.sleep(.3)
