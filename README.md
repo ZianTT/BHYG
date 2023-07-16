@@ -17,7 +17,7 @@ PS：这个脚本也是支持抢回流票的，~~但是最近的BW和BML似乎�
 
 ## 依赖安装
 
-首先，克隆本仓库或者下载origin.py文件。
+首先，克隆本仓库或者下载 main.py 文件。
 
 本脚本基于Python编写，需要Python3来运行。运行前需要`requests`库支持。您可以使用以下代码安装
 
@@ -28,7 +28,7 @@ pip3 install requests
 之后可以直接运行
 
 ```shell
-python3 origin.py
+python3 main.py
 ```
 
 ## 使用教程
