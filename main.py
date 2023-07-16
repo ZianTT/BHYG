@@ -91,7 +91,16 @@ def create_order(screen_id,sku_id,token,deviceId,project_id,pay_money, count):
         "deviceId": deviceId,
         "clickPosition": '{"x":'+x+'"y":'+y+'"origin": '+str(int(time.time()*1000) - random.randint(1,100))+',"now": '+str(int(time.time()*1000))+'}',
     }
-    response = requests.post(url, headers=headers, data=data)
+    try:
+        response = requests.post(url, headers=headers, data=data, timeout=1)
+    except requests.exceptions.Timeout:
+        print("[ERROR] 请求超时")
+        return create_order(screen_id,sku_id,token,deviceId,project_id,pay_money, count)
+    if(response.json()["errno"] == 100001):
+        if(easy_mode):
+            print("，",end="",flush=True)
+        else:
+            print("[INFO] 速率限制中（小电视）")
     return response.json()
 
 def get_token(screen_id,sku_id,project_id, count):
@@ -104,7 +113,10 @@ def get_token(screen_id,sku_id,project_id, count):
         print("[SUCCESS] 成功准备订单"+"https://show.bilibili.com/platform/confirmOrder.html?token="+info["token"])
         return info["token"]
     else:
-        print("[INFO] 触发风控，打开："+str(info["shield"]))
+        print("[INFO] 触发风控。")
+        print("[INFO] 类型：验证码 "+info["shield"]['verifyMethod'])
+        print("[INFO] 请在浏览器中打开以下链接，完成验证")
+        print("[INFO] "+info["shield"]['naUrl'])
         os.system("start "+info["shield"]['naUrl'])
         print("[INFO] 请手动完成验证")
         pause = input("完成验证后，按回车继续")
@@ -113,7 +125,11 @@ def get_token(screen_id,sku_id,project_id, count):
 def get_ticket_status(screen_id,sku_id,project_id):
     global headers
     url = "https://show.bilibili.com/api/ticket/project/get?version=134&id="+project_id
-    response = requests.get(url, headers=headers)
+    try:
+        response = requests.get(url, headers=headers, timeout=1)
+    except requests.exceptions.ConnectTimeout:
+        print("[ERROR] 网络连接超时")
+        return -1, 0
     try:
         screens = response.json()["data"]["screen_list"]
         # 找到 字段id为screen_id的screen
@@ -134,11 +150,19 @@ def get_ticket_status(screen_id,sku_id,project_id):
                 break
         if sku == {}:
             print("[ERROR] 未找到票档")
-            return -1
+            return -1, 0
         return int(sku["sale_flag_number"]),int(sku["num"])
     except:
         print("[ERROR] 可能被风控")
         return -1, 0
+    
+def test_risk():
+    url = "https://show.bilibili.com/api/ticket/order/createV2"
+    result = requests.get(url, headers=headers).status_code
+    if(result == 412):
+        return False
+    else:
+        return True
 
 if(__name__ == "__main__"):
     if easy_mode == -1:
@@ -197,23 +221,24 @@ if(__name__ == "__main__"):
                 except:
                     print("[ERROR] 可能被业务风控")
                     print("该种业务风控请及时暂停，否则可能会引起更大问题。")
-                    exit()
+                    print("开始检测是否解除风控")
+                    risk = True
+                    while(risk):
+                        time.sleep(120)
+                        if(test_risk()):
+                            risk = False
+                            print("已解除风控")
+                            break
+                        else:
+                            print("风控未解除")
+                    continue
                 if(result["errno"] == 100009):
                     if(easy_mode):
                         print("。",end="",flush=True)
                     else:
                         print("[INFO]无票")
-                elif(result["errno"] == 100001):
-                    if(easy_mode):
-                        print("，",end="",flush=True)
-                    else:
-                        print("[INFO] 速率限制中（小电视）")
                 elif(result["errno"] == 0):
                     print(result)
-                    print("[SUCCESS] 成功下单，锁票成功！请在5分钟内完成支付操作")
-                    print("[SUCCESS] 成功下单，锁票成功！请在5分钟内完成支付操作")
-                    print("[SUCCESS] 成功下单，锁票成功！请在5分钟内完成支付操作")
-                    print("[SUCCESS] 成功下单，锁票成功！请在5分钟内完成支付操作")
                     print("[SUCCESS] 成功下单，锁票成功！请在5分钟内完成支付操作")
                     pay_token = result["data"]["token"]
                     print("[INFO] 请打开链接或在手机上完成支付")
@@ -222,7 +247,7 @@ if(__name__ == "__main__"):
                 else:
                     print("[ERROR] "+str(result))
                 
-            reset += 20
+            reset += 10
         elif(status == 1):
             print("[INFO] 未开放购票")
         elif(status == 8):
@@ -235,6 +260,8 @@ if(__name__ == "__main__"):
                 print("”",end="",flush=True)
             else:
                 print("[INFO] 已售罄")
+        elif(status == -1):
+            continue
         else:
             print("[ERROR] "+str(status))
         time.sleep(.3)
