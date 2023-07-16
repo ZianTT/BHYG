@@ -209,7 +209,7 @@ if(__name__ == "__main__"):
     print("[INFO] 开始下单")
     reset = 0
     while(1):
-        if reset > 500 and not watcher_mode:
+        if reset > 800 and not watcher_mode:
             token=get_token(screen_id,sku_id,project_id, count)
             reset = 0
         status, num = get_ticket_status(screen_id,sku_id,project_id) # type: ignore
@@ -246,7 +246,6 @@ if(__name__ == "__main__"):
                     token=get_token(screen_id,sku_id,project_id, count)
                 else:
                     print("[ERROR] "+str(result))
-                
             reset += 10
         elif(status == 1):
             print("[INFO] 未开放购票")
