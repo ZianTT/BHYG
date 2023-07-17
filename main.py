@@ -51,12 +51,12 @@ def get_buyer_info():
     url = "https://show.bilibili.com/api/ticket/buyer/list"
     response = requests.get(url, headers=headers)
     buyer_infos = response.json()["data"]["list"]
-    buyer_info = [buyer_infos[0]]
+    buyer_info = []
     for i in range(len(buyer_infos)):
         print("["+str(i)+"] "+buyer_infos[i]["name"]+" "+buyer_infos[i]["personal_id"]+" "+buyer_infos[i]["tel"])
         if(buyer_infos[i]["is_default"] == 1):
             buyer_info = [buyer_infos[i]]
-    print("[INFO] 请选择购票人，默认"+buyer_info[0]["name"])
+    print("[INFO] 请选择购票人，留空则代表不传入购票人信息，请确保该展支持非实名购票。")
     if buyer_id == "":
         buyer_id = input("请输入购票人序号：")
     if(buyer_id != ""):
@@ -65,7 +65,16 @@ def get_buyer_info():
         for i in range(len(buyerids)):
             buyer_info.append(buyer_infos[int(buyerids[i])])
             print("[INFO] 已选择购票人"+buyer_infos[int(buyerids[i])]["name"])
+    else:
+        print("[INFO] 已选择不传入购票人信息")
+        buyer_info = [0]
     return json.dumps(buyer_info)
+
+def get_contact_info():
+    print("[INFO] 若该展为非实名购票，请传入信息，留空则不传入")
+    buyer = input("请输入姓名：")
+    tel = input("请输入手机号：")
+    return {"buyer": buyer, "tel": tel}
 
 def get_prepare(screen_id,sku_id,project_id, count):
     global headers
@@ -96,11 +105,14 @@ def create_order(screen_id,sku_id,token,deviceId,project_id,pay_money, count):
         "pay_money": pay_money*count,
         "order_type": "1",
         "timestamp": str(int(time.time()*1000)),
-        "buyer_info": buyer_info,
         "token": token,
         "deviceId": deviceId,
         "clickPosition": '{"x":'+x+'"y":'+y+'"origin": '+str(int(time.time()*1000) - random.randint(1,100))+',"now": '+str(int(time.time()*1000))+'}',
     }
+    if(buyer_info != '[0]'):
+        data["buyer_info"] = buyer_info
+    if(contact_info != {}):
+        data = dict(data, **contact_info)
     try:
         response = requests.post(url, headers=headers, data=data, timeout=1)
     except (requests.exceptions.Timeout, requests.exceptions.ReadTimeout):
@@ -215,6 +227,7 @@ if(__name__ == "__main__"):
     if not watcher_mode:
         buyer_info = get_buyer_info()
         count = len(json.loads(buyer_info))
+        contact_info = get_contact_info()
         token=get_token(screen_id,sku_id,project_id, count)
     print("[INFO] 开始下单")
     reset = 0
