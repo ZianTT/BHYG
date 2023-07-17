@@ -56,7 +56,10 @@ def get_buyer_info():
         print("["+str(i)+"] "+buyer_infos[i]["name"]+" "+buyer_infos[i]["personal_id"]+" "+buyer_infos[i]["tel"])
         if(buyer_infos[i]["is_default"] == 1):
             buyer_info = [buyer_infos[i]]
-    print("[INFO] 请选择购票人，留空则代表不传入购票人信息，请确保该展支持非实名购票。")
+    if(len(buyer_info) == 0):
+        print("[INFO] 未找到购票人，请前往实名添加购票人，或留空则代表不传入购票人信息，请确保该展支持非实名购票。")
+    else:
+        print("[INFO] 请选择购票人，留空则代表不传入购票人信息，请确保该展支持非实名购票。")
     if buyer_id == "":
         buyer_id = input("请输入购票人序号：")
     if(buyer_id != ""):
