@@ -249,7 +249,8 @@ if(__name__ == "__main__"):
                         print("[INFO]无票")
                 elif(result["errno"] == 0):
                     print(result)
-                    print("[SUCCESS] 成功下单，锁票成功！请在5分钟内完成支付操作")
+                    print("[SUCCESS] 成功下单！请在10分钟内完成支付操作")
+                    print("[INFO] 近期假票较多，可能并非真实抢到，请注意查看订单情况")
                     pay_token = result["data"]["token"]
                     print("[INFO] 请打开链接或在手机上完成支付")
                 elif(result["errno"] == 100051):
