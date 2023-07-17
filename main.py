@@ -102,7 +102,7 @@ def create_order(screen_id,sku_id,token,deviceId,project_id,pay_money, count):
         "screen_id": screen_id,
         "sku_id": sku_id,
         "count": count,
-        "pay_money": pay_money*count,
+        "pay_money": str(int(float(pay_money)*int(count))),
         "order_type": "1",
         "timestamp": str(int(time.time()*1000)),
         "token": token,
@@ -113,6 +113,7 @@ def create_order(screen_id,sku_id,token,deviceId,project_id,pay_money, count):
         data["buyer_info"] = buyer_info
     if(contact_info != {}):
         data = dict(data, **contact_info)
+    pause = input(data)
     try:
         response = requests.post(url, headers=headers, data=data, timeout=1)
     except (requests.exceptions.Timeout, requests.exceptions.ReadTimeout):
@@ -236,8 +237,11 @@ if(__name__ == "__main__"):
             token=get_token(screen_id,sku_id,project_id, count)
             reset = 0
         status, num = get_ticket_status(screen_id,sku_id,project_id) # type: ignore
-        if(not watcher_mode and status == 2 or num >= 1):
+        if(status == 2 or num >= 1):
             print("[INFO] 剩余票数："+str(num))
+            if watcher_mode:
+                time.sleep(1)
+                continue
             for i in range(20):
                 try:
                     result = create_order(screen_id,sku_id,token,deviceId,project_id,pay_money, count)
@@ -268,6 +272,9 @@ if(__name__ == "__main__"):
                     print("[INFO] 请打开链接或在手机上完成支付")
                 elif(result["errno"] == 100051):
                     token=get_token(screen_id,sku_id,project_id, count)
+                elif(result["errno"] == 100079):
+                    print("[SUCCESS] 你是真抢到了，我先停了，你直接退出就好")
+                    time.sleep(100000)
                 else:
                     print("[ERROR] "+str(result))
             reset += 10
