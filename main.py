@@ -103,7 +103,7 @@ def create_order(screen_id,sku_id,token,deviceId,project_id,pay_money, count):
     }
     try:
         response = requests.post(url, headers=headers, data=data, timeout=1)
-    except requests.exceptions.Timeout:
+    except (requests.exceptions.Timeout, requests.exceptions.ReadTimeout):
         print("[ERROR] 请求超时")
         return create_order(screen_id,sku_id,token,deviceId,project_id,pay_money, count)
     if(response.json()["errno"] == 100001):
@@ -137,7 +137,7 @@ def get_ticket_status(screen_id,sku_id,project_id):
     url = "https://show.bilibili.com/api/ticket/project/get?version=134&id="+project_id
     try:
         response = requests.get(url, headers=headers, timeout=1)
-    except requests.exceptions.ConnectTimeout:
+    except (requests.exceptions.Timeout, requests.exceptions.ReadTimeout):
         print("[ERROR] 网络连接超时")
         return -1, 0
     try:
