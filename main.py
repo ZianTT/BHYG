@@ -113,7 +113,6 @@ def create_order(screen_id,sku_id,token,deviceId,project_id,pay_money, count):
         data["buyer_info"] = buyer_info
     if(contact_info != {}):
         data = dict(data, **contact_info)
-    pause = input(data)
     try:
         response = requests.post(url, headers=headers, data=data, timeout=1)
     except (requests.exceptions.Timeout, requests.exceptions.ReadTimeout):
