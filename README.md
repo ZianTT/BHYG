@@ -9,15 +9,9 @@ bilibili 会员购 抢票脚本
 
 本脚本仅供学习交流，请在24小时内停止运行并删除本脚本。
 
-本脚本若需自动化快速启动（免去参数配置）请参考[Wiki](https://github.com/ZianTT/bilibili-hyg/wiki/关于快速启动（自动化启动）配置的说明)
+FAQ 请参考[Wiki](https://github.com/ZianTT/bilibili-hyg/wiki/FAQ)
 
-本脚本常见错误情况请参考[Wiki](https://github.com/ZianTT/bilibili-hyg/wiki/%E5%85%B3%E4%BA%8E%E9%83%A8%E5%88%86%E9%94%99%E8%AF%AF%E6%83%85%E5%86%B5%E7%9A%84%E8%A7%A3%E9%87%8A)
-
-显示抢到了却没有，请参考 [#2](https://github.com/ZianTT/bilibili-hyg/issues/2)
-
-PS：这个脚本也是支持抢回流票的，~~但是最近的BW和BML似乎是不放回流票了~~，又放了，各位看着抢。至于刷新间隔，绝对是很小的，不会有什么错过的情况，只有检测到但是被秒掉的情况（jio本也太多了扒）
-
-另外针对GeeTest验证码我也没有什么好的解决方案，如果有xd有GeeTest的能用的现成轮子欢迎推荐给我吖
+PS：针对GeeTest验证码我也没有什么好的解决方案，如果有xd有GeeTest的能用的现成轮子欢迎推荐给我吖
 
 ## 依赖安装
 
