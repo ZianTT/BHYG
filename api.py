@@ -220,6 +220,23 @@ class BilibiliHyg:
             return {}
         return response.json()
 
+    def fake_ticket(self, pay_token):
+        url = "https://show.bilibili.com/api/ticket/order/createstatus?project_id="+self.project_id+"&token="+pay_token+"&timestamp="+str(int(time.time()*1000))
+        response = requests.get(url, headers=self.headers).json()
+        if response["errno"] == 0:
+            print("[SUCCESS] 成功购票")
+            order_id = response["data"]["order_id"]
+            pay_url = response["data"]["payParam"]["code_url"]
+            print("[INFO] 订单号："+order_id)
+            print("[INFO] 请在浏览器中打开以下链接，完成支付")
+            print("[INFO] "+pay_url)
+            os.system("start "+pay_url)
+            print("[INFO] 请手动完成支付")
+            return True
+        else:
+            print("[ERROR] "+response["msg"])
+            return False
+
     def run(self):
         reset = 0
         while(1):
@@ -251,7 +268,13 @@ class BilibiliHyg:
                         print("[INFO] 近期假票较多，可能并非真实抢到，请注意查看订单情况")
                         pay_token = result["data"]["token"]
                         # TODO: detect fake ticket
-                        print("[INFO] 请打开链接或在手机上完成支付")
+                        if(self.fake_ticket(pay_token)):
+                            pause = input("请确认是否已经支付，按回车继续")
+                            print("[INFO] 程序将在5秒内退出")
+                            time.sleep(5)
+                            exit()
+                        else:
+                            print("[ERROR] 假票，继续抢票")
                     elif(result["errno"] == 100051):
                         self.token = self.get_token()
                     elif(result["errno"] == 100079):
