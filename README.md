@@ -18,7 +18,7 @@ PS：针对GeeTest验证码我也没有什么好的解决方案，如果有xd有
 
 ## 使用教程
 
-下载[dist/main.exe](/dist/main.exe)文件，双击打开
+前往[Release](https://github.com/ZianTT/bilibili-hyg/releases)下载对应文件，双击打开
 
 登录 show.bilibili.com ，F12打开浏览器开发者工具，选择Network(网络)选项卡，~~选一个看着像的~~点开，在标头(Header)选项卡中找到请求标头中的Cookie，整行复制并按提示输入。
 
