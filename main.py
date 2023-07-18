@@ -66,11 +66,11 @@ class BilibiliHyg:
             self.buyer_info = self.get_buyer_info()
             self.count = len(json.loads(self.buyer_info))
             self.buyer, self.tel = self.get_contact_info()
-            self.token = self.get_token(self.screen_id, self.sku_id, self.project_id, self.count)
+            self.token = self.get_token()
         print("[INFO] 开始下单")
 
-    def get_ticket_status(self, screen_id, sku_id, project_id):
-        url = "https://show.bilibili.com/api/ticket/project/get?version=134&id="+project_id
+    def get_ticket_status(self):
+        url = "https://show.bilibili.com/api/ticket/project/get?version=134&id="+self.project_id
         try:
             response = requests.get(url, headers=self.headers, timeout=1)
         except (requests.exceptions.Timeout, requests.exceptions.ReadTimeout):
@@ -81,7 +81,7 @@ class BilibiliHyg:
             # 找到 字段id为screen_id的screen
             screen = {}
             for i in range(len(screens)):
-                if screens[i]["id"] == int(screen_id):
+                if screens[i]["id"] == int(self.screen_id):
                     screen = screens[i]
                     break
             if screen == {}:
@@ -91,7 +91,7 @@ class BilibiliHyg:
             skus = screen["ticket_list"]
             sku = {}
             for i in range(len(skus)):
-                if skus[i]["id"] == int(sku_id):
+                if skus[i]["id"] == int(self.sku_id):
                     sku = skus[i]
                     break
             if sku == {}:
@@ -152,29 +152,29 @@ class BilibiliHyg:
         tel = input("请输入手机号：")
         return buyer, tel
 
-    def get_token(self, screen_id, sku_id, project_id, count):
-        url = "https://show.bilibili.com/api/ticket/order/prepare?project_id="+project_id
+    def get_token(self):
+        url = "https://show.bilibili.com/api/ticket/order/prepare?project_id="+self.project_id
         data = {
-            "project_id": project_id,
-            "screen_id": screen_id,
-            "sku_id": sku_id,
-            "project_id": project_id,
+            "project_id": self.project_id,
+            "screen_id": self.screen_id,
+            "sku_id": self.sku_id,
+            "project_id": self.project_id,
             "order_type": "1",
-            "count": count
+            "count": self.count
         }
         response = requests.post(url, headers=self.headers, data=data)
         return response.json()["data"]["token"]
 
-    def create_order(self, screen_id, sku_id, token, project_id, pay_money, count):
+    def create_order(self):
         url = "https://show.bilibili.com/api/ticket/order/createV2"
         data = {
-            "screen_id": screen_id,
-            "sku_id": sku_id,
-            "token": token,
+            "screen_id": self.screen_id,
+            "sku_id": self.sku_id,
+            "token": self.token,
             "deviceId": "",
-            "project_id": project_id,
-            "pay_money": pay_money,
-            "count": count
+            "project_id": self.project_id,
+            "pay_money": self.pay_money,
+            "count": self.count
         }
         if self.riskheader != "":
             data["risk_header"] = self.riskheader
@@ -191,9 +191,9 @@ class BilibiliHyg:
         reset = 0
         while(1):
             if reset > 800 and not self.watcher_mode:
-                self.token = self.get_token(self.screen_id, self.sku_id, self.project_id, self.count)
+                self.token = self.get_token()
                 reset = 0
-            status, num = self.get_ticket_status(self.screen_id, self.sku_id, self.project_id)
+            status, num = self.get_ticket_status()
             if(status == 2 or num >= 1):
                 print("[INFO] 剩余票数："+str(num))
                 if self.watcher_mode:
@@ -201,7 +201,7 @@ class BilibiliHyg:
                     continue
                 for i in range(20):
                     try:
-                        result = self.create_order(self.screen_id, self.sku_id, self.token, self.project_id, self.pay_money, self.count)
+                        result = self.create_order()
                     except:
                         print("[ERROR] 可能被业务风控")
                         print("该种业务风控请及时暂停，否则可能会引起更大问题。")
@@ -228,7 +228,7 @@ class BilibiliHyg:
                         pay_token = result["data"]["token"]
                         print("[INFO] 请打开链接或在手机上完成支付")
                     elif(result["errno"] == 100051):
-                        self.token = self.get_token(self.screen_id, self.sku_id, self.project_id, self.count)
+                        self.token = self.get_token()
                     elif(result["errno"] == 100079):
                         print("[SUCCESS] 你是真抢到了，我先停了，你直接退出就好")
                         time.sleep(100000)
