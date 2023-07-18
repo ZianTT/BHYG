@@ -67,7 +67,7 @@ class BilibiliHyg:
         if not self.watcher_mode:
             self.buyer_info = self.get_buyer_info()
             self.count = len(json.loads(self.buyer_info))
-            self.buyer, self.tel = self.get_contact_info()
+            self.get_contact_info()
             self.token = self.get_token()
         print("[INFO] 开始下单")
 
@@ -142,7 +142,7 @@ class BilibiliHyg:
             print("[INFO] 请选择购票人，留空则代表不传入购票人信息，请确保该展支持非实名购票。")
         if self.buyer_id == "":
             self.buyer_id = input("请输入购票人序号：")
-        if(self.buyer_id != ""):
+        if(self.buyer_id != "" and self.buyer_id != "-1"):
             buyerids = self.buyer_id.split(",")
             self.buyer_info = []
             for i in range(len(buyerids)):
@@ -155,9 +155,15 @@ class BilibiliHyg:
 
     def get_contact_info(self):
         print("[INFO] 若该展为非实名购票，请传入信息，留空则不传入")
-        buyer = input("请输入姓名：")
-        tel = input("请输入手机号：")
-        return buyer, tel
+        if self.buyer == "":
+            buyer = input("请输入姓名：")
+        if self.tel == "":
+            tel = input("请输入手机号：")
+        if(self.buyer == "" or self.buyer == "-1"):
+            self.buyer = "-1"
+        if(self.tel == "" or self.tel == "-1"):
+            self.tel = "-1"
+        return
     
     def get_prepare(self):
         url = "https://show.bilibili.com/api/ticket/order/prepare?project_id="+self.project_id
@@ -201,16 +207,16 @@ class BilibiliHyg:
             "token": self.token,
             "deviceId": "",
             "project_id": self.project_id,
-            "pay_money": self.pay_money,
+            "pay_money": str(float(self.pay_money)*int(self.count)),
             "count": self.count
         }
         if self.riskheader != "":
             data["risk_header"] = self.riskheader
         if self.buyer_info != "":
             data["buyer_info"] = self.buyer_info
-        if self.buyer != "":
+        if self.buyer != "-1":
             data["buyer"] = self.buyer
-        if self.tel != "":
+        if self.tel != "-1":
             data["tel"] = self.tel
         response = requests.post(url, headers=self.headers, data=data)
         if(response.status_code == 412):
@@ -261,7 +267,12 @@ class BilibiliHyg:
                         if(self.easy_mode):
                             print("。",end="",flush=True)
                         else:
-                            print("[INFO]无票")
+                            print("[INFO] 无票")
+                    elif(result["errno"] == 100001):
+                        if(self.easy_mode):
+                            print("，",end="",flush=True)
+                        else:
+                            print("[INFO] 小电视速率限制")
                     elif(result["errno"] == 0):
                         print("[SUCCESS] 成功尝试下单！正在检测是否为假票")
                         pay_token = result["data"]["token"]
@@ -281,7 +292,6 @@ class BilibiliHyg:
                         exit()
                     else:
                         print("[ERROR] "+str(result))
-                    time.sleep(.3)
                     reset += 2
             elif(status == 1):
                 print("[INFO] 未开放购票")
