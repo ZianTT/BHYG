@@ -112,14 +112,19 @@ class BilibiliHyg:
             return True
 
     def get_ids(self):
-        url = "https://show.bilibili.com/api/ticket/project/get?version=134&id="
-        response = requests.get(url+self.project_id, headers=self.headers)
-        screens = response.json()["data"]["screen_list"]
-        screen_id = screens[0]["id"]
-        skus = screens[0]["ticket_list"]
-        sku_id = skus[0]["id"]
-        pay_money = skus[0]["price"]
-        return str(screen_id), str(sku_id), str(pay_money)
+        url = "https://show.bilibili.com/api/ticket/project/get?version=134&id="+self.project_id
+        response = requests.get(url).json()
+        screens = response["data"]["screen_list"]
+        for i in range(len(screens)):
+            print("["+str(i)+"] "+screens[i]["name"])
+        screen_id = input("请输入场次序号：")
+        tickets = screens[int(screen_id)]["ticket_list"]
+        for i in range(len(tickets)):
+            print("["+str(i)+"] "+tickets[i]["desc"]+" "+str(tickets[i]["price"]/100)+"元")
+        sku_id = input("请输入票档序号：")
+        ids = str(screens[int(screen_id)]["id"])+" "+str(tickets[int(sku_id)]["id"])+" "+str(tickets[int(sku_id)]["price"])
+        print("[INFO]您的screen_id 和 sku_id 和 pay_money 分别为："+ids)
+        return str(screens[int(screen_id)]["id"]),str(tickets[int(sku_id)]["id"]),str(tickets[int(sku_id)]["price"])
 
     def get_buyer_info(self):
         url = "https://show.bilibili.com/api/ticket/buyer/list"
@@ -186,6 +191,11 @@ class BilibiliHyg:
         if self.tel != "":
             data["tel"] = self.tel
         response = requests.post(url, headers=self.headers, data=data)
+        if(response.status_code == 412):
+            print("[ERROR] 可能被业务风控")
+            print("该种业务风控请及时暂停，否则可能会引起更大问题。")
+            self.risk = True
+            return {}
         return response.json()
 
     def run(self):
@@ -194,6 +204,10 @@ class BilibiliHyg:
             if reset > 800 and not self.watcher_mode:
                 self.token = self.get_token()
                 reset = 0
+            if reset % 100 == 0:
+                self.risk = self.test_risk()
+            if self.risk:
+                status = -1
             status, num = self.get_ticket_status()
             if(status == 2 or num >= 1):
                 print("[INFO] 剩余票数："+str(num))
@@ -201,21 +215,8 @@ class BilibiliHyg:
                     time.sleep(1)
                     continue
                 for i in range(20):
-                    try:
-                        result = self.create_order()
-                    except:
-                        print("[ERROR] 可能被业务风控")
-                        print("该种业务风控请及时暂停，否则可能会引起更大问题。")
-                        print("开始检测是否解除风控")
-                        risk = True
-                        while(risk):
-                            time.sleep(120)
-                            if(self.test_risk()):
-                                risk = False
-                                print("已解除风控")
-                                break
-                            else:
-                                print("风控未解除")
+                    result = self.create_order()
+                    if(result == {}):
                         continue
                     if(result["errno"] == 100009):
                         if(self.easy_mode):
