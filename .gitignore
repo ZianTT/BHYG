@@ -1,2 +1,4 @@
 __pycache__
 /build
+main.spec
+/dist
