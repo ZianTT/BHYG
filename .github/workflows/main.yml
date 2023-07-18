@@ -1,0 +1,19 @@
+on:
+  push:
+    branches:
+    - main
+    - release/*
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: PyInstaller Windows
+        uses: JackMcKew/pyinstaller-action-windows@v0.1.2
+        with:
+          path: .
+      - uses: actions/upload-artifact@v2
+        with:
+          name: Windows-Build
+          path: dist

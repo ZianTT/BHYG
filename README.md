@@ -1,8 +1,7 @@
 # bilibili-hyg
 bilibili 会员购 抢票脚本
 
-### 严正警告：近期发现本脚本被倒卖，根据本项目[开源协议木兰公共许可证，第2版 MulanPubL-2.0](/LICENSE)禁止任何形式的倒卖销售，本人有权根据中国大陆《合同法》，国际数字千年版权法（DMCA）追究法律责任。二次开发根据本项目开源协议分发限制规定，您需要提供您的版本源代码。若您付费购买到本脚本请立即联系卖家退款。
-### 另：根据LICENSE，请保留License和源代码出处，谢谢各位转载大佬
+PS: 在branch refactor-ref 中有新的版本，各位大佬可以先行做个测试，稍后我将合并到主分支
 
 **恳请各位大佬点个免费的星星⭐️支持一下鸭**
 
@@ -16,31 +15,9 @@ bilibili 会员购 抢票脚本
 
 PS：针对GeeTest验证码我也没有什么好的解决方案，如果有xd有GeeTest的能用的现成轮子欢迎推荐给我吖
 
-## 依赖安装
-
-首先，克隆本仓库或者下载 main.py 文件。
-
-本脚本基于Python编写，需要Python3来运行。运行前需要`requests`库支持。您可以使用以下代码安装
-
-（可选）若无pip管理器，即“pip不是或外部命令，也不是可运行的程序或批处理文件。”等情况，运行以下命令安装（仅新版本）
-
-```shell
-python3 -m ensurepip --upgrade
-```
-
-之后可重启cmd/终端。还仍无pip，请确认“系统属性环境变量”中Path中包含“【你的Python安装目录】/Scripts”。
-
-```shell
-pip3 install requests
-```
-
-之后可以直接运行
-
-```shell
-python3 main.py
-```
-
 ## 使用教程
+
+下载[dist/main.exe](/dist/main.exe)文件，双击打开
 
 登录 show.bilibili.com ，F12打开浏览器开发者工具，选择Network(网络)选项卡，~~选一个看着像的~~点开，在标头(Header)选项卡中找到请求标头中的Cookie，整行复制并按提示输入。
 
