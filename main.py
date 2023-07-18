@@ -21,7 +21,6 @@ if __name__ == "__main__":
         if config:
             config = config.split("\n")
             config = [i.split("=") for i in config]
-            # 将第一个等号前的内容作为key，第一个等号后的全部内容作为value
             config = {i[0]: "=".join(i[1:]) for i in config}
             bilibili_hyg = BilibiliHyg(**config)
         else:
