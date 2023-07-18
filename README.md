@@ -22,6 +22,14 @@ PS：针对GeeTest验证码我也没有什么好的解决方案，如果有xd有
 
 本脚本基于Python编写，需要Python3来运行。运行前需要`requests`库支持。您可以使用以下代码安装
 
+（可选）若无pip管理器，即“pip不是或外部命令，也不是可运行的程序或批处理文件。”等情况，运行以下命令安装（仅新版本）
+
+```shell
+python3 -m ensurepip --upgrade
+```
+
+之后可重启cmd/终端。还仍无pip，请确认“系统属性环境变量”中Path中包含“【你的Python安装目录】/Scripts”。
+
 ```shell
 pip3 install requests
 ```
