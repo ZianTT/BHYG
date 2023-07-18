@@ -263,11 +263,8 @@ class BilibiliHyg:
                         else:
                             print("[INFO]无票")
                     elif(result["errno"] == 0):
-                        print(result)
-                        print("[SUCCESS] 成功下单！")
-                        print("[INFO] 近期假票较多，可能并非真实抢到，请注意查看订单情况")
+                        print("[SUCCESS] 成功尝试下单！正在检测是否为假票")
                         pay_token = result["data"]["token"]
-                        # TODO: detect fake ticket
                         if(self.fake_ticket(pay_token)):
                             pause = input("请确认是否已经支付，按回车继续")
                             print("[INFO] 程序将在5秒内退出")
