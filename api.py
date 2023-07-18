@@ -1,4 +1,5 @@
 import json
+import os
 import time
 print("[INFO] 开始检测运行环境")
 try:
@@ -157,19 +158,40 @@ class BilibiliHyg:
         buyer = input("请输入姓名：")
         tel = input("请输入手机号：")
         return buyer, tel
-
-    def get_token(self):
+    
+    def get_prepare(self):
         url = "https://show.bilibili.com/api/ticket/order/prepare?project_id="+self.project_id
         data = {
             "project_id": self.project_id,
             "screen_id": self.screen_id,
-            "sku_id": self.sku_id,
-            "project_id": self.project_id,
             "order_type": "1",
-            "count": self.count
+            "count": self.count,
+            "sku_id": self.sku_id,
+            "token": ""
         }
         response = requests.post(url, headers=self.headers, data=data)
-        return response.json()["data"]["token"]
+        if(response.json()["errno"] != 0):
+            print("[ERROR] "+response.json()["msg"])
+        return response.json()["data"]
+    
+    def get_token(self):
+        info = self.get_prepare()
+        while(info == {}):
+            print("[INFO] 未开放购票")
+            time.sleep(.5)
+            info = self.get_prepare()
+        if(info["shield"]["open"] == 0):
+            print("[SUCCESS] 成功准备订单"+"https://show.bilibili.com/platform/confirmOrder.html?token="+info["token"])
+            return info["token"]
+        else:
+            print("[INFO] 触发风控。")
+            print("[INFO] 类型：验证码 "+info["shield"]['verifyMethod'])
+            print("[INFO] 请在浏览器中打开以下链接，完成验证")
+            print("[INFO] "+info["shield"]['naUrl'])
+            os.system("start "+info["shield"]['naUrl'])
+            print("[INFO] 请手动完成验证")
+            pause = input("完成验证后，按回车继续")
+            return self.get_token()
 
     def create_order(self):
         url = "https://show.bilibili.com/api/ticket/order/createV2"
