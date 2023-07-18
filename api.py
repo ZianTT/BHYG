@@ -11,19 +11,19 @@ except ImportError:
     exit()
 
 class BilibiliHyg:
-    def __init__(self, easy_mode=-1, watcher_mode=-1, cookie="", riskheader="", project_id="", screen_id="", sku_id="", pay_money=-1, buyer_id=""):
-        self.easy_mode = easy_mode
-        self.watcher_mode = watcher_mode
+    def __init__(self, easy_mode="-1", watcher_mode="-1", cookie="", riskheader="", project_id="", screen_id="", sku_id="", pay_money="-1", buyer_id="", buyer="", tel=""):
+        self.easy_mode = int(easy_mode)
+        self.watcher_mode = int(watcher_mode)
         self.cookie = cookie
         self.riskheader = riskheader
         self.project_id = project_id
         self.screen_id = screen_id
         self.sku_id = sku_id
-        self.pay_money = pay_money
+        self.pay_money = int(pay_money)
         self.buyer_id = buyer_id
         self.buyer_info = []
-        self.buyer = ""
-        self.tel = ""
+        self.buyer = buyer
+        self.tel = tel
         if self.easy_mode == -1:
             easy_mode_yn = input("是否开启简易模式？（y/n）")
             if(easy_mode_yn == "y"):

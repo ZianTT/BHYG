@@ -8,8 +8,22 @@
 # MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 # See the Mulan PubL v2 for more details.
 
+import os
 from api import BilibiliHyg
 
 if __name__ == "__main__":
-    bilibili_hyg = BilibiliHyg()
+    # 判断是否存在config.txt文件
+    if not os.path.exists("config.txt"):
+        bilibili_hyg = BilibiliHyg()
+    else:
+        with open("config.txt", "r", encoding="utf-8") as f:
+            config = f.read()
+        if config:
+            config = config.split("\n")
+            config = [i.split("=") for i in config]
+            # 将第一个等号前的内容作为key，第一个等号后的全部内容作为value
+            config = {i[0]: "=".join(i[1:]) for i in config}
+            bilibili_hyg = BilibiliHyg(**config)
+        else:
+            bilibili_hyg = BilibiliHyg()
     bilibili_hyg.run()
