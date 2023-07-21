@@ -1,12 +1,22 @@
+# Copyright (c) 2023 ZianTT
+# bilibili-hyg is licensed under Mulan PubL v2.
+# You can use this software according to the terms and conditions of the Mulan PubL v2.
+# You may obtain a copy of Mulan PubL v2 at:
+#          http://license.coscl.org.cn/MulanPubL-2.0
+# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+# EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+# MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+# See the Mulan PubL v2 for more details.
 import json
 import os
 import time
-print("[INFO] 开始检测运行环境")
+from loguru import logger
+logger.info("开始检测运行环境")
 try:
     import requests
 except ImportError:
-    print("[ERROR] 未安装requests库")
-    print("[INFO] 程序将在5秒内退出")
+    logger.error("未安装requests库")
+    logger.info("程序将在5秒内退出")
     time.sleep(5)
     exit()
 
@@ -31,8 +41,8 @@ class BilibiliHyg:
             elif(easy_mode_yn == "n"):
                 self.easy_mode = False
             else:
-                print("[ERROR] 请输入y或n")
-                print("[INFO] 程序将在5秒内退出")
+                logger.error("请输入y或n")
+                logger.info("程序将在5秒内退出")
                 time.sleep(5)
                 exit()
         if(self.watcher_mode == -1):
@@ -42,8 +52,8 @@ class BilibiliHyg:
             elif(watcher_mode_yn == "n"):
                 self.watcher_mode = False
             else:
-                print("[ERROR] 请输入y或n")
-                print("[INFO] 程序将在5秒内退出")
+                logger.error("请输入y或n")
+                logger.info("程序将在5秒内退出")
                 time.sleep(5)
                 exit()
         if(not self.watcher_mode and self.cookie == ""):
@@ -69,14 +79,14 @@ class BilibiliHyg:
             self.count = len(json.loads(self.buyer_info))
             self.get_contact_info()
             self.token = self.get_token()
-        print("[INFO] 开始下单")
+        logger.info("开始下单")
 
     def get_ticket_status(self):
         url = "https://show.bilibili.com/api/ticket/project/get?version=134&id="+self.project_id
         try:
             response = requests.get(url, headers=self.headers, timeout=1)
         except (requests.exceptions.Timeout, requests.exceptions.ReadTimeout):
-            print("[ERROR] 网络连接超时")
+            logger.error("网络连接超时")
             return -1, 0
         try:
             screens = response.json()["data"]["screen_list"]
@@ -87,7 +97,7 @@ class BilibiliHyg:
                     screen = screens[i]
                     break
             if screen == {}:
-                print("[ERROR] 未找到场次")
+                logger.error("未找到场次")
                 return -1, 0
             # 找到 字段id为sku_id的sku
             skus = screen["ticket_list"]
@@ -97,11 +107,11 @@ class BilibiliHyg:
                     sku = skus[i]
                     break
             if sku == {}:
-                print("[ERROR] 未找到票档")
+                logger.error("未找到票档")
                 return -1, 0
             return int(sku["sale_flag_number"]),int(sku["num"])
         except:
-            print("[ERROR] 可能被风控")
+            logger.error("可能被风控")
             return -1, 0
 
     def test_risk(self):
@@ -124,7 +134,7 @@ class BilibiliHyg:
             print("["+str(i)+"] "+tickets[i]["desc"]+" "+str(tickets[i]["price"]/100)+"元")
         sku_id = input("请输入票档序号：")
         ids = str(screens[int(screen_id)]["id"])+" "+str(tickets[int(sku_id)]["id"])+" "+str(tickets[int(sku_id)]["price"])
-        print("[INFO]您的screen_id 和 sku_id 和 pay_money 分别为："+ids)
+        logger.info("您的screen_id 和 sku_id 和 pay_money 分别为："+ids)
         return str(screens[int(screen_id)]["id"]),str(tickets[int(sku_id)]["id"]),str(tickets[int(sku_id)]["price"])
 
     def get_buyer_info(self):
@@ -137,9 +147,9 @@ class BilibiliHyg:
             if(buyer_infos[i]["is_default"] == 1):
                 self.buyer_info = [buyer_infos[i]]
         if(len(self.buyer_info) == 0):
-            print("[INFO] 未找到购票人，请前往实名添加购票人，或留空则代表不传入购票人信息，请确保该展支持非实名购票。")
+            logger.info("未找到购票人，请前往实名添加购票人，或留空则代表不传入购票人信息，请确保该展支持非实名购票。")
         else:
-            print("[INFO] 请选择购票人，留空则代表不传入购票人信息，请确保该展支持非实名购票。")
+            logger.info("请选择购票人，留空则代表不传入购票人信息，请确保该展支持非实名购票。")
         if self.buyer_id == "":
             self.buyer_id = input("请输入购票人序号：")
         if(self.buyer_id != "" and self.buyer_id != "-1"):
@@ -147,18 +157,18 @@ class BilibiliHyg:
             self.buyer_info = []
             for i in range(len(buyerids)):
                 self.buyer_info.append(buyer_infos[int(buyerids[i])])
-                print("[INFO] 已选择购票人"+buyer_infos[int(buyerids[i])]["name"])
+                logger.info("已选择购票人"+buyer_infos[int(buyerids[i])]["name"])
         else:
-            print("[INFO] 已选择不传入购票人信息")
+            logger.info("已选择不传入购票人信息")
             self.buyer_info = [0]
         return json.dumps(self.buyer_info)
 
     def get_contact_info(self):
-        print("[INFO] 若该展为非实名购票，请传入信息，留空则不传入")
+        logger.info("若该展为非实名购票，请传入信息，留空则不传入")
         if self.buyer == "":
-            buyer = input("请输入姓名：")
+            self.buyer = input("请输入姓名：")
         if self.tel == "":
-            tel = input("请输入手机号：")
+            self.tel = input("请输入手机号：")
         if(self.buyer == "" or self.buyer == "-1"):
             self.buyer = "-1"
         if(self.tel == "" or self.tel == "-1"):
@@ -183,19 +193,19 @@ class BilibiliHyg:
     def get_token(self):
         info = self.get_prepare()
         while(info == {}):
-            print("[INFO] 未开放购票")
+            logger.info("未开放购票")
             time.sleep(.5)
             info = self.get_prepare()
         if(info["shield"]["open"] == 0):
-            print("[SUCCESS] 成功准备订单"+"https://show.bilibili.com/platform/confirmOrder.html?token="+info["token"])
+            logger.success("成功准备订单"+"https://show.bilibili.com/platform/confirmOrder.html?token="+info["token"])
             return info["token"]
         else:
-            print("[INFO] 触发风控。")
-            print("[INFO] 类型：验证码 "+info["shield"]['verifyMethod'])
-            print("[INFO] 请在浏览器中打开以下链接，完成验证")
-            print("[INFO] "+info["shield"]['naUrl'])
+            logger.info("触发风控。")
+            logger.info("类型：验证码 "+info["shield"]['verifyMethod'])
+            logger.info("请在浏览器中打开以下链接，完成验证")
+            logger.info(info["shield"]['naUrl'])
             os.system("start "+info["shield"]['naUrl'])
-            print("[INFO] 请手动完成验证")
+            logger.info("请手动完成验证")
             pause = input("完成验证后，按回车继续")
             return self.get_token()
 
@@ -220,8 +230,7 @@ class BilibiliHyg:
             data["tel"] = self.tel
         response = requests.post(url, headers=self.headers, data=data)
         if(response.status_code == 412):
-            print("[ERROR] 可能被业务风控")
-            print("该种业务风控请及时暂停，否则可能会引起更大问题。")
+            logger.error("可能被业务风控\n该种业务风控请及时暂停，否则可能会引起更大问题。")
             self.risk = True
             return {}
         return response.json()
@@ -230,17 +239,17 @@ class BilibiliHyg:
         url = "https://show.bilibili.com/api/ticket/order/createstatus?project_id="+self.project_id+"&token="+pay_token+"&timestamp="+str(int(time.time()*1000))
         response = requests.get(url, headers=self.headers).json()
         if response["errno"] == 0:
-            print("[SUCCESS] 成功购票")
+            logger.success("成功购票")
             order_id = response["data"]["order_id"]
             pay_url = response["data"]["payParam"]["code_url"]
-            print("[INFO] 订单号："+order_id)
-            print("[INFO] 请在浏览器中打开以下链接，完成支付")
-            print("[INFO] "+pay_url)
+            logger.info("订单号："+order_id)
+            logger.info("请在浏览器中打开以下链接，完成支付")
+            logger.info(pay_url)
             os.system("start "+pay_url)
-            print("[INFO] 请手动完成支付")
+            logger.info("请手动完成支付")
             return True
         else:
-            print("[ERROR] "+response["msg"])
+            logger.error("购票失败")
             return False
 
     def run(self):
@@ -255,7 +264,7 @@ class BilibiliHyg:
                 status = -1
             status, num = self.get_ticket_status()
             if(status == 2 or num >= 1):
-                print("[INFO] 剩余票数："+str(num))
+                logger.info("剩余票数："+str(num))
                 if self.watcher_mode:
                     time.sleep(1)
                     continue
@@ -267,47 +276,47 @@ class BilibiliHyg:
                         if(self.easy_mode):
                             print("。",end="",flush=True)
                         else:
-                            print("[INFO] 无票")
+                            logger.info("无票")
                     elif(result["errno"] == 100001):
                         if(self.easy_mode):
                             print("，",end="",flush=True)
                         else:
-                            print("[INFO] 小电视速率限制")
+                            logger.info("小电视速率限制")
                     elif(result["errno"] == 0):
-                        print("[SUCCESS] 成功尝试下单！正在检测是否为假票")
+                        logger.success("成功尝试下单！正在检测是否为假票")
                         pay_token = result["data"]["token"]
                         if(self.fake_ticket(pay_token)):
                             pause = input("请确认是否已经支付，按回车继续")
-                            print("[INFO] 程序将在5秒内退出")
+                            logger.info("程序将在5秒内退出")
                             time.sleep(5)
                             exit()
                         else:
-                            print("[ERROR] 假票，继续抢票")
+                            logger.error("假票，继续抢票")
                     elif(result["errno"] == 100051):
                         self.token = self.get_token()
                     elif(result["errno"] == 100079):
-                        print("[SUCCESS] 已经抢到了啊喂！")
-                        print("[INFO] 程序将在5秒内退出")
+                        logger.success("已经抢到了啊喂！")
+                        logger.info("程序将在5秒内退出")
                         time.sleep(5)
                         exit()
                     else:
-                        print("[ERROR] "+str(result))
+                        logger.error("未知错误:"+str(result))
                     reset += 2
             elif(status == 1):
-                print("[INFO] 未开放购票")
+                logger.info("未开放购票")
             elif(status == 8):
                 if(self.easy_mode):
                     print("’",end="",flush=True)
                 else:
-                    print("[INFO] 暂时售罄，即将放票")
+                    logger.info("暂时售罄，即将放票")
             elif(status == 4):
                 if(self.easy_mode):
                     print("”",end="",flush=True)
                 else:
-                    print("[INFO] 已售罄")
+                    logger.info("已售罄")
             elif(status == -1):
                 continue
             else:
-                print("[ERROR] "+str(status))
+                logger.error("未知状态:"+str(status))
             time.sleep(.3)
             reset += 2
