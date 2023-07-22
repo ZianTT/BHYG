@@ -11,8 +11,14 @@
 import os
 import time
 import sentry_sdk
-from sentry_sdk.integrations.loguru import LoguruIntegration
+from sentry_sdk.integrations.loguru import LoguruIntegration, LoggingLevels
+from sentry_sdk.integrations.logging import ignore_logger
 from api import logger
+
+sentry_loguru = LoguruIntegration(
+    level=LoggingLevels.INFO.value,  # Capture info and above as breadcrumbs
+    event_level=LoggingLevels.CRITICAL.value
+)
 
 sentry_sdk.init(
   dsn="https://978fc0de4c8c46d597f52934a393ea20@o4504797893951488.ingest.sentry.io/4505567308087296",
@@ -22,7 +28,7 @@ sentry_sdk.init(
   # We recommend adjusting this value in production.
   traces_sample_rate=1.0,
   integrations=[
-        LoguruIntegration(),
+    sentry_loguru
   ],
 )
 
@@ -49,6 +55,10 @@ except KeyboardInterrupt:
 except Exception as e:
     track = sentry_sdk.capture_exception(e)
     logger.exception("程序出现错误，错误信息："+str(e))
-    logger.info("错误追踪ID(可提供给开发者)："+str(track))
+    logger.critical("错误追踪ID(可提供给开发者)："+str(track))
+    logger.info("按回车将继续...")
+    try:
+        pause = input()
+    except KeyboardInterrupt:
+        logger.info("程序已退出")
     logger.info("程序将在2s内退出")
-    exit(1)
