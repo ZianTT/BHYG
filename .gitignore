@@ -1,4 +1,5 @@
 __pycache__
 /build
 main.spec
+login.spec
 /dist
