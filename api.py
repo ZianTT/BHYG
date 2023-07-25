@@ -116,7 +116,7 @@ class BilibiliHyg:
 
     def test_risk(self):
         url = "https://show.bilibili.com/api/ticket/order/createV2"
-        result = requests.get(url, headers=self.headers).status_code
+        result = requests.post(url, headers=self.headers).status_code
         if(result == 412):
             return False
         else:
