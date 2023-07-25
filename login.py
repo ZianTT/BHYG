@@ -22,10 +22,8 @@ if generate['code'] == 0:
 else:
     print(generate)
     exit()
-qr = qrcode.QRCode()
-qr.add_data(url)
-qr.print_ascii(invert=True)
-print("请使用Bilibili手机客户端扫描二维码")
+qrcode.make(url).show()
+print("请使用Bilibili手机客户端扫描弹出的二维码")
 while True:
     req = session.get("https://passport.bilibili.com/x/passport-login/web/qrcode/poll?qrcode_key="+generate['data']['qrcode_key'])
     check = req.json()["data"]

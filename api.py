@@ -8,7 +8,8 @@
 # MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 # See the Mulan PubL v2 for more details.
 import json
-import os
+import webbrowser
+import qrcode
 import time
 from loguru import logger
 logger.info("开始检测运行环境")
@@ -133,7 +134,7 @@ class BilibiliHyg:
 
     def test_risk(self):
         url = "https://show.bilibili.com/api/ticket/order/createV2"
-        result = requests.get(url, headers=self.headers).status_code
+        result = requests.post(url, headers=self.headers).status_code
         if(result == 412):
             return False
         else:
@@ -221,7 +222,7 @@ class BilibiliHyg:
             logger.info("类型：验证码 "+info["shield"]['verifyMethod'])
             logger.info("请在浏览器中打开以下链接，完成验证")
             logger.info(info["shield"]['naUrl'])
-            os.system("start "+info["shield"]['naUrl'])
+            webbrowser.open(info["shield"]['naUrl'])
             logger.info("请手动完成验证")
             pause = input("完成验证后，按回车继续")
             return self.get_token()
@@ -234,7 +235,7 @@ class BilibiliHyg:
             "token": self.token,
             "deviceId": "",
             "project_id": self.project_id,
-            "pay_money": str(float(self.pay_money)*int(self.count)),
+            "pay_money": int(self.pay_money)*int(self.count),
             "count": self.count
         }
         if self.riskheader != "":
@@ -260,9 +261,8 @@ class BilibiliHyg:
             order_id = response["data"]["order_id"]
             pay_url = response["data"]["payParam"]["code_url"]
             logger.info("订单号："+order_id)
-            logger.info("请在浏览器中打开以下链接，完成支付")
-            logger.info(pay_url)
-            os.system("start "+pay_url)
+            logger.info("请扫描弹出的二维码，完成支付")
+            qrcode.make(pay_url).show()
             logger.info("请手动完成支付")
             return True
         else:
