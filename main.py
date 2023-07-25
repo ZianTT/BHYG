@@ -9,14 +9,12 @@
 # See the Mulan PubL v2 for more details.
 
 import os
-import time
 import sentry_sdk
 from sentry_sdk.integrations.loguru import LoguruIntegration, LoggingLevels
-from sentry_sdk.integrations.logging import ignore_logger
 from api import logger
 
 sentry_loguru = LoguruIntegration(
-    level=LoggingLevels.INFO.value,  # Capture info and above as breadcrumbs
+    level=LoggingLevels.INFO.value,
     event_level=LoggingLevels.CRITICAL.value
 )
 
