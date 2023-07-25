@@ -1,62 +1,137 @@
-# Copyright (c) 2023 ZianTT
-# bilibili-hyg is licensed under Mulan PubL v2.
-# You can use this software according to the terms and conditions of the Mulan PubL v2.
-# You may obtain a copy of Mulan PubL v2 at:
-#          http://license.coscl.org.cn/MulanPubL-2.0
-# THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
-# EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
-# MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
-# See the Mulan PubL v2 for more details.
+"""
+Copyright (c) 2023 bilibaiWater
+BiliHYG is licensed under Mulan PubL v2.
+You can use this software according to the terms and conditions of the Mulan PubL v2.
+You may obtain a copy of Mulan PubL v2 at:
+         http://license.coscl.org.cn/MulanPubL-2.0
+THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND,
+EITHER EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT,
+MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
+See the Mulan PubL v2 for more details.
+"""
 
 import os
-import sentry_sdk
-from sentry_sdk.integrations.loguru import LoguruIntegration, LoggingLevels
-from api import logger
+import time
+import threading
 
-sentry_loguru = LoguruIntegration(
-    level=LoggingLevels.INFO.value,
-    event_level=LoggingLevels.CRITICAL.value
-)
+from classes import BiliException, BiliTickets
+from utils import get_logger_
 
-sentry_sdk.init(
-  dsn="https://978fc0de4c8c46d597f52934a393ea20@o4504797893951488.ingest.sentry.io/4505567308087296",
+logger = get_logger_('main.py')
 
-  # Set traces_sample_rate to 1.0 to capture 100%
-  # of transactions for performance monitoring.
-  # We recommend adjusting this value in production.
-  traces_sample_rate=1.0,
-  integrations=[
-    sentry_loguru
-  ],
-)
+REST_BETWEEN_STARTING_THREADS = 1
 
-from api import BilibiliHyg
-try:
-    if __name__ == "__main__":
-        # 判断是否存在config.txt文件
-        if not os.path.exists("config.txt"):
-            bilibili_hyg = BilibiliHyg()
+
+def start_threads(obj: BiliTickets, max_thread: int = 1):
+    threads: list[threading.Thread] = []
+    max_thread = max_thread if 1 <= max_thread <= 3 else 1
+
+    for index in range(max_thread):
+        t = threading.Thread(
+            target=obj.run,
+            name=f'Thread{index}',
+            args=(f'Thread{index}', )
+        )
+        threads.append(t)
+        t.start()
+        logger.info(f'Thread{index} started')
+        time.sleep(REST_BETWEEN_STARTING_THREADS)
+        if not threads[0].is_alive():
+            exit()
+
+    while True:
+        if True in [t.is_alive for t in threads]:
+            pass  # wait for other threads.
         else:
-            with open("config.txt", "r", encoding="utf-8") as f:
-                config = f.read()
-            if config:
-                config = config.split("\n")
-                config = [i.split("=") for i in config]
-                config = {i[0]: "=".join(i[1:]) for i in config}
-                bilibili_hyg = BilibiliHyg(**config)
-            else:
-                bilibili_hyg = BilibiliHyg()
-        # catch Keyboard Interrupt
-        bilibili_hyg.run()
-except KeyboardInterrupt:
-    logger.info("程序已退出")
-except Exception as e:
-    track = sentry_sdk.capture_exception(e)
-    logger.exception("程序出现错误，错误信息："+str(e))
-    logger.critical("错误追踪ID(可提供给开发者)："+str(track))
-    logger.info("按回车将继续...")
+            break
+
+
+def quick_start(max_thread: int = 1):
+    logger.info('quick start! max_thread: {}'.format(max_thread))
+    obj = BiliTickets.load_object()
+
+    # info
+    if hasattr(obj, '_buyers_str'):
+        buyer = obj._buyers_str
+    else:
+        buyer = obj._contant_info
+    project = obj._project_name
+    ticket = obj._ticket_info_str
+    count = obj._tickets_count
+    pay_money = obj._pay_money / 100
+    info = '\n请检查票务信息\n' + \
+        f'[{project}]{ticket} * {count} pcs\n' + \
+        f'money: RMB {pay_money} * {count} pcs = RMB {pay_money * count}\n' + \
+        f'buyer_info: {buyer}\n'
+    print(info)
+
     try:
-        pause = input()
+        input('检查信息无误后请回车，否则[Ctrl+C]重新配置\t\t>>>\t')
     except KeyboardInterrupt:
-        logger.info("程序已退出")
-    logger.info("程序将在2s内退出")
+        os.remove('bili_tickets.pkl')
+        main()
+
+    start_threads(obj, max_thread=max_thread)
+    logger.info('threads started.')
+    info = info.replace('\n', '\\n')
+    logger.info(f'info: {info}')
+
+
+def main():
+    # load/get/init obj
+    if os.path.exists('bili_tickets.pkl'):
+        logger.info('file `bili_tickets.pkl` found.')
+        print('\nfile `bili_tickets.pkl` found.')
+        print('[WARNING]【绝·对·不·要】随意加载未知来源的pkl文件!!请确保这个pkl是你之前运行程序时留下的pkl!!')
+        input_ = input('载入?(y/n)\t\t>>>\t').lower()
+
+        if input_ == 'y':
+            logger.info('user chose to load pkl.')
+            obj = BiliTickets.load_object()
+
+        elif input_ == 'n':
+            logger.info('user chose NOT to load pkl.')
+            obj = BiliTickets()
+
+        else:
+            raise BiliException(f'unknown input: {input_}')
+
+    else:
+        logger.info('file `bili_tickets.pkl` NOT found. init.')
+        obj = BiliTickets()
+
+    # save obj
+    input_ = input('初始化/更新完成。是否覆写/创建pkl文件保存配置? (y/n)\t\t>>>\t').lower()
+    if input_ == 'y':
+        logger.info('user chose to save pkl.')
+        obj.save_object()
+
+    elif input_ == 'n':
+        logger.info('user chose NOT to save pkl.')
+
+    # threads
+    try:
+        input_ = input('\n\n初始化完成. 线程数? 留空使用1, [Ctrl+C]不启动抢票线程\t\t>>>\t')
+    except KeyboardInterrupt:
+        exit()
+
+    num = 1 if not input_ else int(input_)
+    start_threads(obj, max_thread=num)
+
+
+if __name__ == '__main__':
+    logger.debug('')
+    logger.debug('='*80)
+
+    # quick start?
+    if os.path.exists('bili_tickets.pkl'):
+        input_ = input('快速启动? 直接回车Yes, 否则No\t\t>>>\t').lower()
+        if not input_:
+            logger.info('user chose to quick_start.')
+            quick_start()
+            exit()
+    else:
+        main()
+
+# CJ 2023   id=74643    REAL_NAME
+#           id=75003    NOT_REAL_NAME

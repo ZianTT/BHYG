@@ -1,5 +1,8 @@
-__pycache__
+/__pycache__
+bili_tickets.pkl
+login.png
+*.log
+*.spec
 /build
-main.spec
-login.spec
 /dist
+tmp.*
