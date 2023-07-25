@@ -44,7 +44,7 @@ try:
             if config:
                 config = config.split("\n")
                 config = [i.split("=") for i in config]
-                config = {i[0]: "=".join(i[1:]) for i in config}
+                config = {i[0]: "=".join(i[1:]) for i in config if i[0]}
                 bilibili_hyg = BilibiliHyg(**config)
             else:
                 bilibili_hyg = BilibiliHyg()
