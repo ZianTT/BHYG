@@ -59,6 +59,13 @@ class BilibiliHyg:
                 exit()
         if(not self.watcher_mode and self.cookie == ""):
             self.cookie = input("请输入cookie：").encode("utf-8")
+        if(not self.watcher_mode):
+            auth = self.get_auth()
+            if(not auth):
+                logger.info("登录失败，请检查cookie是否正确")
+                logger.info("程序将在5秒内退出")
+                time.sleep(5)
+                exit()           
         self.headers = {
             "Host": "show.bilibili.com",
             "Connection": "keep-alive",
@@ -81,6 +88,16 @@ class BilibiliHyg:
             self.get_contact_info()
             self.token = self.get_token()
         logger.info("开始下单")
+    
+    def get_auth(self):
+        user = requests.get("https://api.bilibili.com/x/web-interface/nav", headers={"cookie": self.cookie})
+        user = user.json()
+        if(user["data"]["isLogin"]):
+            print("用户 "+user["data"]["uname"]+" 登录成功")
+            return True
+        else:
+            print("登录失败")
+            return False
 
     def get_ticket_status(self):
         url = "https://show.bilibili.com/api/ticket/project/get?version=134&id="+self.project_id
