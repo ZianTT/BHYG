@@ -33,19 +33,17 @@ sentry_sdk.init(
 from api import BilibiliHyg
 try:
     if __name__ == "__main__":
-        # 判断是否存在config.txt文件
-        if not os.path.exists("config.txt"):
-            bilibili_hyg = BilibiliHyg()
+        # 判断是否存在config.json
+        if os.path.exists("config.json"):
+            # 读取config.json，转为dict并存入config
+            with open("config.json", "r", encoding="utf-8") as f:
+                config = eval(f.read())
         else:
-            with open("config.txt", "r", encoding="utf-8") as f:
-                config = f.read()
-            if config:
-                config = config.split("\n")
-                config = [i.split("=") for i in config]
-                config = {i[0]: "=".join(i[1:]) for i in config}
-                bilibili_hyg = BilibiliHyg(**config)
-            else:
-                bilibili_hyg = BilibiliHyg()
+            # 不存在则创建config.json
+            with open("config.json", "w", encoding="utf-8") as f:
+                f.write("{}")
+            config = {}
+        bilibili_hyg = BilibiliHyg(config)
         # catch Keyboard Interrupt
         bilibili_hyg.run()
 except KeyboardInterrupt:
