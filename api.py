@@ -170,7 +170,7 @@ class BilibiliHyg:
             "token": self.token,
             "deviceId": "",
             "project_id": self.config["project_id"],
-            "pay_money": str(float(self.config["pay_money"])*int(self.count)),
+            "pay_money": int(self.config["pay_money"])*int(self.count),
             "count": self.count
         }
         # if self.riskheader != "":
