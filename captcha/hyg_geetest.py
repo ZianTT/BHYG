@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 import threading,execjs, requests, time, json
 from urllib import request
-from gap import *
-from trace import *
+from gap import restore_picture, get_gap
+import random
+from trace import get_track
 
 class VerifyFail(Exception):
     pass
@@ -73,7 +74,7 @@ def main(cookie, voucher):
 def verify(cookie, voucher):
     try:
         for i in range(1):
-            thr = threading.Thread(target=main(cookie, voucher))
+            thr = threading.Thread(target=main, args=(cookie, voucher))
             thr.start()
             time.sleep(2)
         return True
