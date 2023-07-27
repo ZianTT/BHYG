@@ -3,3 +3,5 @@ __pycache__
 main.spec
 login.spec
 /dist
+.sentryclirc
+release-dev.sh

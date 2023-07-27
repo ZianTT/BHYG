@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import threading,execjs, requests, time, json
 from urllib import request
-from gap import restore_picture, get_gap
-import random
-from trace import get_track
+from captcha.gap import *
+from captcha.trace import *
 
 class VerifyFail(Exception):
     pass
