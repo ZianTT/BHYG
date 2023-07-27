@@ -2,6 +2,10 @@ import time
 import requests
 import requests.utils
 import qrcode
+import os
+
+def exit():
+    os._exit(0)
 
 def login():
     headers = {
@@ -23,6 +27,7 @@ def login():
     else:
         print(generate)
         exit()
+        return
     qr = qrcode.QRCode()
     qr.add_data(url)
     qr.print_ascii(invert=True)
@@ -39,6 +44,9 @@ def login():
         elif check['code'] == 86090:
             print(check["message"])
         elif check['code'] == 86083:
+            print(check["message"])
+            exit()
+        elif check['code'] == 86038:
             print(check["message"])
             exit()
         else:

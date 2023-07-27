@@ -16,6 +16,9 @@ from pick import pick
 from login import login
 from captcha.hyg_geetest import verify
 
+def exit():
+    os._exit(0)
+
 class HygException(Exception):
     pass
 
