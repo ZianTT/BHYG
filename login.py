@@ -1,3 +1,11 @@
+'''
+Author: ZianTT 2508164094@qq.com
+Date: 2023-07-25 17:08:39
+LastEditors: ZianTT 2508164094@qq.com
+LastEditTime: 2023-12-18 00:04:21
+FilePath: \bilibili-hyg\login.py
+Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+'''
 import time
 import requests
 import requests.utils
@@ -9,10 +17,12 @@ def exit():
 
 def login():
     headers = {
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.42"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
         }
 
     session = requests.session()
+
+    session.get("https://www.bilibili.com/", headers=headers)
 
     def getCookies(cookie_jar, domain):
         cookie_dict = cookie_jar.get_dict(domain=domain)
@@ -33,7 +43,10 @@ def login():
     qr.print_ascii(invert=True)
     print("请使用Bilibili手机客户端扫描二维码")
     while True:
-        req = session.get("https://passport.bilibili.com/x/passport-login/web/qrcode/poll?qrcode_key="+generate['data']['qrcode_key'])
+        time.sleep(1)
+        url = "https://passport.bilibili.com/x/passport-login/web/qrcode/poll?source=main-fe-header&qrcode_key="+generate['data']['qrcode_key']
+        req = session.get(url, headers=headers)
+        # read as utf-8
         check = req.json()["data"]
         if check['code'] == 0:
             print("登录成功")
@@ -52,7 +65,6 @@ def login():
         else:
             print(check)
             exit()
-        time.sleep(1)
     lst = []
     for item in cookies.items():
         lst.append(f"{item[0]}={item[1]}")

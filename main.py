@@ -1,3 +1,11 @@
+'''
+Author: ZianTT 2508164094@qq.com
+Date: 2023-07-25 17:08:39
+LastEditors: ZianTT 2508164094@qq.com
+LastEditTime: 2023-12-18 00:44:49
+FilePath: \bilibili-hyg\main.py
+Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+'''
 # Copyright (c) 2023 ZianTT
 # bilibili-hyg is licensed under Mulan PubL v2.
 # You can use this software according to the terms and conditions of the Mulan PubL v2.
@@ -33,14 +41,23 @@ sentry_sdk.init(
 from api import BilibiliHyg
 try:
     if __name__ == "__main__":
-        # 判断是否存在config.json
-        if os.path.exists("config.json"):
-            # 读取config.json，转为dict并存入config
-            with open("config.json", "r", encoding="utf-8") as f:
-                config = eval(f.read())
+        # 判断是否存在config.py
+        if os.path.exists("config.py"):
+            is_use_config = input("已存在上一次的配置文件，是否沿用？(Y/n)")
+            if is_use_config == "n":
+                logger.info("重新配置")
+                config = {}
+            else:
+                if(is_use_config.lower() == "y"):
+                    logger.info("使用上次的配置文件")
+                else:
+                    logger.info("已默认使用上次的配置文件")
+                # 读取config.py，转为dict并存入config
+                with open("config.py", "r", encoding="utf-8") as f:
+                    config = eval(f.read())
         else:
-            # 不存在则创建config.json
-            with open("config.json", "w", encoding="utf-8") as f:
+            # 不存在则创建config.py
+            with open("config.py", "w", encoding="utf-8") as f:
                 f.write("{}")
             config = {}
         bilibili_hyg = BilibiliHyg(config)
