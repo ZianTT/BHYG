@@ -5,3 +5,5 @@ login.spec
 /dist
 .sentryclirc
 release-dev.sh
+config.py
+/captcha
