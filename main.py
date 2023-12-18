@@ -2,9 +2,9 @@
 Author: ZianTT 2508164094@qq.com
 Date: 2023-07-25 17:08:39
 LastEditors: ZianTT 2508164094@qq.com
-LastEditTime: 2023-12-18 00:44:49
+LastEditTime: 2023-12-18 20:25:41
 FilePath: \bilibili-hyg\main.py
-Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+Description: 入口文件
 '''
 # Copyright (c) 2023 ZianTT
 # bilibili-hyg is licensed under Mulan PubL v2.
@@ -43,10 +43,15 @@ try:
     if __name__ == "__main__":
         # 判断是否存在config.py
         if os.path.exists("config.py"):
-            is_use_config = input("已存在上一次的配置文件，是否沿用？(Y/n)")
+            is_use_config = input("已存在上一次的配置文件，是否沿用全部或只沿用登录信息？(Y/l/n)")
             if is_use_config == "n":
                 logger.info("重新配置")
                 config = {}
+            elif is_use_config == "l":
+                logger.info("只沿用登录信息")
+                with open("config.py", "r", encoding="utf-8") as f:
+                    config = {}
+                    config["cookie"] = eval(f.read())["cookie"]
             else:
                 if(is_use_config.lower() == "y"):
                     logger.info("使用上次的配置文件")
