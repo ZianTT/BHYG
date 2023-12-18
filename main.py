@@ -1,3 +1,11 @@
+'''
+Author: ZianTT 2508164094@qq.com
+Date: 2023-07-25 17:08:39
+LastEditors: ZianTT 2508164094@qq.com
+LastEditTime: 2023-12-18 20:25:41
+FilePath: \bilibili-hyg\main.py
+Description: 入口文件
+'''
 # Copyright (c) 2023 ZianTT
 # bilibili-hyg is licensed under Mulan PubL v2.
 # You can use this software according to the terms and conditions of the Mulan PubL v2.
@@ -33,19 +41,31 @@ sentry_sdk.init(
 from api import BilibiliHyg
 try:
     if __name__ == "__main__":
-        # 判断是否存在config.txt文件
-        if not os.path.exists("config.txt"):
-            bilibili_hyg = BilibiliHyg()
-        else:
-            with open("config.txt", "r", encoding="utf-8") as f:
-                config = f.read()
-            if config:
-                config = config.split("\n")
-                config = [i.split("=") for i in config]
-                config = {i[0]: "=".join(i[1:]) for i in config if i[0]}
-                bilibili_hyg = BilibiliHyg(**config)
+        # 判断是否存在config.py
+        if os.path.exists("config.py"):
+            is_use_config = input("已存在上一次的配置文件，是否沿用全部或只沿用登录信息？(Y/l/n)")
+            if is_use_config == "n":
+                logger.info("重新配置")
+                config = {}
+            elif is_use_config == "l":
+                logger.info("只沿用登录信息")
+                with open("config.py", "r", encoding="utf-8") as f:
+                    config = {}
+                    config["cookie"] = eval(f.read())["cookie"]
             else:
-                bilibili_hyg = BilibiliHyg()
+                if(is_use_config.lower() == "y"):
+                    logger.info("使用上次的配置文件")
+                else:
+                    logger.info("已默认使用上次的配置文件")
+                # 读取config.py，转为dict并存入config
+                with open("config.py", "r", encoding="utf-8") as f:
+                    config = eval(f.read())
+        else:
+            # 不存在则创建config.py
+            with open("config.py", "w", encoding="utf-8") as f:
+                f.write("{}")
+            config = {}
+        bilibili_hyg = BilibiliHyg(config)
         # catch Keyboard Interrupt
         bilibili_hyg.run()
 except KeyboardInterrupt:

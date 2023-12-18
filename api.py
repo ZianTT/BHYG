@@ -11,107 +11,108 @@ import json
 import webbrowser
 import qrcode
 import time
+from urllib.parse import quote, urlencode
 from loguru import logger
-logger.info("开始检测运行环境")
-try:
-    import requests
-except ImportError:
-    logger.error("未安装requests库")
-    logger.info("程序将在5秒内退出")
-    time.sleep(5)
-    exit()
+import qrcode
+import requests
+from pick import pick
+from login import login
+from captcha.hyg_geetest import verify
+
+def exit():
+    os._exit(0)
+
+class HygException(Exception):
+    pass
 
 class BilibiliHyg:
-    def __init__(self, easy_mode="-1", watcher_mode="-1", cookie="", riskheader="", project_id="", screen_id="", sku_id="", pay_money="-1", buyer_id="", buyer="", tel=""):
-        self.easy_mode = int(easy_mode)
-        self.watcher_mode = int(watcher_mode)
-        self.cookie = cookie
-        self.riskheader = riskheader
-        self.project_id = project_id
-        self.screen_id = screen_id
-        self.sku_id = sku_id
-        self.pay_money = int(pay_money)
-        self.buyer_id = buyer_id
-        self.buyer_info = []
-        self.buyer = buyer
-        self.tel = tel
-        if self.easy_mode == -1:
-            easy_mode_yn = input("是否开启简易模式？（y/n）")
-            if(easy_mode_yn == "y"):
-                self.easy_mode = True
-            elif(easy_mode_yn == "n"):
-                self.easy_mode = False
-            else:
-                logger.error("请输入y或n")
-                logger.info("程序将在5秒内退出")
-                time.sleep(5)
-                exit()
-        if(self.watcher_mode == -1):
-            watcher_mode_yn = input("是否开启仅检测模式？（y/n）")
-            if(watcher_mode_yn == "y"):
-                self.watcher_mode = True
-            elif(watcher_mode_yn == "n"):
-                self.watcher_mode = False
-            else:
-                logger.error("请输入y或n")
-                logger.info("程序将在5秒内退出")
-                time.sleep(5)
-                exit()
-        if(not self.watcher_mode and self.cookie == ""):
-            self.cookie = input("请输入cookie：").encode("utf-8")
-        if(not self.watcher_mode):
-            auth = self.get_auth()
-            if(not auth):
-                logger.info("登录失败，请检查cookie是否正确")
-                logger.info("程序将在5秒内退出")
-                time.sleep(5)
-                exit()           
+    def __init__(self, config):
+        self.config = config
         self.headers = {
             "Host": "show.bilibili.com",
             "Connection": "keep-alive",
-            "Cookie": self.cookie,
             "Accept": "*/*",
             "Origin": "https://show.bilibili.com",
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
         }
-        if self.riskheader != "":
-            self.headers["X-Risk-Header"] = self.riskheader
-        if self.project_id == "" or self.screen_id == "" or self.sku_id == "" or self.pay_money == -1:
-            if self.project_id == "":
-                self.project_id = input("请输入项目id：")
-            self.screen_id, self.sku_id, self.pay_money = self.get_ids()
-        self.count = 0
+        # 若无该数组执行
+        if "cookie" not in self.config:
+            self.config["cookie"] = login()
+        self.headers["Cookie"] = self.config["cookie"]
+        
+        if "project_id" not in self.config or "screen_id" not in self.config or "sku_id" not in self.config or "pay_money" not in self.config or "id_bind" not in self.config:
+            self.config["project_id"] = input("请输入项目id：")
+            url = "https://show.bilibili.com/api/ticket/project/getV2?version=134&id="+self.config["project_id"]
+            response = requests.get(url, headers=self.headers)
+            if(response.status_code == 412):
+                    logger.error("被412风控，请联系作者")
+            response = response.json()
+            self.config["id_bind"] = response["data"]["id_bind"]
+            screens = response["data"]["screen_list"]
+            screen_id = pick([screen["name"] for screen in screens], "请选择场次：")[1]
+            tickets = screens[int(screen_id)]["ticket_list"] # type: ignore
+            sku_id = pick([ticket["desc"]+" "+str(ticket["price"]/100)+"元" for ticket in tickets], "请选择票档：")[1]
+            
+            self.config["screen_id"] = str(screens[int(screen_id)]["id"])
+            self.config["sku_id"] = str(tickets[int(sku_id)]["id"])
+            self.config["pay_money"] = str(tickets[int(sku_id)]["price"])
+            logger.info("您的screen_id 和 sku_id 和 pay_money 分别为："+self.config["screen_id"]," ",self.config["sku_id"]," ",self.config["pay_money"])
+        if "watcher_mode" not in self.config:
+            self.config["watcher_mode"] = False
         self.token = ""
-        if not self.watcher_mode:
-            self.buyer_info = self.get_buyer_info()
-            self.count = len(json.loads(self.buyer_info))
-            self.get_contact_info()
-            self.token = self.get_token()
-        logger.info("开始下单")
-    
-    def get_auth(self):
-        user = requests.get("https://api.bilibili.com/x/web-interface/nav", headers={"cookie": self.cookie})
-        user = user.json()
-        if(user["data"]["isLogin"]):
-            print("用户 "+user["data"]["uname"]+" 登录成功")
-            return True
-        else:
-            print("登录失败")
-            return False
+        if self.config["id_bind"] != 0 and ("buyer_info" not in self.config):
+            url = "https://show.bilibili.com/api/ticket/buyer/list"
+            response = requests.get(url, headers=self.headers)
+            if(response.status_code == 412):
+                logger.error("被412风控，请联系作者")
+            buyer_infos = response.json()["data"]["list"]
+            self.config["buyer_info"] = []
+            if(len(buyer_infos) == 0):
+                logger.info("未找到购票人，请前往实名添加购票人")
+            else:
+                multiselect = True
+                logger.info("请选择购票人。")
+                if(self.config["id_bind"] == 1):
+                    logger.info("本项目只能购买一人票")
+                    multiselect = False
+                buyerids = pick([buyer_infos[i]["name"]+" "+buyer_infos[i]["personal_id"]+" "+buyer_infos[i]["tel"] for i in range(len(buyer_infos))],
+                                "请选择购票人：",
+                                multiselect=multiselect,
+                                min_selection_count=1)
+                self.config["buyer_info"] = []
+                for select in buyerids:
+                    self.config["buyer_info"].append(buyer_infos[select[1]]) # type: ignore
+                    logger.info("已选择购票人"+buyer_infos[select[1]]["name"]) # type: ignore
+                if "count" not in self.config:
+                    self.config["count"] = len(self.config["buyer_info"])
+                self.config["buyer_info"] = json.dumps(self.config["buyer_info"])
+        if self.config["id_bind"] == 0 and ("buyer" not in self.config or "tel" not in self.config):
+            logger.info("请添加联系人信息")
+            self.config["buyer"] = input("联系人姓名：")
+            self.config["tel"] = input("联系人手机号：")
+            if "count" not in self.config:
+                self.config["count"] = input("请输入票数：")
+        self.token = self.get_token()
+        with open("config.py", "w", encoding="utf-8") as f:
+            f.write(str(self.config))
+        logger.info("即将开始下单")
 
     def get_ticket_status(self):
-        url = "https://show.bilibili.com/api/ticket/project/get?version=134&id="+self.project_id
+        url = "https://show.bilibili.com/api/ticket/project/getV2?version=134&id="+self.config["project_id"]
         try:
             response = requests.get(url, headers=self.headers, timeout=1)
         except (requests.exceptions.Timeout, requests.exceptions.ReadTimeout):
             logger.error("网络连接超时")
             return -1, 0
         try:
+            if(response.status_code == 412):
+                logger.error("被412风控，请联系作者")
+                return -1, 0
             screens = response.json()["data"]["screen_list"]
             # 找到 字段id为screen_id的screen
             screen = {}
             for i in range(len(screens)):
-                if screens[i]["id"] == int(self.screen_id):
+                if screens[i]["id"] == int(self.config["screen_id"]):
                     screen = screens[i]
                     break
             if screen == {}:
@@ -121,7 +122,7 @@ class BilibiliHyg:
             skus = screen["ticket_list"]
             sku = {}
             for i in range(len(skus)):
-                if skus[i]["id"] == int(self.sku_id):
+                if skus[i]["id"] == int(self.config["sku_id"]):
                     sku = skus[i]
                     break
             if sku == {}:
@@ -139,71 +140,20 @@ class BilibiliHyg:
             return False
         else:
             return True
-
-    def get_ids(self):
-        url = "https://show.bilibili.com/api/ticket/project/get?version=134&id="+self.project_id
-        response = requests.get(url).json()
-        screens = response["data"]["screen_list"]
-        for i in range(len(screens)):
-            print("["+str(i)+"] "+screens[i]["name"])
-        screen_id = input("请输入场次序号：")
-        tickets = screens[int(screen_id)]["ticket_list"]
-        for i in range(len(tickets)):
-            print("["+str(i)+"] "+tickets[i]["desc"]+" "+str(tickets[i]["price"]/100)+"元")
-        sku_id = input("请输入票档序号：")
-        ids = str(screens[int(screen_id)]["id"])+" "+str(tickets[int(sku_id)]["id"])+" "+str(tickets[int(sku_id)]["price"])
-        logger.info("您的screen_id 和 sku_id 和 pay_money 分别为："+ids)
-        return str(screens[int(screen_id)]["id"]),str(tickets[int(sku_id)]["id"]),str(tickets[int(sku_id)]["price"])
-
-    def get_buyer_info(self):
-        url = "https://show.bilibili.com/api/ticket/buyer/list"
-        response = requests.get(url, headers=self.headers)
-        buyer_infos = response.json()["data"]["list"]
-        self.buyer_info = []
-        for i in range(len(buyer_infos)):
-            print("["+str(i)+"] "+buyer_infos[i]["name"]+" "+buyer_infos[i]["personal_id"]+" "+buyer_infos[i]["tel"])
-            if(buyer_infos[i]["is_default"] == 1):
-                self.buyer_info = [buyer_infos[i]]
-        if(len(self.buyer_info) == 0):
-            logger.info("未找到购票人，请前往实名添加购票人，或留空则代表不传入购票人信息，请确保该展支持非实名购票。")
-        else:
-            logger.info("请选择购票人，留空则代表不传入购票人信息，请确保该展支持非实名购票。")
-        if self.buyer_id == "":
-            self.buyer_id = input("请输入购票人序号：")
-        if(self.buyer_id != "" and self.buyer_id != "-1"):
-            buyerids = self.buyer_id.split(",")
-            self.buyer_info = []
-            for i in range(len(buyerids)):
-                self.buyer_info.append(buyer_infos[int(buyerids[i])])
-                logger.info("已选择购票人"+buyer_infos[int(buyerids[i])]["name"])
-        else:
-            logger.info("已选择不传入购票人信息")
-            self.buyer_info = [0]
-        return json.dumps(self.buyer_info)
-
-    def get_contact_info(self):
-        logger.info("若该展为非实名购票，请传入信息，留空则不传入")
-        if self.buyer == "":
-            self.buyer = input("请输入姓名：")
-        if self.tel == "":
-            self.tel = input("请输入手机号：")
-        if(self.buyer == "" or self.buyer == "-1"):
-            self.buyer = "-1"
-        if(self.tel == "" or self.tel == "-1"):
-            self.tel = "-1"
-        return
     
     def get_prepare(self):
-        url = "https://show.bilibili.com/api/ticket/order/prepare?project_id="+self.project_id
+        url = "https://show.bilibili.com/api/ticket/order/prepare?project_id="+self.config["project_id"]
         data = {
-            "project_id": self.project_id,
-            "screen_id": self.screen_id,
+            "project_id": self.config["project_id"],
+            "screen_id": self.config["screen_id"],
             "order_type": "1",
-            "count": self.count,
-            "sku_id": self.sku_id,
+            "count": self.config["count"],
+            "sku_id": self.config["sku_id"],
             "token": ""
         }
         response = requests.post(url, headers=self.headers, data=data)
+        if(response.status_code == 412):
+            logger.error("被412风控，请联系作者")
         if(response.json()["errno"] != 0):
             print("[ERROR] "+response.json()["msg"])
         return response.json()["data"]
@@ -220,32 +170,36 @@ class BilibiliHyg:
         else:
             logger.info("触发风控。")
             logger.info("类型：验证码 "+info["shield"]['verifyMethod'])
-            logger.info("请在浏览器中打开以下链接，完成验证")
-            logger.info(info["shield"]['naUrl'])
-            webbrowser.open(info["shield"]['naUrl'])
-            logger.info("请手动完成验证")
-            pause = input("完成验证后，按回车继续")
+            # logger.info("请在浏览器中打开以下链接，完成验证")
+            # logger.info(info["shield"]['naUrl'])
+            # os.system("start "+info["shield"]['naUrl'])
+            # logger.info("请手动完成验证")
+            # pause = input("完成验证后，按回车继续")
+            voucher = info["shield"]['voucher']
+            # 若返回不为true，则持续验证
+            while(not verify(self.config["cookie"],voucher)):
+                continue
             return self.get_token()
 
     def create_order(self):
         url = "https://show.bilibili.com/api/ticket/order/createV2"
         data = {
-            "screen_id": self.screen_id,
-            "sku_id": self.sku_id,
+            "project_id": self.config["project_id"],
+            "screen_id": self.config["screen_id"],
+            "sku_id": self.config["sku_id"],
             "token": self.token,
             "deviceId": "",
-            "project_id": self.project_id,
-            "pay_money": int(self.pay_money)*int(self.count),
-            "count": self.count
+            "project_id": self.config["project_id"],
+            "pay_money": int(self.config["pay_money"])*int(self.config["count"]),
+            "count": self.config["count"],
+            "timestamp": int(time.time()),
         }
-        if self.riskheader != "":
-            data["risk_header"] = self.riskheader
-        if self.buyer_info != "":
-            data["buyer_info"] = self.buyer_info
-        if self.buyer != "-1":
-            data["buyer"] = self.buyer
-        if self.tel != "-1":
-            data["tel"] = self.tel
+        if self.config["id_bind"] == 0:
+            data["buyer"] = self.config["buyer"]
+            data["tel"] = self.config["tel"]
+        else:
+            data["buyer_info"] = self.config["buyer_info"]
+
         response = requests.post(url, headers=self.headers, data=data)
         if(response.status_code == 412):
             logger.error("可能被业务风控\n该种业务风控请及时暂停，否则可能会引起更大问题。")
@@ -254,15 +208,26 @@ class BilibiliHyg:
         return response.json()
 
     def fake_ticket(self, pay_token):
-        url = "https://show.bilibili.com/api/ticket/order/createstatus?project_id="+self.project_id+"&token="+pay_token+"&timestamp="+str(int(time.time()*1000))
-        response = requests.get(url, headers=self.headers).json()
+        url = "https://show.bilibili.com/api/ticket/order/createstatus?project_id="+self.config["project_id"]+"&token="+pay_token+"&timestamp="+str(int(time.time()*1000))
+        response = requests.get(url, headers=self.headers)
+        if(response.status_code == 412):
+            logger.error("被412风控，请联系作者")
+        response = response.json()
         if response["errno"] == 0:
             logger.success("成功购票")
             order_id = response["data"]["order_id"]
             pay_url = response["data"]["payParam"]["code_url"]
+            response["data"]["payParam"].pop("code_url")
+            response["data"]["payParam"].pop("expire_time")
+            response["data"]["payParam"].pop("pay_type")
+            response["data"]["payParam"].pop("use_huabei")
             logger.info("订单号："+order_id)
-            logger.info("请扫描弹出的二维码，完成支付")
-            qrcode.make(pay_url).show()
+            logger.info("请在微信/支付宝/QQ中扫描以下二维码，完成支付")
+            logger.info("二维码内容："+pay_url)
+            qr = qrcode.QRCode()
+            qr.add_data(pay_url)
+            qr.print_ascii(invert=True)
+            logger.info("或打开 https://pay.bilibili.com/payplatform-h5/pccashier.html?params="+quote(json.dumps(response["data"]["payParam"],ensure_ascii=False))+" 完成支付")
             logger.info("请手动完成支付")
             return True
         else:
@@ -272,7 +237,7 @@ class BilibiliHyg:
     def run(self):
         reset = 0
         while(1):
-            if reset > 800 and not self.watcher_mode:
+            if reset > 800 and not self.config["watcher_mode"]:
                 self.token = self.get_token()
                 reset = 0
             if reset % 100 == 0:
@@ -282,7 +247,17 @@ class BilibiliHyg:
             status, num = self.get_ticket_status()
             if(status == 2 or num >= 1):
                 logger.info("剩余票数："+str(num))
-                if self.watcher_mode:
+                if(status == 1):
+                    logger.warning("未开放购票")
+                elif(status == 3):
+                    logger.warning("已停售")
+                    if not "ignore" in vars():
+                        ignore = input("当前状态可能无法抢票，请确认是否继续抢票，按回车继续")
+                elif(status == 5):
+                    logger.warning("不可售")
+                    if not "ignore" in vars():
+                        ignore = input("当前状态可能无法抢票，请确认是否继续抢票，按回车继续")
+                if self.config["watcher_mode"]:
                     time.sleep(1)
                     continue
                 for i in range(20):
@@ -290,15 +265,11 @@ class BilibiliHyg:
                     if(result == {}):
                         continue
                     if(result["errno"] == 100009):
-                        if(self.easy_mode):
-                            print("。",end="",flush=True)
-                        else:
-                            logger.info("无票")
+                        logger.info("无票")
                     elif(result["errno"] == 100001):
-                        if(self.easy_mode):
-                            print("，",end="",flush=True)
-                        else:
-                            logger.info("小电视速率限制")
+                        logger.info("小电视速率限制")
+                    elif(result["errno"] == 100016):
+                        logger.error("项目不可售")
                     elif(result["errno"] == 0):
                         logger.success("成功尝试下单！正在检测是否为假票")
                         pay_token = result["data"]["token"]
@@ -320,17 +291,21 @@ class BilibiliHyg:
                         logger.error("未知错误:"+str(result))
                     reset += 2
             elif(status == 1):
-                logger.info("未开放购票")
-            elif(status == 8):
-                if(self.easy_mode):
-                    print("’",end="",flush=True)
-                else:
-                    logger.info("暂时售罄，即将放票")
+                logger.warning("未开放购票")
+            elif(status == 3):
+                logger.warning("已停售")
             elif(status == 4):
-                if(self.easy_mode):
-                    print("”",end="",flush=True)
-                else:
-                    logger.info("已售罄")
+                logger.info("已售罄")
+            elif(status == 5):
+                logger.warning("不可售")
+            elif(status == 6):
+                logger.error("免费票，程序尚未适配")
+                logger.info("程序将在5秒内退出")
+                time.sleep(5)
+                exit()
+            elif(status == 8):
+                logger.info("暂时售罄，即将放票")
+            
             elif(status == -1):
                 continue
             else:
