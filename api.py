@@ -199,14 +199,15 @@ class BilibiliHyg:
             logger.info("触发风控。")
             logger.info("类型：验证码 "+info["shield"]['verifyMethod'])
             # logger.info("请在浏览器中打开以下链接，完成验证")
-            # logger.info(info["shield"]['naUrl'])
+            logger.info("验证链接 "+info["shield"]['naUrl'])
             # os.system("start "+info["shield"]['naUrl'])
-            # logger.info("请手动完成验证")
+            logger.info("正在尝试自动验证...")
             # pause = input("完成验证后，按回车继续")
             voucher = info["shield"]['voucher']
             # 若返回不为true，则持续验证
             while(not verify(self.config["cookie"],voucher)):
                 continue
+            logger.info("验证成功")
             return self.get_token()
 
     def create_order(self):
