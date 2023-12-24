@@ -3,7 +3,7 @@ __pycache__
 main.spec
 login.spec
 /dist
+captcha/img
 .sentryclirc
 release-dev.sh
 config.py
-/captcha
