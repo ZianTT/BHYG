@@ -331,7 +331,7 @@ class BilibiliHyg:
                             logger.error("假票，继续抢票")
                     elif(result["errno"] == 100051):
                         self.token = self.get_token()
-                    elif(result["errno"] == 100079):
+                    elif(result["errno"] == 100079 or result["errno"] == 100048):
                         logger.success("已经抢到了啊喂！")
                         logger.info("程序将在5秒内退出")
                         time.sleep(5)
