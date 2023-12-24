@@ -63,9 +63,9 @@ def main(cookie, voucher):
         "referer": "https://mall.bilibili.com/activities/verify/index.html",
         "user-agent": "Mozilla/5.0 (Linux; Android 10; Redmi K30 5G) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Mobile Safari/537.36"
     }
-    res = requests.post(url, data=data, headers=headers).json()["code"]
-    if res == 0:
-        print("验证成功")
+    res = requests.post(url, data=data, headers=headers).json()
+    if res["code"] == 0:
+        return
     else:
         print("验证失败")
         raise VerifyFail
