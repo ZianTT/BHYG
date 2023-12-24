@@ -8,7 +8,8 @@
 # MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 # See the Mulan PubL v2 for more details.
 import json
-import os
+import webbrowser
+import qrcode
 import time
 from urllib.parse import quote, urlencode
 from loguru import logger
@@ -163,7 +164,7 @@ class BilibiliHyg:
 
     def test_risk(self):
         url = "https://show.bilibili.com/api/ticket/order/createV2"
-        result = requests.get(url, headers=self.headers).status_code
+        result = requests.post(url, headers=self.headers).status_code
         if(result == 412):
             return False
         else:
@@ -330,7 +331,7 @@ class BilibiliHyg:
                             logger.error("假票，继续抢票")
                     elif(result["errno"] == 100051):
                         self.token = self.get_token()
-                    elif(result["errno"] == 100079):
+                    elif(result["errno"] == 100079 or result["errno"] == 100048):
                         logger.success("已经抢到了啊喂！")
                         logger.info("程序将在5秒内退出")
                         time.sleep(5)
