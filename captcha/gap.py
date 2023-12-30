@@ -61,21 +61,21 @@ class SlideCrack(object):
         return x
 def get_gap():
     # 滑块图片
-    # image1 = "img/tukuai.png"
-    image1 = r'./img/slide.png'
+    # image1 = "tukuai.png"
+    image1 = r'./slide.png'
     # 背景图片
-    # image2 = "img/beijing.png"
-    image2 = r'./img/bg.png'
+    # image2 = "beijing.png"
+    image2 = r'./bg.png'
     # 处理结果图片,用红线标注
-    #image3 = "img/show_image.png"
-    image3 = r'./img/show_image.png'
+    #image3 = "show_image.png"
+    image3 = r'./show_image.png'
     sc = SlideCrack(image1, image2, image3)
-    os.remove('./img/oldbg.png')
-    os.remove('./img/oldallbg.png')
-    os.remove('./img/newallbg.png')
+    os.remove('./oldbg.png')
+    os.remove('./oldallbg.png')
+    os.remove('./newallbg.png')
     return sc.discern()
 def restore_picture():
-    img_list = ["./img/oldbg.png", "./img/oldallbg.png"]
+    img_list = ["./oldbg.png", "./oldallbg.png"]
     for index, img in enumerate(img_list):
         image = Image.open(img)
         s = Image.new("RGBA", (260, 160))
@@ -87,6 +87,6 @@ def restore_picture():
             l_ = image.crop(box=(c, u, c + 10, u + 80))
             s.paste(l_, box=(inx % 26 * 10, 80 if inx > 25 else 0))
         if index == 0:
-            s.save("./img/bg.png")
+            s.save("./bg.png")
         else:
-            s.save("./img/newallbg.png")
+            s.save("./newallbg.png")
