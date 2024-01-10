@@ -17,6 +17,7 @@ import requests
 from pick import pick
 from login import login
 from captcha.hyg_geetest import verify
+import os
 
 def exit():
     os._exit(0)
@@ -103,7 +104,11 @@ class BilibiliHyg:
         if self.config["id_bind"] == 0 and ("buyer" not in self.config or "tel" not in self.config):
             logger.info("请添加联系人信息")
             self.config["buyer"] = input("联系人姓名：")
-            self.config["tel"] = input("联系人手机号：")
+            while True:
+                self.config["tel"] = input("联系人手机号：")
+                if len(self.config["tel"]) == 11:
+                    break
+                logger.error("手机号长度错误")
             if "count" not in self.config:
                 self.config["count"] = input("请输入票数：")
         self.token = self.get_token()

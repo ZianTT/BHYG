@@ -2,3 +2,7 @@ requests
 qrcode
 pick
 loguru
+sentry_sdk
+PyExecJs
+opencv-python
+pillow

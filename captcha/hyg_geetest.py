@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import threading,execjs, requests, time, json
+import threading, execjs, requests, time, json
 from urllib import request
 from captcha.gap import *
 from captcha.trace import *

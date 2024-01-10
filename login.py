@@ -1,11 +1,3 @@
-'''
-Author: ZianTT 2508164094@qq.com
-Date: 2023-07-25 17:08:39
-LastEditors: ZianTT 2508164094@qq.com
-LastEditTime: 2023-12-18 00:04:21
-FilePath: \bilibili-hyg\login.py
-Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
-'''
 import time
 import requests
 import requests.utils
@@ -17,7 +9,7 @@ def exit():
 
 def login():
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/1.5.2"
         }
 
     session = requests.session()
@@ -75,7 +67,9 @@ def login():
     print('=' * 20)
     print("开始测试Cookie状态")
     # https://api.bilibili.com/x/web-interface/nav
-    user = session.get("https://api.bilibili.com/x/web-interface/nav", headers={"cookie": cookie_str}, headers=headers)
+    # add cookie header to headers
+    headers.update({"cookie": cookie_str})
+    user = session.get("https://api.bilibili.com/x/web-interface/nav", headers=headers)
     if user.status_code == 412:
         print("被412风控，登录态未知。")
         return cookie_str

@@ -1,11 +1,3 @@
-'''
-Author: ZianTT 2508164094@qq.com
-Date: 2023-07-25 17:08:39
-LastEditors: ZianTT 2508164094@qq.com
-LastEditTime: 2023-12-18 20:25:41
-FilePath: \bilibili-hyg\main.py
-Description: 入口文件
-'''
 # Copyright (c) 2023 ZianTT
 # bilibili-hyg is licensed under Mulan PubL v2.
 # You can use this software according to the terms and conditions of the Mulan PubL v2.
