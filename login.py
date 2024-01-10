@@ -75,7 +75,10 @@ def login():
     print('=' * 20)
     print("开始测试Cookie状态")
     # https://api.bilibili.com/x/web-interface/nav
-    user = session.get("https://api.bilibili.com/x/web-interface/nav", headers={"cookie": cookie_str})
+    user = session.get("https://api.bilibili.com/x/web-interface/nav", headers={"cookie": cookie_str}, headers=headers)
+    if user.status_code == 412:
+        print("被412风控，登录态未知。")
+        return cookie_str
     user = user.json()
     if(user["data"]["isLogin"]):
         print("用户 "+user["data"]["uname"]+" 登录成功")

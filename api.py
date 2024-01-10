@@ -29,10 +29,6 @@ class BilibiliHyg:
     def __init__(self, config):
         self.config = config
         self.headers = {
-            "Host": "show.bilibili.com",
-            "Connection": "keep-alive",
-            "Accept": "*/*",
-            "Origin": "https://show.bilibili.com",
             "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
         }
         # 若无该数组执行

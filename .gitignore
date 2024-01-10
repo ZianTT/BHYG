@@ -7,3 +7,4 @@ captcha/img
 .sentryclirc
 release-dev.sh
 config.py
+get_info.py
