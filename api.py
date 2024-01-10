@@ -8,10 +8,9 @@
 # MERCHANTABILITY OR FIT FOR A PARTICULAR PURPOSE.
 # See the Mulan PubL v2 for more details.
 import json
-import webbrowser
 import qrcode
 import time
-from urllib.parse import quote, urlencode
+from urllib.parse import quote
 from loguru import logger
 import qrcode
 import requests
