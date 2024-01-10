@@ -1,4 +1,4 @@
-# B*HYG
+# BHYG
 
 一个能在某放票很少的某某购抢票的小程序
 
@@ -10,7 +10,7 @@
 
 本脚本抓取api使用，存在一定风控风险，包括但不限于暂时屏蔽请求、封禁账号，**脚本提供者不为您的行为负责**。
 
-常见问题可以参考[FAQ Wiki](https://github.com/ZianTT/bilibili-hyg/wiki/FAQ)
+常见问题可以参考[FAQ Wiki](https://github.com/ZianTT/BHYG/wiki/FAQ)
 
 ## 使用教程
 
