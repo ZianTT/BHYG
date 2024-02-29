@@ -43,6 +43,13 @@ class BilibiliHyg:
             if response.status_code == 412:
                     logger.error("被412风控，请联系作者")
             response = response.json()
+            if(response["errno"] == 3):
+                logger.error("未找到项目ID")
+                exit()
+            if(response["data"] == {}):
+                logger.error("服务器无返回")
+                exit()
+            
             self.config["id_bind"] = response["data"]["id_bind"]
             self.config["is_paper_ticket"] = response["data"]["has_paper_ticket"]
             screens = response["data"]["screen_list"]
@@ -74,7 +81,7 @@ class BilibiliHyg:
                         "addr_id" : addr["addr"],
                         "addr" : addr["prov"]+addr["city"]+addr["area"]+addr["addr"],
                     },ensure_ascii=False)
-            logger.debug("您的screen_id 和 sku_id 和 pay_money 分别为："+self.config["screen_id"]+" ",self.config["sku_id"]+" ",self.config["pay_money"])
+            logger.debug("您的screen_id 和 sku_id 和 pay_money 分别为："+self.config["screen_id"]+" "+self.config["sku_id"]+" "+self.config["pay_money"])
         self.token = ""
         if self.config["id_bind"] != 0 and ("buyer_info" not in self.config):
             url = "https://show.bilibili.com/api/ticket/buyer/list"
@@ -90,14 +97,21 @@ class BilibiliHyg:
                 if(self.config["id_bind"] == 1):
                     logger.info("本项目只能购买一人票")
                     multiselect = False
-                buyerids = pick([buyer_infos[i]["name"]+" "+buyer_infos[i]["personal_id"]+" "+buyer_infos[i]["tel"] for i in range(len(buyer_infos))],
+                
+                if multiselect:
+                    buyerids = pick([buyer_infos[i]["name"]+" "+buyer_infos[i]["personal_id"]+" "+buyer_infos[i]["tel"] for i in range(len(buyer_infos))],
                                 "请选择购票人：",
                                 multiselect=multiselect,
                                 min_selection_count=1)
-                self.config["buyer_info"] = []
-                for select in buyerids:
-                    self.config["buyer_info"].append(buyer_infos[select[1]]) # type: ignore
-                    logger.info("已选择购票人"+buyer_infos[select[1]]["name"]) # type: ignore
+                    self.config["buyer_info"] = []
+                    for select in buyerids:
+                        self.config["buyer_info"].append(buyer_infos[select[1]]) # type: ignore
+                        logger.info("已选择购票人"+buyer_infos[select[1]]["name"]) # type: ignore
+                else:
+                    buyerids, index = pick([buyer_infos[i]["name"]+" "+buyer_infos[i]["personal_id"]+" "+buyer_infos[i]["tel"] for i in range(len(buyer_infos))],
+                                "请选择购票人：")
+                    self.config["buyer_info"].append(buyer_infos[index])
+                    logger.info("已选择购票人"+buyer_infos[index]["name"])
                 if "count" not in self.config:
                     self.config["count"] = len(self.config["buyer_info"])
                 self.config["buyer_info"] = json.dumps(self.config["buyer_info"])
