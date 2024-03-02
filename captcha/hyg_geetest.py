@@ -2284,6 +2284,9 @@ function get_w(slide_length,encodetrace, challenge34,challenge32, passtime, imgl
 class VerifyFail(Exception):
     pass
 
+class VerifySuccess(Exception):
+    pass
+
 def main(cookie, voucher):
     csrf = cookie[cookie.index("bili_jct") + 9:cookie.index("bili_jct") + 41]    
     url = "https://show.bilibili.com/openplatform/verify/tool/geetest/prepare?oaccesskey="
@@ -2343,18 +2346,20 @@ def main(cookie, voucher):
         "user-agent": "Mozilla/5.0 (Linux; Android 10; Redmi K30 5G) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Mobile Safari/537.36"
     }
     res = requests.post(url, data=data, headers=headers).json()
-    if res["code"] == 0:
-        return
+    if res["message"] != 'fail':
+        raise VerifySuccess
     else:
         print("验证失败")
         raise VerifyFail
 
 def verify(cookie, voucher):
     try:
-        for i in range(1):
-            thr = threading.Thread(target=main, args=(cookie, voucher))
-            thr.start()
-            time.sleep(2)
+        thr = threading.Thread(target=main, args=(cookie, voucher))
+        thr.start()
+        time.sleep(10)
+        print("验证超时")
+        return False
+    except VerifySuccess:
         return True
     except VerifyFail:
         return False
