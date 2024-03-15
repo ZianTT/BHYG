@@ -33,6 +33,7 @@ def login():
     qr = qrcode.QRCode()
     qr.add_data(url)
     qr.print_ascii(invert=True)
+    qr.make_image().show()
     print("请使用Bilibili手机客户端扫描二维码")
     while True:
         time.sleep(1)
