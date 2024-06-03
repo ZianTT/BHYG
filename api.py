@@ -377,8 +377,8 @@ class BilibiliHyg:
                 return {}
             return response.json()
 
-        def fake_ticket(self, pay_token):
-            url = "https://show.bilibili.com/api/ticket/order/createstatus?project_id="+self.config["project_id"]+"&token="+pay_token+"&timestamp="+str(int(time.time()*1000))
+        def fake_ticket(self, pay_token, order_id):
+            url = "https://show.bilibili.com/api/ticket/order/createstatus?project_id="+self.config["project_id"]+"&token="+pay_token+"&timestamp="+str(int(time.time()*1000))+"&orderId="+str(order_id)
             response = self.session.get(url, headers=self.headers)
             if response.status_code == 412:
                 logger.error("被412风控，请联系作者")
@@ -449,7 +449,8 @@ class BilibiliHyg:
             elif(result["errno"] == 0):
                 logger.success("成功尝试下单！正在检测是否为假票")
                 pay_token = result["data"]["token"]
-                if(self.fake_ticket(pay_token)):
+                orderid = result["data"]["orderId"]
+                if(self.fake_ticket(pay_token,orderid)):
                     while self.order_status(self.order_id):
                         logger.info("订单未支付，正在等待")
                         time.sleep(3)
