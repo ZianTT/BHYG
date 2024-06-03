@@ -22,6 +22,13 @@ class BilibiliHyg:
             }
             
             self.headers["Cookie"] = self.config["cookie"]
+            
+            if "mode" not in self.config:
+                mode_str = input("是否直接抢票（不进行检测）y/N：")
+                if mode_str.lower() == "y":
+                    self.config["mode"] = True
+                else:
+                    self.config["mode"] = False
 
             if "co_delay" not in self.config:
                 co_delay = input("请输入创建订单时间间隔(该选项影响412风控概率，单开建议使用0)(秒)：")
@@ -33,7 +40,7 @@ class BilibiliHyg:
                 while(self.config["co_delay"] < 0):
                     logger.error("时间间隔过短")
                     self.config["co_delay"] = float(input("请输入创建订单时间间隔(该选项影响412风控概率，单开建议使用0)(秒)："))
-            if "status_delay" not in self.config:
+            if "status_delay" not in self.config and not self.config["mode"]:
                 try:
                     self.config["status_delay"] = float(input("请输入票务信息检测时间间隔(该选项影响412风控概率)(秒)："))
                 except:
@@ -435,6 +442,9 @@ class BilibiliHyg:
                 return False
             if(result["errno"] == 100009):
                 logger.warning("无票")
+                self.waited = False
+            elif(result["errno"] == 100017):
+                logger.warning("票种不可售")
                 self.waited = False
             elif(result["errno"] == 3):
                 logger.warning("慢一点（强制5秒）")
