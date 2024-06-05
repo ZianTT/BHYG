@@ -11,7 +11,9 @@ import time
 
 class BilibiliHyg:
         def __init__(self, config, sdk):
-            common_project_id = []
+            common_project_id = [
+                {"name":"上海·BilibiliWorld 2024","id":85939}
+            ]
             self.waited = False
             self.sdk = sdk
             self.config = config
@@ -54,7 +56,7 @@ class BilibiliHyg:
                 while True:
                     logger.info("常用项目id如下：")
                     for i in range(len(common_project_id)):
-                        logger.info(common_project_id[i]["name"]+common_project_id[i]["id"])
+                        logger.info(common_project_id[i]["name"]+" id: "+str(common_project_id[i]["id"]))
                     if len(common_project_id) == 0:
                         logger.info("暂无")
                     self.config["project_id"] = input("请输入项目id：")
@@ -70,6 +72,7 @@ class BilibiliHyg:
                         logger.error("服务器无返回")
                         continue
                     if(response["data"]["is_sale"] == 0):
+                        logger.info("项目名称："+response["data"]["name"])
                         logger.error("项目不可售")
                         continue
                     break
@@ -250,7 +253,7 @@ class BilibiliHyg:
                 "sku_id": self.config["sku_id"],
                 "token": "",
                 "newRisk": "true",
-                "requestSource": "pc-new",
+                "requestSource": "neul-next",
             }
             response = self.session.post(url, headers=self.headers, data=data)
             if response.status_code == 412:
@@ -364,7 +367,7 @@ class BilibiliHyg:
                 "timestamp": int(time.time()+5),
                 "order_type": "1",
                 "newRisk": "true",
-                "requestSource": "pc-new",
+                "requestSource": "neul-next",
                 "clickPosition": self.generate_clickPosition()
             }
             if self.config["id_bind"] == 0:
