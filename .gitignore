@@ -9,13 +9,7 @@ config.json
 get_info.py
 bilibili-hyg
 key
-main.c
-main.cp311-win_amd64.pyd
-gen_key.py
-setup.py
-sentry.c
-sentry.cp311-win_amd64.pyd
-sentry.py
+bhyg.py
 data
 srland/
 srland.py
