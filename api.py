@@ -8,9 +8,11 @@ import urllib.parse
 import json
 import random
 import time
+import kdl
 
 class BilibiliHyg:
         def __init__(self, config, sdk):
+
             common_project_id = [
                 {"name":"上海·BilibiliWorld 2024","id":85939}
             ]
@@ -51,7 +53,20 @@ class BilibiliHyg:
                 while(self.config["status_delay"] < 0):
                     logger.error("时间间隔过短")
                     self.config["status_delay"] = float(input("请输入票务信息检测时间间隔(该选项影响412风控概率)(秒)："))
-            
+            if "proxy" not in self.config or "proxy_auth" not in self.config:
+                choice = input("是否使用代理？y/N：")
+                if choice.lower() == "y":
+                    self.config["proxy_auth"] = input("请输入代理认证信息: ").split(" ")
+                    self.config["proxy"] = True
+                else:
+                    self.config["proxy"] = False
+            if self.config["proxy"] == True:
+                auth = kdl.Auth(self.config["proxy_auth"][0], self.config["proxy_auth"][1])
+                self.client = kdl.Client(auth)
+                self.session.proxies = {"http": self.config["proxy_auth"][2], "https": self.config["proxy_auth"][2]}
+                self.session.get("https://show.bilibili.com")
+                logger.info("尝试访问B站，当前IP为："+self.client.tps_current_ip(sign_type="hmacsha1"))
+
             if "project_id" not in self.config or "screen_id" not in self.config or "sku_id" not in self.config or "pay_money" not in self.config or "id_bind" not in self.config:
                 while True:
                     logger.info("常用项目id如下：")
@@ -63,7 +78,10 @@ class BilibiliHyg:
                     url = "https://show.bilibili.com/api/ticket/project/getV2?version=134&id="+self.config["project_id"]
                     response = self.session.get(url, headers=self.headers)
                     if response.status_code == 412:
-                            logger.error("被412风控，请联系作者")
+                        logger.error("被412风控，请联系作者")
+                        if self.config["proxy"]:
+                            logger.info("手动切换，当前IP为："+self.client.change_tps_ip(sign_type="hmacsha1"))
+                            self.session.close()
                     response = response.json()
                     if(response["errno"] == 3):
                         logger.error("未找到项目ID")
@@ -114,6 +132,9 @@ class BilibiliHyg:
                     resp_ticket = self.session.get(url, headers=self.headers)
                     if(resp_ticket.status_code == 412):
                         logger.error("被412风控，请联系作者")
+                        if self.config["proxy"]:
+                            logger.info("手动切换，当前IP为："+self.client.change_tps_ip(sign_type="hmacsha1"))
+                            self.session.close()
                     addr_list = resp_ticket.json()["data"]["addr_list"]
                     if len(addr_list) == 0:
                         logger.error("没有收货地址，请先添加收货地址")
@@ -142,6 +163,9 @@ class BilibiliHyg:
                 response = self.session.get(url, headers=self.headers)
                 if response.status_code == 412:
                     logger.error("被412风控，请联系作者")
+                    if self.config["proxy"]:
+                            logger.info("手动切换，当前IP为："+self.client.change_tps_ip(sign_type="hmacsha1"))
+                            self.session.close()
                 buyer_infos = response.json()["data"]["list"]
                 self.config["buyer_info"] = []
                 if len(buyer_infos) == 0:
@@ -207,15 +231,24 @@ class BilibiliHyg:
                 response = self.session.get(url, headers=self.headers, timeout=1)
             except (requests.exceptions.Timeout, requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError):
                 logger.error("网络连接超时")
+                if self.config["proxy"]:
+                    logger.info("手动切换，当前IP为："+self.client.change_tps_ip(sign_type="hmacsha1"))
+                    self.session.close()
+                    return self.get_ticket_status()
                 return -1, 0
             try:
                 if response.status_code == 412:
                     logger.error("可能被业务风控\n该种业务风控请及时暂停，否则可能会引起更大问题。")
-                    self.risk = True
-                    logger.error("暂停30s")
-                    logger.error("你也可以尝试更换网络环境，如重启流量（飞行模式开关）重新拨号（重启光猫）等")
-                    time.sleep(30)
-                    return -1, 0
+                    if self.config["proxy"]:
+                        logger.info("手动切换，当前IP为："+self.client.change_tps_ip(sign_type="hmacsha1"))
+                        self.session.close()
+                        return self.get_ticket_status()
+                    else:
+                        self.risk = True
+                        logger.error("暂停30s")
+                        logger.error("你也可以尝试更换网络环境，如重启流量（飞行模式开关）重新拨号（重启光猫）等")
+                        time.sleep(30)
+                        return -1, 0
                 screens = response.json()["data"]["screen_list"]
                 # 找到 字段id为screen_id的screen
                 screen = {}
@@ -258,6 +291,10 @@ class BilibiliHyg:
             response = self.session.post(url, headers=self.headers, data=data)
             if response.status_code == 412:
                 logger.error("被412风控，请联系作者")
+                if self.config["proxy"]:
+                    logger.info("手动切换，当前IP为："+self.client.change_tps_ip(sign_type="hmacsha1"))
+                    self.session.close()
+                    return self.get_prepare()
             if(response.json()["errno"] != 0 and response.json()["errno"] != -401):
                 logger.error(response.json()["msg"])
             return response.json()["data"]
@@ -296,7 +333,7 @@ class BilibiliHyg:
             info = self.get_prepare()
             if(info == {}):
                 logger.warning("未开放购票或被风控，请检查配置问题，休息1s")
-                time.sleep(1)
+                #time.sleep(1)
                 self.get_token()
             if(info["token"]):
                 logger.success("成功准备订单"+"https://show.bilibili.com/platform/confirmOrder.html?token="+info["token"])
@@ -378,13 +415,26 @@ class BilibiliHyg:
             if self.config["is_paper_ticket"]:
                 data["deliver_info"] = self.config["deliver_info"]
 
-            response = self.session.post(url, headers=self.headers, data=data)
+            try:
+                response = self.session.post(url, headers=self.headers, data=data)
+            except (requests.exceptions.Timeout, requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError):
+                logger.error("网络连接超时")
+                if self.config["proxy"]:
+                    logger.info("手动切换，当前IP为："+self.client.change_tps_ip(sign_type="hmacsha1"))
+                    self.session.close()
+                return self.create_order()
             if response.status_code == 412:
                 logger.error("可能被业务风控\n该种业务风控请及时暂停，否则可能会引起更大问题。")
-                self.risk = True
-                logger.error("暂停60s")
-                time.sleep(60)
-                return {}
+                logger.info(response.text)
+                if self.config["proxy"]:
+                        logger.info("手动切换，当前IP为："+self.client.change_tps_ip(sign_type="hmacsha1"))
+                        self.session.close()
+                        return self.create_order()
+                else:
+                    self.risk = True
+                    logger.error("暂停60s")
+                    time.sleep(60)
+                    return {}
             return response.json()
 
         def fake_ticket(self, pay_token, order_id):
@@ -392,6 +442,9 @@ class BilibiliHyg:
             response = self.session.get(url, headers=self.headers)
             if response.status_code == 412:
                 logger.error("被412风控，请联系作者")
+                if self.config["proxy"]:
+                    logger.info("手动切换，当前IP为："+self.client.change_tps_ip(sign_type="hmacsha1"))
+                    self.session.close()
             response = response.json()
             if response["errno"] == 0:
                 self.sdk.add_breadcrumb(
@@ -427,6 +480,9 @@ class BilibiliHyg:
             response = self.session.get(url, headers=self.headers)
             if response.status_code == 412:
                 logger.error("被412风控，请联系作者")
+                if self.config["proxy"]:
+                        logger.info("手动切换，当前IP为："+self.client.change_tps_ip(sign_type="hmacsha1"))
+                        self.session.close()
             response = response.json()
             if response["data"]["status"] == 1:
                 return True
@@ -457,6 +513,8 @@ class BilibiliHyg:
                     self.waited = True
             elif(result["errno"] == 100001):
                 logger.warning("小电视速率限制")
+            elif(result["errno"] == 100041):
+                logger.warning("不是，哥们，你token呢？")
             elif(result["errno"] == 100016):
                 logger.error("项目不可售")
             elif(result["errno"] == 0):
