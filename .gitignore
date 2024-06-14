@@ -18,3 +18,8 @@ starter.py
 gh_token
 main.py
 venv
+privkey.txt
+pubkey.txt
+main.py.bak
+utils.py
+utils.spec

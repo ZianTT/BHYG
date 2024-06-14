@@ -9,3 +9,4 @@ requests
 sentry-sdk
 uvicorn
 WMI
+kdl-py
