@@ -11,10 +11,8 @@ import requests
 from loguru import logger
 
 from api import BilibiliHyg
-from auth import *
 from globals import *
 from login import *
-from web import *
 
 common_project_id = [
     {"name": "上海·BilibiliWorld 2024", "id": 85939},
@@ -98,10 +96,6 @@ def main():
             os.mkdir("data")
 
         config = load_config()
-
-        logger.info(f"正在打开 http://127.0.0.1:{port} 以完成验证码")
-        logger.info(f"同时，你也可以通过手机打开 http://你的电脑内网地址:{port} 来完成验证码")
-        # os.system(f"start http://127.0.0.1:{port}")
 
         while True:
             if "cookie" not in config:
