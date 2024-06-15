@@ -221,7 +221,7 @@ Al8G7CqwoJOsW7Kddns=
         try:
             data = jwt.decode(combined_key, public_key, algorithms=['ES512'])
             logger.info(
-                f"欢迎用户{data['user']}! 距离授权过期还有{int((data['exp'] - time.time()) / 86400)}天。欢迎使用全新0.7.0版本"
+                f"欢迎用户{data['user']}! 距离授权过期还有{int((data['exp'] - time.time()) / 86400)}天。欢迎使用全新0.7.1版本"
             )
             bhyg_username = data["user"]
             sentry_sdk.set_user({"username": data["user"]})
@@ -244,7 +244,7 @@ Al8G7CqwoJOsW7Kddns=
 
 def interactive_registration(session):
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.0",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.1",
         "Referer": "https://www.bilibili.com/",
     }
     session.get("https://space.bilibili.com/1", headers=headers)

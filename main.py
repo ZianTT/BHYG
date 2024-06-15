@@ -109,7 +109,7 @@ def main():
                 with open("config.json", "w", encoding="utf-8") as f:
                     json.dump(config, f)
             headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.0",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.1",
                 "Cookie": config["cookie"],
             }
             user = requests.get(

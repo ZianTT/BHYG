@@ -37,7 +37,7 @@ else:
             f.write("")
 sentry_sdk.init(
     dsn="https://978fc0de4c8c46d597f52934a393ea20@o4504797893951488.ingest.us.sentry.io/4505567308087296",
-    release="v0.7.0",
+    release="v0.7.1",
     # Enable performance monitoring
     enable_tracing=True,
     integrations=[
