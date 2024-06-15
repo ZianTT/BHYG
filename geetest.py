@@ -18,7 +18,6 @@ class Validator():
     def validate(self, gt, challenge) -> str:
         try:
             validate = self.click.simple_match_retry(gt, challenge)
-            print(validate)
             return validate
         except Exception as e:
             return ""
