@@ -1,12 +1,8 @@
-fastapi
 loguru
 pillow
-pycryptodome
-pydantic
 pyinstaller
 qrcode
 requests
 sentry-sdk
-uvicorn
-WMI
-kdl-py
+kdl
+bili_ticket_gt_python==0.2.0

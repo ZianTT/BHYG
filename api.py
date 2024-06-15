@@ -160,7 +160,7 @@ class BilibiliHyg:
         info = self.get_prepare()
         if info == {}:
             logger.warning("未开放购票或被风控，请检查配置问题，休息1s")
-            # time.sleep(1)
+            time.sleep(1)
             self.get_token()
         if info["token"]:
             logger.success(
