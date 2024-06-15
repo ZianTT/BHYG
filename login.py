@@ -58,13 +58,13 @@ def qr_login(session, headers):
             logger.info(check["message"])
         elif check["code"] == 86083:
             logger.error(check["message"])
-            return qr_login(session)
+            return qr_login(session, headers)
         elif check["code"] == 86038:
             logger.error(check["message"])
-            return qr_login(session)
+            return qr_login(session, headers)
         else:
             logger.error(check)
-            return qr_login(session)
+            return qr_login(session, headers)
     return cookie(cookies)
 
 
@@ -114,7 +114,7 @@ def verify_code_login(session, headers):
     ).json()
     if send["code"] != 0:
         logger.error(f"{send['code']}: {send['message']}")
-        return verify_code_login(session)
+        return verify_code_login(session, headers)
     else:
         logger.success("验证码发送成功")
         send_token = send["data"]["captcha_key"]
@@ -188,7 +188,7 @@ def password_login(session, headers):
         logger.error(f"{login['code']}: {login['message']}")
         if login["code"] == -662:
             logger.error("PS: 请求超时，请快一点")
-        return password_login(session)
+        return password_login(session, headers)
     else:
         if login["data"]["status"] == 2 or login["data"]["status"] == 1:
             logger.warning("需要二次验证")
@@ -248,7 +248,7 @@ def password_login(session, headers):
             ).json()
             if send["code"] != 0:
                 logger.error(f"{send['code']}: {send['message']}")
-                return password_login(session)
+                return password_login(session, headers)
             else:
                 logger.success("验证码发送成功")
                 send_token = send["data"]["captcha_key"]

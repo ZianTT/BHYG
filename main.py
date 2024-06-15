@@ -426,16 +426,6 @@ def main():
 
 
 if __name__ == "__main__":
-
-    thread = threading.Thread(
-        target=run_web,
-        args=(
-            app,
-            port,
-        ),
-        daemon=True,
-    )
-    thread.start()
     main()
     from sentry_sdk import Hub
 
