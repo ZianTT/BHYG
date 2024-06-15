@@ -19,23 +19,7 @@ def cookie(cookies):
 
 def _verify(gt, challenge, token):
     from geetest import run
-    from threading import Thread
-    th = Thread(target = run, args =(gt, challenge, token, ),daemon=True)
-    th.start()
-    pending_captcha = {"gt": gt, "challenge": challenge, "token": token}
-    with open("data/toc", "w") as f:
-        f.write(json.dumps({"type": "geetest", "data": pending_captcha}))
-    with open("data/tos", "a+") as f:
-        while True:
-            f.seek(0, 0)
-            data = f.read()
-            if data != "":
-                captcha_data = json.loads(data)
-                if captcha_data["success"] == False:
-                    f.truncate(0)
-                    return False
-                f.truncate(0)
-                return captcha_data
+    return run(gt, challenge, token)
 
 
 def qr_login(session, headers):
@@ -101,7 +85,7 @@ def verify_code_login(session, headers):
     else:
         cid = tel[0]
         tel = tel[1]
-    logger.info("请完成验证")
+    logger.info("请稍后，正在执行自动验证...")
     cap_data = _verify(gt, challenge, token)
     while cap_data == False:
         logger.error("验证失败，请重新验证")
@@ -166,7 +150,7 @@ def password_login(session, headers):
     gt = captcha["data"]["geetest"]["gt"]
     challenge = captcha["data"]["geetest"]["challenge"]
     token = captcha["data"]["token"]
-    logger.info("请完成验证")
+    logger.info("请稍后，正在执行自动验证...")
     cap_data = _verify(gt, challenge, token)
     while cap_data == False:
         captcha = session.get(
@@ -235,7 +219,7 @@ def password_login(session, headers):
             gt = captcha["data"]["gee_gt"]
             challenge = captcha["data"]["gee_challenge"]
             token = captcha["data"]["recaptcha_token"]
-            logger.info("请完成验证")
+            logger.info("请稍后，正在执行自动验证...")
             cap_data = _verify(gt, challenge, token)
             while cap_data == False:
                 logger.error("验证失败，请重新验证")
