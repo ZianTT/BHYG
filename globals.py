@@ -36,7 +36,7 @@ else:
         with open("upload-error", "w") as f:
             f.write("")
 sentry_sdk.init(
-    dsn="https://978fc0de4c8c46d597f52934a393ea20@o4504797893951488.ingest.us.sentry.io/4505567308087296",
+    dsn="https://9c5cab8462254a2e1e6ea76ffb8a5e3d@sentry-inc.bitf1a5h.eu.org/3",
     release="v0.7.1",
     # Enable performance monitoring
     enable_tracing=True,
