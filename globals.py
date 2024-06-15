@@ -10,6 +10,22 @@ import sentry_sdk
 from loguru import logger
 from sentry_sdk.integrations.loguru import LoggingLevels, LoguruIntegration
 
+logger.remove(handler_id=0)
+handler_id = logger.add(
+    sys.stderr,
+    format="<green>{time:HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>",
+    level="INFO",  # NOTE: logger level
+)
+
+logger.info("可选的错误上传：您是否选择上传可能遇到的错误以帮助我们改善脚本？（Y/n）")
+is_upload_error = input()
+if is_upload_error.lower() == "n":
+    logger.info("已选择不上传错误")
+    sample_rate=0
+else:
+    logger.info("已选择上传错误")
+    logger.info("感谢您的理解与支持！")
+    sample_rate=1
 sentry_sdk.init(
     dsn="https://978fc0de4c8c46d597f52934a393ea20@o4504797893951488.ingest.us.sentry.io/4505567308087296",
     release="v0.7.0",
@@ -20,16 +36,12 @@ sentry_sdk.init(
             level=LoggingLevels.DEBUG.value, event_level=LoggingLevels.CRITICAL.value
         ),
     ],
+    sample_rate=sample_rate,
 )
 with sentry_sdk.configure_scope() as scope:
     scope.add_attachment(path="config.json")
 
-logger.remove(handler_id=0)
-handler_id = logger.add(
-    sys.stderr,
-    format="<green>{time:HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>",
-    level="INFO",  # NOTE: logger level
-)
+
 
 
 bhyg_username = "未知用户"
