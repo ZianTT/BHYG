@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - '*'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+      - name: Build Binary
+        run: pyinstaller -F main.py
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: BHYG-Windows
+          path: dist
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.x
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+      - name: Build Binary
+        run: pyinstaller -F main.py
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: BHYG-Linux
+          path: dist
