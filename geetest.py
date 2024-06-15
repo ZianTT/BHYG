@@ -41,7 +41,7 @@ def run(gt, challenge, token):
 if __name__ == "__main__":
     captcha = requests.get(
         "https://passport.bilibili.com/x/passport-login/captcha", headers={
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.0"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.1"
     }
     ).json()
     gt = captcha["data"]["geetest"]["gt"]
