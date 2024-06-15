@@ -17,15 +17,24 @@ handler_id = logger.add(
     level="INFO",  # NOTE: logger level
 )
 
-logger.info("可选的错误上传：您是否选择上传可能遇到的错误以帮助我们改善脚本？（Y/n）")
-is_upload_error = input()
-if is_upload_error.lower() == "n":
-    logger.info("已选择不上传错误")
+if os.path.exists("upload-error"):
+    sample_rate=1
+elif os.path.exists("do-not-upload-error"):
     sample_rate=0
 else:
-    logger.info("已选择上传错误")
-    logger.info("感谢您的理解与支持！")
-    sample_rate=1
+    logger.info("可选的错误上传：您是否选择上传可能遇到的错误以帮助我们改善脚本？（Y/n）")
+    is_upload_error = input()
+    if is_upload_error.lower() == "n":
+        logger.info("已选择不上传错误")
+        sample_rate=0
+        with open("do-not-upload-error", "w") as f:
+            f.write("")
+    else:
+        logger.info("已选择上传错误")
+        logger.info("感谢您的理解与支持！")
+        sample_rate=1
+        with open("upload-error", "w") as f:
+            f.write("")
 sentry_sdk.init(
     dsn="https://978fc0de4c8c46d597f52934a393ea20@o4504797893951488.ingest.us.sentry.io/4505567308087296",
     release="v0.7.0",
