@@ -133,43 +133,28 @@ class BilibiliHyg:
 
     def verify(self, gt, challenge, token):
         from geetest import run
-        from threading import Thread
-        th = Thread(target = run, args =(gt, challenge, token, ),daemon=True)
-        th.start()
-        self.pending_captcha = {"gt": gt, "challenge": challenge, "token": token}
-        with open("data/toc", "w") as f:
-            f.write(json.dumps({"type": "geetest", "data": self.pending_captcha}))
-        with open("data/tos", "a+") as f:
-            while True:
-                f.seek(0, 0)
-                data = f.read()
-                if data != "":
-                    self.captcha_data = json.loads(data)
-                    if self.captcha_data["success"] == False:
-                        f.truncate(0)
-                        return False
-                    self.captcha_data["csrf"] = self.headers["Cookie"][
+        self.captcha_data = run(gt, challenge, token)
+        self.captcha_data["csrf"] = self.headers["Cookie"][
                         self.headers["Cookie"].index("bili_jct")
                         + 9 : self.headers["Cookie"].index("bili_jct")
                         + 41
                     ]
-                    self.captcha_data["token"] = token
-                    success = self.session.post(
+        self.captcha_data["token"] = token
+        success = self.session.post(
                         "https://api.bilibili.com/x/gaia-vgate/v1/validate",
                         headers=self.headers,
                         data=self.captcha_data,
-                    ).json()["data"]["is_valid"]
-                    self.config["gaia_vtoken"] = token
-                    self.captcha_data = None
-                    if self.headers["Cookie"].find("x-bili-gaia-vtoken") != -1:
-                        self.headers["Cookie"] = self.headers["Cookie"].split(
-                            "; x-bili-gaia-vtoken"
-                        )[0]
-                    self.headers["Cookie"] += "; x-bili-gaia-vtoken=" + token
-                    f.truncate(0)
-                    with open("config.json", "w", encoding="utf-8") as f:
-                        json.dump(self.config, f)
-                    return success
+        ).json()["data"]["is_valid"]
+        self.config["gaia_vtoken"] = token
+        self.captcha_data = None
+        if self.headers["Cookie"].find("x-bili-gaia-vtoken") != -1:
+            self.headers["Cookie"] = self.headers["Cookie"].split(
+                "; x-bili-gaia-vtoken"
+            )[0]
+        self.headers["Cookie"] += "; x-bili-gaia-vtoken=" + token
+        with open("config.json", "w", encoding="utf-8") as f:
+            json.dump(self.config, f)
+        return success
 
     def get_token(self):
         info = self.get_prepare()
