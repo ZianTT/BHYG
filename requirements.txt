@@ -5,4 +5,5 @@ qrcode
 requests
 sentry-sdk
 kdl
+pydomecrypto
 bili_ticket_gt_python==0.2.3
