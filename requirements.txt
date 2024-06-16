@@ -5,4 +5,4 @@ qrcode
 requests
 sentry-sdk
 kdl
-bili_ticket_gt_python==0.2.2
+bili_ticket_gt_python==0.2.3
