@@ -2,7 +2,7 @@
 # Copyright (c) 2023 ZianTT
 import json
 import os
-import inquirer
+import threading
 import time
 
 import kdl
@@ -41,10 +41,22 @@ def run(hyg):
                     logger.warning("未开放购票")
                 elif status == 3:
                     logger.warning("已停售")
+                    if not "ignore" in vars():
+                        ignore = input(
+                            "当前状态可能无法抢票，请确认是否继续抢票，按回车继续"
+                        )
                 elif status == 5:
                     logger.warning("不可售")
+                    if not "ignore" in vars():
+                        ignore = input(
+                            "当前状态可能无法抢票，请确认是否继续抢票，按回车继续"
+                        )
                 elif status == 102:
                     logger.warning("已结束")
+                    if not "ignore" in vars():
+                        ignore = input(
+                            "当前状态可能无法抢票，请确认是否继续抢票，按回车继续"
+                        )
                 while True:
                     if last_reset + 60 > time.time():
                         hyg.session.close()
@@ -112,57 +124,51 @@ def main():
 
         session = requests.Session()
         if "mode" not in config:
-            mode_str = inquirer.prompt([
-                inquirer.List(
-                    'mode',
-                    message="是否直接抢票（不进行检测）",
-                    choices=['是', '否'],
-                    default='否',
-                ),
-            ])["mode"]
-            if mode_str == "是":
+            mode_str = input("是否直接抢票（不进行检测）y/N：")
+            if mode_str.lower() == "y":
                 config["mode"] = True
             else:
                 config["mode"] = False
 
         if "co_delay" not in config:
-            co_delay = inquirer.prompt([
-                inquirer.Text(
-                    'co_delay',
-                    message="请输入创建订单时间间隔(该选项影响412风控概率，单开建议使用0)(秒)",
-                    validate=lambda _, x: x.replace(".", "").isdigit() and float(x) >= 0,                   
-                    default='0',
-                ),
-            ])["co_delay"]
-            config["co_delay"] = float(co_delay)
+            co_delay = input(
+                "请输入创建订单时间间隔(该选项影响412风控概率，单开建议使用0)(秒)："
+            )
+            try:
+                config["co_delay"] = float(co_delay)
+            except:
+                logger.warning("未设置时间间隔，默认为0")
+                config["co_delay"] = 0
+            while config["co_delay"] < 0:
+                logger.error("时间间隔过短")
+                config["co_delay"] = float(
+                    input(
+                        "请输入创建订单时间间隔(该选项影响412风控概率，单开建议使用0)(秒)："
+                    )
+                )
         if "status_delay" not in config and not config["mode"]:
-            status_delay = inquirer.prompt([
-                inquirer.Text(
-                    'status_delay',
-                    message="请输入票务信息检测时间间隔(该选项影响412风控概率)(秒)",
-                    validate=lambda _, x: x.replace(".", "").isdigit() and float(x) >= 0,
-                    default='0.2',
-                ),
-            ])["status_delay"]
-            config["status_delay"] = float(status_delay)
+            try:
+                config["status_delay"] = float(
+                    input("请输入票务信息检测时间间隔(该选项影响412风控概率)(秒)：")
+                )
+            except:
+                logger.warning("未设置时间间隔，默认为0.2")
+                config["status_delay"] = 0.2
+            while config["status_delay"] < 0:
+                logger.error("时间间隔过短")
+                config["status_delay"] = float(
+                    input("请输入票务信息检测时间间隔(该选项影响412风控概率)(秒)：")
+                )
         if "proxy" not in config:
-            choice = inquirer.prompt([
-                inquirer.List(
-                    'proxy',
-                    message="是否使用代理",
-                    choices=['是', '否'],
-                    default='否',
-                ),
-            ])["proxy"]
-            if choice == "是":
-                config["proxy_auth"] = inquirer.prompt([
-                    inquirer.Text(
-                        'proxy_auth',
-                        message="请输入代理认证信息: ",
-                        validate=lambda _, x: len(x.split(" ")) == 3,
-                    ),
-                ])["proxy_auth"].split(" ")
-                config["proxy"] = True
+            choice = input("是否使用代理？y/N：")
+            if choice.lower() == "y":
+                while True:
+                    config["proxy_auth"] = input("请输入代理认证信息: ").split(" ")
+                    if len(config["proxy_auth"]) != 3:
+                        logger.error("代理认证信息错误")
+                        continue
+                    config["proxy"] = True
+                    break
             else:
                 config["proxy"] = False
         kdl_client = None
@@ -179,15 +185,8 @@ def main():
                 + kdl_client.tps_current_ip(sign_type="hmacsha1")
             )
         if "again" not in config:
-            choice = inquirer.prompt([
-                inquirer.List(
-                    'again',
-                    message="是否允许重复下单？",
-                    choices=['是', '否'],
-                    default='是',
-                ),
-            ])["again"]
-            if choice == "否":
+            choice = input("是否允许重复下单？Y/n：")
+            if choice.lower() == "n":
                 config["again"] = False
             else:
                 config["again"] = True
@@ -208,13 +207,7 @@ def main():
                     )
                 if len(common_project_id) == 0:
                     logger.info("暂无")
-                config["project_id"] = inquirer.prompt([
-                    inquirer.Text(
-                        'project_id',
-                        message="请输入项目id",
-                        validate=lambda _, x: x.isdigit(),
-                    ),
-                ])["project_id"]
+                config["project_id"] = input("请输入项目id：")
                 url = (
                     "https://show.bilibili.com/api/ticket/project/getV2?version=134&id="
                     + config["project_id"]
@@ -244,21 +237,34 @@ def main():
             config["id_bind"] = response["data"]["id_bind"]
             config["is_paper_ticket"] = response["data"]["has_paper_ticket"]
             screens = response["data"]["screen_list"]
-            screen_id = inquirer.prompt([
-                inquirer.List(
-                    'screen_id',
-                    message="请选择场次",
-                    choices=[f"{i}. {screens[i]['name']}" for i in range(len(screens))],
-                ),
-            ])["screen_id"].split(".")[0]
-            tickets = screens[int(screen_id)]["ticket_list"]
-            sku_id = inquirer.prompt([
-                inquirer.List(
-                    'sku_id',
-                    message="请选择票档",
-                    choices=[f"{i}. {tickets[i]['desc']} {tickets[i]['price'] / 100}元" for i in range(len(tickets))],
-                ),
-            ])["sku_id"].split(".")[0]
+            for i in range(len(screens)):
+                logger.info(str(i) + ". " + screens[i]["name"])
+            while True:
+                try:
+                    screen_id = int(input("请输入场次序号："))
+                    if screen_id >= len(screens):
+                        raise ValueError
+                    break
+                except ValueError:
+                    logger.error("序号错误")
+            tickets = screens[int(screen_id)]["ticket_list"]  # type: ignore
+            for i in range(len(tickets)):
+                logger.info(
+                    str(i)
+                    + ". "
+                    + tickets[i]["desc"]
+                    + " "
+                    + str(tickets[i]["price"] / 100)
+                    + "元"
+                )
+            while True:
+                try:
+                    sku_id = int(input("请输入票档序号："))
+                    if sku_id >= len(tickets):
+                        raise ValueError
+                    break
+                except ValueError:
+                    logger.error("序号错误")
             config["screen_id"] = str(screens[int(screen_id)]["id"])
             config["sku_id"] = str(tickets[int(sku_id)]["id"])
             config["pay_money"] = str(tickets[int(sku_id)]["price"])
@@ -282,13 +288,18 @@ def main():
                 if len(addr_list) == 0:
                     logger.error("没有收货地址，请先添加收货地址")
                 else:
-                    addr_index = inquirer.prompt([
-                        inquirer.List(
-                            'addr_index',
-                            message="请选择收货地址",
-                            choices=[f"{i}. {addr_list[i]['prov']+addr_list[i]['city']+addr_list[i]['area']+addr_list[i]['addr']} {addr_list[i]['name']} {addr_list[i]['phone']}" for i in range(len(addr_list))],
-                        ),
-                    ])["addr_index"].split(".")[0]
+                    for i in range(len(addr_list)):
+                        logger.info(
+                            f"{str(i)}. {addr_list[i]['prov']+addr_list[i]['city']+addr_list[i]['area']+addr_list[i]['addr']} {addr_list[i]['name']} {addr_list[i]['phone']}"
+                        )
+                    while True:
+                        try:
+                            addr_index = int(input("请选择收货地址序号："))
+                            if addr_index >= len(addr_list):
+                                raise ValueError
+                            break
+                        except ValueError:
+                            logger.error("序号错误")
                     addr = addr_list[addr_index]
                     config["deliver_info"] = json.dumps(
                         {
@@ -327,37 +338,28 @@ def main():
                 while True:
                     try:
                         if multiselect:
-                            buyerids = inquirer.prompt([
-                                inquirer.Checkbox(
-                                    'buyerids',
-                                    message="请选择购票人",
-                                    choices=[f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for i in range(len(buyer_infos))],
-                                ),
-                            ])["buyerids"]
-                            buyerids = [int(i.split(".")[0]) for i in buyerids]
+                            for i in range(len(buyer_infos)):
+                                logger.info(
+                                    f"{str(i)}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}"
+                                )
+                            buyerids = input(
+                                "请选择购票人序号(多人用空格隔开)："
+                            ).split(" ")
                             config["buyer_info"] = []
                             for select in buyerids:
                                 config["buyer_info"].append(
                                     buyer_infos[int(select)]
-                                )
+                                )  # type: ignore
+                                # type: ignore
                                 logger.info(
                                     "已选择购票人" + buyer_infos[int(select)]["name"]
                                 )
                         else:
-                            index = inquirer.prompt([
-                                inquirer.Select(
-                                    'index',
-                                    message="请选择购票人",
-                                    choices=[f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for i in range(len(buyer_infos))],
-                                ),
-                            ])["index"].split(".")[0]
-                            index = inquirer.prompt([
-                                inquirer.Text(
-                                    'index',
-                                    message="请选择购票人序号",
-                                    validate=lambda _, x: x.isdigit(),
-                                ),
-                            ])["index"]
+                            for i in range(len(buyer_infos)):
+                                logger.info(
+                                    f"{str(i)}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}"
+                                )
+                            index = int(input("请选择购票人序号："))
                             config["buyer_info"].append(buyer_infos[index])
                             logger.info("已选择购票人" + buyer_infos[index]["name"])
                         break
@@ -370,27 +372,14 @@ def main():
             "buyer" not in config or "tel" not in config
         ):
             logger.info("请添加联系人信息")
-            config["buyer"] = inquirer.prompt([
-                inquirer.Text(
-                    'buyer',
-                    message="联系人姓名",
-                ),
-            ])["buyer"]
-            config["tel"] = inquirer.prompt([
-                inquirer.Text(
-                    'tel',
-                    message="联系人手机号",
-                    validate=lambda _, x: len(x) == 11,
-                ),
-            ])["tel"]
+            config["buyer"] = input("联系人姓名：")
+            while True:
+                config["tel"] = input("联系人手机号：")
+                if len(config["tel"]) == 11:
+                    break
+                logger.error("手机号长度错误")
             if "count" not in config:
-                config["count"] = inquirer.prompt([
-                    inquirer.Text(
-                        'count',
-                        message="请输入票数",
-                        validate=lambda _, x: x.isdigit(),
-                    ),
-                ])["count"]
+                config["count"] = input("请输入票数：")
         if config["is_paper_ticket"]:
             if config["express_fee"] == 0:
                 config["all_price"] = int(config["pay_money"]) * int(
