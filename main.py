@@ -12,7 +12,6 @@ from loguru import logger
 
 from api import BilibiliHyg
 from globals import *
-from login import *
 
 common_project_id = [
     {"name": "上海·BilibiliWorld 2024", "id": 85939},
@@ -96,31 +95,6 @@ def main():
             os.mkdir("data")
 
         config = load_config()
-
-        while True:
-            if "cookie" not in config:
-                config["cookie"] = interactive_login()
-                with open("config.json", "w", encoding="utf-8") as f:
-                    json.dump(config, f)
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.1",
-                "Cookie": config["cookie"],
-            }
-            user = requests.get(
-                "https://api.bilibili.com/x/web-interface/nav", headers=headers
-            )
-            user = user.json()
-            if user["data"]["isLogin"]:
-                logger.success("用户 " + user["data"]["uname"] + " 登录成功")
-                sentry_sdk.set_user(
-                    {
-                        "username": user["data"]["mid"]
-                    }
-                )
-                break
-            else:
-                logger.error("登录失败")
-                config.pop("cookie")
 
         session = requests.Session()
         if "mode" not in config:
