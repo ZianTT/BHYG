@@ -10,8 +10,6 @@ import sentry_sdk
 from loguru import logger
 from sentry_sdk.integrations.loguru import LoggingLevels, LoguruIntegration
 
-import inquirer
-
 logger.remove(handler_id=0)
 handler_id = logger.add(
     sys.stderr,
@@ -24,13 +22,9 @@ if os.path.exists("upload-error"):
 elif os.path.exists("do-not-upload-error"):
     sample_rate=0
 else:
-    is_upload_error = inquirer.prompt([
-        inquirer.Confirm(
-            'upload',
-            message="可选的错误上传：您是否选择上传可能遇到的错误以帮助我们改善脚本？",
-        ),
-    ])
-    if not is_upload_error:
+    logger.info("可选的错误上传：您是否选择上传可能遇到的错误以帮助我们改善脚本？（Y/n）")
+    is_upload_error = input()
+    if is_upload_error.lower() == "n":
         logger.info("已选择不上传错误")
         sample_rate=0
         with open("do-not-upload-error", "w") as f:
@@ -69,18 +63,13 @@ class HygException(Exception):
 def load_config(): 
     # 判断是否存在config.json
     if os.path.exists("config.json"):
-        is_use_config = inquirer.prompt([
-            inquirer.List(
-                'use_config',
-                message="已存在上一次的配置文件，是否沿用全部或只沿用登录信息（包括风控信息）？",
-                choices=['全部', '只沿用登录信息', '不沿用'],
-                default='全部',
-            ),
-        ])
-        if is_use_config["use_config"] == "不沿用":
+        is_use_config = input(
+            "已存在上一次的配置文件，是否沿用全部或只沿用登录信息（包括风控信息）？(Y/l/n)"
+        )
+        if is_use_config == "n":
             logger.info("重新配置")
             config = {}
-        elif is_use_config["use_config"] == "只沿用登录信息":
+        elif is_use_config == "l":
             logger.info("只沿用登录信息")
             with open("config.json", "r", encoding="utf-8") as f:
                 config = {}
@@ -94,7 +83,7 @@ def load_config():
                     logger.error("读取cookie失败，重新配置")
                     config = {}
         else:
-            if is_use_config["use_config"].lower() == "全部":
+            if is_use_config.lower() == "y":
                 logger.info("使用上次的配置文件")
             else:
                 logger.info("已默认使用上次的配置文件")
