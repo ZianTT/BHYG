@@ -283,6 +283,67 @@ def password_login(session, headers):
         cookies = requests.utils.dict_from_cookiejar(session.cookies)
         return cookie(cookies)
 
+def sns_login(session, headers):
+    logger.info("请选择SNS登录方式\n1. 微信\n2. QQ\n3. 微博")
+    method = input("请输入数字: ")
+    if method == "1":
+        sns = "wechat"
+    elif method == "2":
+        sns = "qq"
+    elif method == "3":
+        sns = "weibo"
+    else:
+        logger.error("暂不支持此方式")
+        return sns_login(session, headers)
+    # https://passport.bilibili.com/x/passport-login/web/sns/state/generate
+    state = session.get(
+        "https://passport.bilibili.com/x/passport-login/web/sns/state/generate",
+        headers=headers,
+    ).json()["data"]["csrf_state"]
+    # https://passport.bilibili.com/x/passport-login/web/sns/authorize/url
+    data = {
+        "sns_platform": sns,
+        "csrf_state": state,
+        "gourl": "http://127.0.0.1/",
+        "source": "main-fe-header",
+    }
+    url = session.post(
+        "https://passport.bilibili.com/x/passport-login/web/sns/authorize/url",
+        headers=headers,
+        data=data,
+    ).json()["data"]["url"]
+    logger.info(url)
+    logger.info("请在浏览器中打开上面的链接并登录, 然后复制重定向的链接（即提示'校验失败，请重试~'的网址）")
+    # https://passport.bilibili.com/x/passport-login/web/sns/login
+    redirect = input("请输入重定向链接: ")
+    # get params from redirect
+    redirect = redirect.split("?")[1]
+    params = {}
+    for item in redirect.split("&"):
+        key, value = item.split("=")
+        params[key] = value
+    data = {
+        "csrf_state": state,
+        "gourl": params["go_url"],
+        "source": "main-fe-header",
+        "sns_platform": params["sns_platform"],
+        "code": params["code"],
+    }
+    login = session.post(
+        "https://passport.bilibili.com/x/passport-login/web/sns/login",
+        headers=headers,
+        data=data,
+    ).json()
+    if login["code"] != 0:
+            logger.error(f"{login['code']}: {login['message']}")
+    else:
+        if not login["data"]["has_bind"]:
+            logger.error("未绑定SNS账号")
+            return sns_login(session, headers)
+        logger.success("登录成功")
+        cookies = requests.utils.dict_from_cookiejar(session.cookies)
+        return cookie(cookies)
+
 
 def interactive_login():
 
@@ -294,7 +355,7 @@ def interactive_login():
     session.get("https://www.bilibili.com/", headers=headers)
 
     logger.info(
-        "请选择登录方式\n1. cookie登录\n2. 扫码登录\n3. 用户名密码登录\n4. 验证码登录"
+        "请选择登录方式\n1. cookie登录\n2. 扫码登录\n3. 用户名密码登录\n4. 验证码登录\n5. SNS登录(第三方登录)"
     )
     method = input("请输入数字: ")
     if method == "1":
@@ -305,6 +366,8 @@ def interactive_login():
         cookie_str = password_login(session, headers)
     elif method == "4":
         cookie_str = verify_code_login(session, headers)
+    elif method == "5":
+        cookie_str = sns_login(session, headers)
     else:
         logger.error("暂不支持此方式")
         interactive_login()
