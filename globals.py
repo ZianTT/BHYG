@@ -10,6 +10,8 @@ import sentry_sdk
 from loguru import logger
 from sentry_sdk.integrations.loguru import LoggingLevels, LoguruIntegration
 
+from login import *
+
 logger.remove(handler_id=0)
 handler_id = logger.add(
     sys.stderr,
@@ -69,19 +71,15 @@ def load_config():
         if is_use_config == "n":
             logger.info("重新配置")
             config = {}
+            use_login = False
         elif is_use_config == "l":
             logger.info("只沿用登录信息")
             with open("config.json", "r", encoding="utf-8") as f:
+                temp = json.load(f)
                 config = {}
-                try:
-                    temp = json.load(f)
-                    config["cookie"] = temp["cookie"]
-                    if "gaia_vtoken" in temp:
-                        config["gaia_vtoken"] = temp["gaia_vtoken"]
-                except Exception as e:
-                    logger.error(e)
-                    logger.error("读取cookie失败，重新配置")
-                    config = {}
+                if "gaia_vtoken" in temp:
+                    config["gaia_vtoken"] = temp["gaia_vtoken"]
+            use_login = True
         else:
             if is_use_config.lower() == "y":
                 logger.info("使用上次的配置文件")
@@ -90,10 +88,38 @@ def load_config():
             # 读取config.json，转为dict并存入config
             with open("config.json", "r", encoding="utf-8") as f:
                 config = json.load(f)
+            use_login = True
     else:
         # 不存在则创建config.json
         with open("config.json", "w", encoding="utf-8") as f:
             f.write("{}")
         config = {}
 
+    while True:
+            if os.path.exists("login-info") and use_login:
+                with open("login-info", "r", encoding="utf-8") as f:
+                    config["cookie"] = f.read()
+            else:
+                config["cookie"] = interactive_login()
+                with open("login-info", "w", encoding="utf-8") as f:
+                    f.write(config["cookie"])
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.1",
+                "Cookie": config["cookie"],
+            }
+            user = requests.get(
+                "https://api.bilibili.com/x/web-interface/nav", headers=headers
+            )
+            user = user.json()
+            if user["data"]["isLogin"]:
+                logger.success("用户 " + user["data"]["uname"] + " 登录成功")
+                sentry_sdk.set_user(
+                    {
+                        "username": user["data"]["mid"]
+                    }
+                )
+                break
+            else:
+                logger.error("登录失败")
+                config.pop("cookie")
     return config
