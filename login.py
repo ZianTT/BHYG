@@ -1,5 +1,5 @@
 import base64
-import json
+import inquirer
 import time
 
 import qrcode
@@ -76,15 +76,10 @@ def verify_code_login(session, headers):
     gt = captcha["data"]["geetest"]["gt"]
     challenge = captcha["data"]["geetest"]["challenge"]
     token = captcha["data"]["token"]
-    tel = input("请输入手机号（非大陆手机号请添加国家号，如+1 4438888888）: ").split(
-        " "
-    )
-    if len(tel) == 1:
-        cid = "+86"
-        tel = tel[0]
-    else:
-        cid = tel[0]
-        tel = tel[1]
+    tel = inquirer.prompt([
+        inquirer.Text("tel", message="请输入手机号（仅支持大陆手机号）", validate=lambda _, x: len(x) == 11 and x.isdigit())
+    ])["tel"]
+    cid = "86"
     logger.info("请稍后，正在执行自动验证...")
     cap_data = _verify(gt, challenge, token)
     while cap_data == False:
@@ -99,6 +94,7 @@ def verify_code_login(session, headers):
         cap_data = _verify(gt, challenge, token)
     logger.success("验证完成")
     data = {
+        "source": "main-fe-header",
         "cid": cid,
         "tel": tel,
         "token": token,
@@ -106,6 +102,7 @@ def verify_code_login(session, headers):
         "validate": cap_data["validate"],
         "seccode": cap_data["seccode"] + "|jordan",
     }
+    print(data)
     # https://passport.bilibili.com/x/passport-login/web/sms/send
     send = session.post(
         "https://passport.bilibili.com/x/passport-login/web/sms/send",
@@ -119,7 +116,9 @@ def verify_code_login(session, headers):
         logger.success("验证码发送成功")
         send_token = send["data"]["captcha_key"]
     while True:
-        code = input("请输入验证码: ")
+        code = inquirer.prompt([
+            inquirer.Text("code", message="请输入验证码", validate=lambda _, x: len(x) == 6 and x.isdigit())
+        ])["code"]
         # https://passport.bilibili.com/x/passport-login/web/login/sms
         data = {"cid": cid, "tel": tel, "captcha_key": send_token, "code": code}
         login = session.post(
@@ -140,10 +139,12 @@ def password_login(session, headers):
     from Crypto.PublicKey import RSA
 
     # https://passport.bilibili.com/x/passport-login/web/key
-    username = input("请输入用户名（通常为手机号）: ")
-    import getpass
-
-    password = getpass.getpass("请输入密码：")
+    username = inquirer.prompt([
+        inquirer.Text("username", message="请输入用户名（通常为手机号）")
+    ])["username"]
+    password = inquirer.prompt([
+        inquirer.Password("password", message="请输入密码")
+    ])["password"]
     captcha = session.get(
         "https://passport.bilibili.com/x/passport-login/captcha", headers=headers
     ).json()
@@ -253,7 +254,9 @@ def password_login(session, headers):
                 logger.success("验证码发送成功")
                 send_token = send["data"]["captcha_key"]
             while True:
-                code = input("请输入验证码: ")
+                code = inquirer.prompt([
+                    inquirer.Text("code", message="请输入验证码", validate=lambda _, x: len(x) == 6 and x.isdigit())
+                ])["code"]
                 data = {
                     "type": "loginTelCheck",
                     "tmp_code": tmp_token,
@@ -293,17 +296,23 @@ def interactive_login():
     session = requests.session()
     session.get("https://www.bilibili.com/", headers=headers)
 
-    logger.info(
-        "请选择登录方式\n1. cookie登录\n2. 扫码登录\n3. 用户名密码登录\n4. 验证码登录"
-    )
-    method = input("请输入数字: ")
-    if method == "1":
-        cookie_str = input("请输入cookie: ")
-    elif method == "2":
+    method = inquirer.prompt([
+        inquirer.List(
+            'method',
+            message="请选择登录方式",
+            choices=['Cookie登录', '扫码登录', '用户名密码登录', '验证码登录'],
+            default='扫码登录',
+        ),
+    ])["method"]
+    if method == "Cookie登录":
+        cookie_str = inquirer.prompt([
+            inquirer.Text("cookie", message="请输入cookie")
+        ])
+    elif method == "扫码登录":
         cookie_str = qr_login(session, headers)
-    elif method == "3":
+    elif method == "用户名密码登录":
         cookie_str = password_login(session, headers)
-    elif method == "4":
+    elif method == "验证码登录":
         cookie_str = verify_code_login(session, headers)
     else:
         logger.error("暂不支持此方式")
