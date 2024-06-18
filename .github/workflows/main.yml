@@ -1,10 +1,8 @@
-name: CI
-
 on:
   push:
     branches:
       - main
-      - master
+      - dev
     tags:
       - '*'
   pull_request:
@@ -79,99 +77,20 @@ jobs:
         with:
           name: BHYG-macOS-Apple_Silicon
           path: dist
-name: CI
-
-on:
-  push:
-    branches:
-      - main
-      - master
-    tags:
-      - '*'
-  pull_request:
-  workflow_dispatch:
-
-permissions:
-  contents: read
-
-jobs:
-  windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.12
-      - name: Install Dependencies
-        run: pip install -r requirements.txt
-      - name: Build Binary
-        run: pyinstaller -F main.py
-      - name: Upload wheels
-        uses: actions/upload-artifact@v4
-        with:
-          name: BHYG-Windows
-          path: dist
-
-  linux:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.12
-      - name: Install Dependencies
-        run: pip install -r requirements.txt
-      - name: Build Binary
-        run: pyinstaller -F main.py
-      - name: Upload wheels
-        uses: actions/upload-artifact@v4
-        with:
-          name: BHYG-Linux
-          path: dist
-  macos-x64:
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.12
-      - name: Install Dependencies
-        run: pip install -r requirements.txt
-      - name: Build Binary
-        run: pyinstaller -F main.py
-      - name: Upload wheels
-        uses: actions/upload-artifact@v4
-        with:
-          name: BHYG-macOS-Intel
-          path: dist
-  macos-arm64:
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: 3.12
-      - name: Install Dependencies
-        run: pip install -r requirements.txt
-      - name: Build Binary
-        run: pyinstaller -F main.py
-      - name: Upload wheels
-        uses: actions/upload-artifact@v4
-        with:
-          name: BHYG-macOS-Apple_Silicon
-          path: dist
-  pre-release:
-    uses: release-drafter/release-drafter@v6.0.0
-    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-    with:
-      token: ${{ secrets.GITHUB_TOKEN }}
-      config-name: .github/release-drafter.yml
-      pre-release-identifier: beta
-      prerelease: true
   release:
-    uses: release-drafter/release-drafter@v6.0.0
-    if: github.event_name == 'pull-request' && contains(github.event.pull_request.title, 'Release')
-    with:
-      token: ${{ secrets.GITHUB_TOKEN }}
-      config-name: .github/release-drafter.yml
-      prerelease: false
+    runs-on: ubuntu-latest
+    needs: [windows, linux, macos-x64, macos-arm64]
+    steps:
+      - uses: release-drafter/release-drafter@v6.0.0
+        if: github.event_name == 'push'
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-name: .github/release-drafter.yml
+          pre-release-identifier: alpha
+          prerelease: true
+      - uses: release-drafter/release-drafter@v6.0.0
+        if: github.event_name == 'pull-request'
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-name: .github/release-drafter.yml
+          prerelease: false
