@@ -83,7 +83,7 @@ jobs:
     steps:
       - name: Draft Prerelease
         uses: release-drafter/release-drafter@v6.0.0
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         id: release-drafter-pre
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -100,7 +100,7 @@ jobs:
           prerelease: false
       - name: Upload Release Asset Windows Pre
         uses: actions/upload-release-asset@v1
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -110,7 +110,7 @@ jobs:
           asset_content_type: application/zip
       - name: Upload Release Asset Linux Pre
         uses: actions/upload-release-asset@v1
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -120,7 +120,7 @@ jobs:
           asset_content_type: application/zip
       - name: Upload Release Asset macOS Intel Pre
         uses: actions/upload-release-asset@v1
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -130,7 +130,7 @@ jobs:
           asset_content_type: application/zip
       - name: Upload Release Asset macOS Apple Silicon Pre
         uses: actions/upload-release-asset@v1
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
