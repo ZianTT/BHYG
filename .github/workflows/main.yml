@@ -47,3 +47,35 @@ jobs:
         with:
           name: BHYG-Linux
           path: dist
+  macos-x64:
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+      - name: Build Binary
+        run: pyinstaller -F main.py
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: BHYG-macOS-Intel
+          path: dist
+  macos-arm64:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+      - name: Install Dependencies
+        run: pip install -r requirements.txt
+      - name: Build Binary
+        run: pyinstaller -F main.py
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: BHYG-macOS-Apple_Silicon
+          path: dist
