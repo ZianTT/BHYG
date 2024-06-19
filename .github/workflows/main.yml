@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   windows:
@@ -79,54 +79,16 @@ jobs:
         with:
           name: BHYG-macOS-Apple_Silicon
           path: dist
-  # release:
-  #   runs-on: ubuntu-latest
-  #   needs: [windows, linux, macos-x64, macos-arm64]
-  #   steps:
-  #     - name: Draft Release
-  #       uses: release-drafter/release-drafter@v6.0.0
-  #       if: github.event_name == 'push' && github.ref_type == 'tag'
-  #       id: release-drafter
-  #       with:
-  #         token: ${{ secrets.GITHUB_TOKEN }}
-  #         config-name: .github/release-drafter.yml
-  #     - name: Upload Release Asset Windows
-  #       uses: actions/upload-release-asset@v1
-  #       if: github.event_name == 'push' && github.ref_type == 'tag'
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       with:
-  #         upload_url: ${{ steps.release-drafter.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-  #         asset_path: ./dist/BHYG-Windows.zip
-  #         asset_name: BHYG-Windows.zip
-  #         asset_content_type: application/zip
-  #     - name: Upload Release Asset Linux
-  #       uses: actions/upload-release-asset@v1
-  #       if: github.event_name == 'push' && github.ref_type == 'tag'
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       with:
-  #         upload_url: ${{ steps.release-drafter.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-  #         asset_path: ./dist/BHYG-Linux.zip
-  #         asset_name: BHYG-Linux.zip
-  #         asset_content_type: application/zip
-  #     - name: Upload Release Asset macOS Intel
-  #       uses: actions/upload-release-asset@v1
-  #       if: github.event_name == 'push' && github.ref_type == 'tag'
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       with:
-  #         upload_url: ${{ steps.release-drafter.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-  #         asset_path: ./dist/BHYG-macOS-Intel.zip
-  #         asset_name: BHYG-macOS-Intel.zip
-  #         asset_content_type: application/zip
-  #     - name: Upload Release Asset macOS Apple Silicon
-  #       uses: actions/upload-release-asset@v1
-  #       if: github.event_name == 'push' && github.ref_type == 'tag'
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       with:
-  #         upload_url: ${{ steps.release-drafter.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
-  #         asset_path: ./dist/BHYG-macOS-Apple_Silicon.zip
-  #         asset_name: BHYG-macOS-Apple_Silicon.zip
-  #         asset_content_type: application/zip
+  release:
+    runs-on: ubuntu-latest
+    needs: [windows, linux, macos-x64, macos-arm64]
+    steps:
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            dist/BHYG-Windows.zip
+            dist/BHYG-Linux.zip
+            dist/BHYG-macOS-Intel.zip
+            dist/BHYG-macOS-Apple_Silicon.zip
