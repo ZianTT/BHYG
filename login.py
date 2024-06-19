@@ -370,7 +370,7 @@ def interactive_login():
         cookie_str = sns_login(session, headers)
     else:
         logger.error("暂不支持此方式")
-        interactive_login()
+        return interactive_login()
 
     logger.debug("=" * 20)
     logger.debug(cookie_str)
