@@ -24,7 +24,7 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt
       - name: Build Binary
-        run: pyinstaller -F main.py
+        run: pyinstaller -F main.py -n BHYG-Windows
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -34,7 +34,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: dist/BHYG-Windows.zip
+          files: dist/BHYG-Windows.exe
 
   linux:
     runs-on: ubuntu-20.04
@@ -46,7 +46,7 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt
       - name: Build Binary
-        run: pyinstaller -F main.py
+        run: pyinstaller -F main.py -n BHYG-Linux
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -56,7 +56,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: dist/BHYG-Linux.zip
+          files: dist/BHYG-Linux
   macos-x64:
     runs-on: macos-13
     steps:
@@ -67,7 +67,7 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt
       - name: Build Binary
-        run: pyinstaller -F main.py
+        run: pyinstaller -F main.py -n BHYG-macOS-Intel
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -77,7 +77,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: dist/BHYG-macOS-Intel.zip
+          files: dist/BHYG-macOS-Intel
   macos-arm64:
     runs-on: macos-latest
     steps:
@@ -88,7 +88,7 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt
       - name: Build Binary
-        run: pyinstaller -F main.py
+        run: pyinstaller -F main.py -n BHYG-macOS-Apple_Silicon
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -98,5 +98,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          files: dist/BHYG-macOS-Apple_Silicon.zip
+          files: dist/BHYG-macOS-Apple_Silicon
       
