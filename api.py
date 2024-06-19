@@ -415,6 +415,7 @@ class BilibiliHyg:
         elif result["errno"] == 100051:
             self.token = self.get_token()
         elif result["errno"] == 100079 or result["errno"] == 100048:
+            logger.info(result["msg"])
             logger.success("已经抢到了啊喂！")
             self.sdk.capture_message("Exit by in-app exit")
             return True
