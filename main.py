@@ -268,7 +268,12 @@ def main():
                 multiselect = False
             if multiselect:
                 buyerids = inquirer.prompt([
-                    inquirer.Checkbox("buyerids", message="请选择购票人", choices=[f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for i in range(len(buyer_infos))])
+                    inquirer.Checkbox(
+                        "buyerids",
+                        message="请选择购票人",
+                        choices=[f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for i in range(len(buyer_infos))],
+                        validate=lambda _, x: len(x) > 0
+                    )
                 ])["buyerids"]
                 buyerids = [int(i.split(".")[0]) for i in buyerids]
                 config["buyer_info"] = []

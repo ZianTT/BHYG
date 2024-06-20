@@ -19,12 +19,14 @@ from utility import utility
 logger.remove(handler_id=0)
 if sys.argv[0].endswith(".py"):
     level = "DEBUG"
+    format = "DEBUG MODE | <green>{time:HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>"
     print("WARNING: YOU ARE IN DEBUG MODE")
 else:
     level = "INFO"
+    format = "<green>{time:HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>"
 handler_id = logger.add(
     sys.stderr,
-    format="<green>{time:HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>",
+    format=format,
     level=level,  # NOTE: logger level
 )
 
@@ -59,9 +61,6 @@ sentry_sdk.init(
 )
 with sentry_sdk.configure_scope() as scope:
     scope.add_attachment(path="config.json")
-
-
-
 
 bhyg_username = "未知用户"
 uid = None
