@@ -446,12 +446,12 @@ class BilibiliHyg:
             :param message: 要加密的消息
             :return: 加密后的哈希值
             """
-        key = key.encode("utf-8")
-        message = message.encode("utf-8")
-        hmac_obj = hmac.new(key, message, hashlib.sha256)
-        hash_value = hmac_obj.digest()
-        hash_hex = hash_value.hex()
-        return hash_hex
+            key = key.encode("utf-8")
+            message = message.encode("utf-8")
+            hmac_obj = hmac.new(key, message, hashlib.sha256)
+            hash_value = hmac_obj.digest()
+            hash_hex = hash_value.hex()
+            return hash_hex
 
         o = hmac_sha256("XgwSnGZ1p", f"ts{int(time.time())}")
         url = "https://api.bilibili.com/bapis/bilibili.api.ticket.v1.Ticket/GenWebTicket"
