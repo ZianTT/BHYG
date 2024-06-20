@@ -7,7 +7,7 @@ def utility(config):
         name = input("请输入购票人姓名：")
         id_type = inquirer.prompt([inquirer.List("id_type", message="请选择证件类型", choices=["0. 身份证", "1. 护照", "2. 港澳居民往来内地通行证", "3. 台湾居民往来大陆通行证"], default="身份证"),
         ])
-        personal_id = input("请输入购票人身份证号码：")
+        personal_id = input("请输入购票人证件号码：")
         tel = input("请输入购票人手机号码：")
         data = {
             "name": name,
