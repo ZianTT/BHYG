@@ -285,9 +285,9 @@ def main():
                             ])["index"].split(".")[0]
                             config["buyer_info"].append(buyer_infos[index])
                             logger.info("已选择购票人" + buyer_infos[index]["name"] + " " + buyer_infos[index]["personal_id"] + " " + buyer_infos[index]["tel"])
-                if "count" not in config:
-                    config["count"] = len(config["buyer_info"])
-                config["buyer_info"] = json.dumps(config["buyer_info"])
+            if "count" not in config:
+                config["count"] = len(config["buyer_info"])
+            config["buyer_info"] = json.dumps(config["buyer_info"])
         if config["id_bind"] == 0 and (
             "buyer" not in config or "tel" not in config
         ):

@@ -16,7 +16,17 @@ def cookie(cookies):
     cookie_str = ";".join(lst)
     return cookie_str
 
-
+def appsign(params):
+    import hashlib
+    import urllib.parse
+    appkey = '1d8b6e7d45233436'
+    appsec = '560c52ccd288fed045859ed18bffd973'
+    params.update({'appkey': appkey})
+    params = dict(sorted(params.items())) # 按照 key 重排参数
+    query = urllib.parse.urlencode(params) # 序列化参数
+    sign = hashlib.md5((query+appsec).encode()).hexdigest() # 计算 api 签名
+    params.update({'sign':sign})
+    return params
 
 def _verify(gt, challenge, token):
     from geetest import run
@@ -77,7 +87,7 @@ def verify_code_login(session, headers):
     gt = captcha["data"]["geetest"]["gt"]
     challenge = captcha["data"]["geetest"]["challenge"]
     token = captcha["data"]["token"]
-    tel = inquirer.prompt([inquirer.Text("tel", message="请输入手机号", validate=lambda _, x: len(x) == 11)])["tel"].split(" ")
+    tel = inquirer.prompt([inquirer.Text("tel", message="请输入手机号", validate=lambda _, x: len(x) == 11)])["tel"]
     logger.info("请稍后，正在执行自动验证...")
     cap_data = _verify(gt, challenge, token)
     while cap_data == False:
@@ -114,7 +124,7 @@ def verify_code_login(session, headers):
     while True:
         code = inquirer.prompt([inquirer.Text("code", message="请输入验证码", validate=lambda _, x: len(x) == 6)])["code"]
         # https://passport.bilibili.com/x/passport-login/web/login/sms
-        data = {"cid": cid, "tel": tel, "captcha_key": send_token, "code": code}
+        data = {"cid": "86", "tel": tel, "captcha_key": send_token, "code": code}
         login = session.post(
             "https://passport.bilibili.com/x/passport-login/web/login/sms",
             headers=headers,
@@ -127,6 +137,84 @@ def verify_code_login(session, headers):
             cookies = requests.utils.dict_from_cookiejar(session.cookies)
             return cookie(cookies)
 
+def verify_code_login_app(session, headers):
+    logger.warning("该方法尚在测试中")
+    import uuid
+    def buvid():
+        import hashlib
+        import random
+        mac = []
+        for i in range(6):
+            num = random.randint(0, 0xff)
+            mac.append(hex(num)[2:])
+        md5 = hashlib.md5(":".join(mac).encode()).hexdigest()
+        md5Arr = list(md5)
+        return f"XY{md5Arr[2]}{md5Arr[12]}{md5Arr[22]}{md5}"
+    # https://passport.bilibili.com/x/passport-login/captcha
+    # captcha = session.get(
+    #     "https://passport.bilibili.com/x/passport-login/captcha", headers=headers
+    # ).json()
+    # gt = captcha["data"]["geetest"]["gt"]
+    # challenge = captcha["data"]["geetest"]["challenge"]
+    # token = captcha["data"]["token"]
+    tel = inquirer.prompt([inquirer.Text("tel", message="请输入手机号", validate=lambda _, x: len(x) == 11)])["tel"]
+    # logger.info("请稍后，正在执行自动验证...")
+    # cap_data = _verify(gt, challenge, token)
+    # while cap_data == False:
+    #     logger.error("验证失败，请重新验证")
+    #     captcha = session.post(
+    #         "https://passport.bilibili.com/x/passport-login/captcha",
+    #         headers=headers,
+    #     ).json()
+    #     gt = captcha["data"]["geetest"]["gt"]
+    #     challenge = captcha["data"]["geetest"]["challenge"]
+    #     token = captcha["data"]["token"]
+    #     cap_data = _verify(gt, challenge, token)
+    logger.success("验证完成")
+    session_id = uuid.uuid4().hex.upper()
+    buvid = buvid()
+    data = {
+        "cid": "86",
+        "tel": tel,
+        "login_session_id": session_id,
+        # "recaptcha_token": token,
+        # "gee_challenge": cap_data["challenge"],
+        # "gee_validate": cap_data["validate"],
+        # "gee_seccode": cap_data["seccode"] + "|jordan",
+        "channel": "bili",
+        "buvid": buvid,
+        "local_id": buvid,
+        "statistics": '{"appId":1,"platform":3,"version":"8.0.0","abtest":""}',
+        "ts": round(time.time())
+    }
+    logger.debug(data)
+    # https://passport.bilibili.com/x/passport-login/sms/send
+    send = session.post(
+        "https://passport.bilibili.com/x/passport-login/sms/send",
+        headers=headers,
+        data=appsign(data),
+    ).json()
+    if send["code"] != 0:
+        logger.error(f"{send['code']}: {send['message']}")
+        return verify_code_login_app(session, headers)
+    else:
+        logger.success("验证码发送成功")
+        send_token = send["data"]["captcha_key"]
+    while True:
+        code = inquirer.prompt([inquirer.Text("code", message="请输入验证码", validate=lambda _, x: len(x) == 6)])["code"]
+        # https://passport.bilibili.com/x/passport-login/login/sms
+        data = {"cid": 86, "tel": int(tel), "captcha_key": send_token, "code": int(code), "login_session_id": session_id}
+        login = session.post(
+            "https://passport.bilibili.com/x/passport-login/login/sms",
+            headers=headers,
+            data=appsign(data),
+        ).json()
+        if login["code"] != 0:
+            logger.error(f"{login['code']}: {login['message']}")
+        else:
+            logger.success("登录成功")
+            cookies = requests.utils.dict_from_cookiejar(session.cookies)
+            return cookie(cookies)
 
 def password_login(session, headers):
     from Crypto.Cipher import PKCS1_v1_5
@@ -348,7 +436,7 @@ def interactive_login():
     session = requests.session()
     session.get("https://www.bilibili.com/", headers=headers)
 
-    method = inquirer.prompt([inquirer.List("method", message="请选择登录方式", choices=["cookie", "扫码", "用户名密码", "验证码", "SNS"], default="扫码")])
+    method = inquirer.prompt([inquirer.List("method", message="请选择登录方式", choices=["cookie", "扫码", "用户名密码", "验证码", "验证码APP版", "SNS"], default="扫码")])
     if method["method"] == "cookie":
         cookie_str = input("请输入cookie: ")
         # verify cookie
@@ -365,6 +453,8 @@ def interactive_login():
         cookie_str = verify_code_login(session, headers)
     elif method["method"] == "SNS":
         cookie_str = sns_login(session, headers)
+    elif method["method"] == "验证码APP版":
+        cookie_str = verify_code_login_app(session, headers)
     else:
         logger.error("暂不支持此方式")
         return interactive_login()
