@@ -27,7 +27,7 @@ def utility(config):
 
     headers = {
         "Cookie": config["cookie"],
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.2",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.3",
         "Referer": "https://show.bilibili.com"
     }
     select = inquirer.prompt([

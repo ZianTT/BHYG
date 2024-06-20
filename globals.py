@@ -47,7 +47,7 @@ else:
             f.write("")
 sentry_sdk.init(
     dsn="https://9c5cab8462254a2e1e6ea76ffb8a5e3d@sentry-inc.bitf1a5h.eu.org/3",
-    release="v0.7.2",
+    release="v0.7.3",
     
     enable_tracing=True,
     integrations=[
@@ -71,7 +71,7 @@ class HygException(Exception):
 
 
 def load_config(): 
-    
+    go_utility = False
     if os.path.exists("config.json"):
         run_info = inquirer.prompt([
             inquirer.List(
@@ -125,7 +125,7 @@ def load_config():
                 with open("login-info", "w", encoding="utf-8") as f:
                     f.write(config["cookie"])
             headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.2",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.3",
                 "Cookie": config["cookie"],
             }
             user = requests.get(
