@@ -30,8 +30,10 @@ handler_id = logger.add(
     level=level,  # NOTE: logger level
 )
 
-if os.path.exists("upload-error"):
+if os.path.exists("upload-error") or level == "DEBUG":
     sample_rate=1
+    if level == "DEBUG":
+        logger.debug("ERROR REPORTING IS ENABLED BY FORCE IN DEBUG MODE")
 elif os.path.exists("do-not-upload-error"):
     sample_rate=0
 else:    
