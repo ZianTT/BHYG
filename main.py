@@ -99,21 +99,21 @@ def main():
                 logger.info("已开启检测模式")
 
         if "co_delay" not in config:
-            config["co_delay"] = inquirer.prompt([
+            config["co_delay"] = float(inquirer.prompt([
                 inquirer.Text(
                     "co_delay",
                     message="请输入创建订单时间间隔(该选项影响412风控概率，单开建议使用0)(秒)",
                     default="0",
                     validate=lambda _, x: float(x) >= 0
-                )])["co_delay"]
+                )])["co_delay"])
         if "status_delay" not in config and not config["mode"]:
-            config["status_delay"] = inquirer.prompt([
+            config["status_delay"] = float(inquirer.prompt([
                 inquirer.Text(
                     "status_delay",
                     message="请输入票务信息检测时间间隔(该选项影响412风控概率)(秒)",
                     default="0.2",
                     validate=lambda _, x: float(x) >= 0
-                )])["status_delay"]
+                )])["status_delay"])
         if "proxy" not in config:
             choice = inquirer.prompt([inquirer.List("proxy", message="是否使用代理", choices=["是", "否"], default="否")])["proxy"]
             if choice == "是":
@@ -252,24 +252,25 @@ def main():
                 + " "
                 + config["pay_money"]
             )
-        if config["id_bind"] != 0 and ("buyer_info" not in config):
-            url = "https://show.bilibili.com/api/ticket/buyer/list"
-            response = session.get(url, headers=headers)
-            if response.status_code == 412:
-                logger.error("被412风控，请联系作者")
-            buyer_infos = response.json()["data"]["list"]
-            config["buyer_info"] = []
-            if len(buyer_infos) == 0:
-                logger.error("未找到购票人，请前往实名添加购票人")
-            else:
-                multiselect = True
-            if config["id_bind"] == 1:
+            if config["id_bind"] != 0 and ("buyer_info" not in config):
+                url = "https://show.bilibili.com/api/ticket/buyer/list"
+                response = session.get(url, headers=headers)
+                if response.status_code == 412:
+                    logger.error("被412风控，请联系作者")
+                buyer_infos = response.json()["data"]["list"]
+                config["buyer_info"] = []
+                if len(buyer_infos) == 0:
+                    logger.error("未找到购票人，请前往实名添加购票人")
+                else:
+                    multiselect = True
+                if config["id_bind"] == 1:
                     logger.info("本项目只能购买一人票")
                     multiselect = False
-                    if multiselect:
+                if multiselect:
                             buyerids = inquirer.prompt([
-                                inquirer.Checkbox("buyerids", message="请选择购票人", choices=[{"name": f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}", "value": i} for i in range(len(buyer_infos))])
-                            ])["buyerids"].split(" ")[0]
+                                inquirer.Checkbox("buyerids", message="请选择购票人", choices=[f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for i in range(len(buyer_infos))])
+                            ])["buyerids"]
+                            buyerids = [int(i.split(".")[0]) for i in buyerids]
                             config["buyer_info"] = []
                             for select in buyerids:
                                 config["buyer_info"].append(
@@ -279,7 +280,7 @@ def main():
                                 logger.info(
                                     "已选择购票人" + buyer_infos[int(select)]["name"] + " " + buyer_infos[int(select)]["personal_id"] + " " + buyer_infos[int(select)]["tel"]
                                 )
-                    else:
+                else:
                             index = inquirer.prompt([
                                 inquirer.List("index", message="请选择购票人", choices=[{"name": f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}", "value": i} for i in range(len(buyer_infos))])
                             ])["index"].split(".")[0]
