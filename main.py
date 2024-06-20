@@ -99,7 +99,7 @@ def main():
                 logger.info("已开启检测模式")
 
         if "co_delay" not in config:
-            co_delay = inquirer.prompt([
+            config["co_delay"] = inquirer.prompt([
                 inquirer.Text(
                     "co_delay",
                     message="请输入创建订单时间间隔(该选项影响412风控概率，单开建议使用0)(秒)",
@@ -107,7 +107,7 @@ def main():
                     validate=lambda _, x: float(x) >= 0
                 )])["co_delay"]
         if "status_delay" not in config and not config["mode"]:
-            status_delay = inquirer.prompt([
+            config["status_delay"] = inquirer.prompt([
                 inquirer.Text(
                     "status_delay",
                     message="请输入票务信息检测时间间隔(该选项影响412风控概率)(秒)",
@@ -300,7 +300,7 @@ def main():
             ])["tel"]
             if "count" not in config:
                 config["count"] = inquirer.prompt([
-                    inquirer.Text("count", message="请输入票数", default="1",validate=lambda _, x: x.isdigit())
+                    inquirer.Text("count", message="请输入票数", default="1",validate=lambda _, x: x.isdigit() and int(x) > 0)
                 ])["count"]
         if config["is_paper_ticket"]:
             if config["express_fee"] == 0:

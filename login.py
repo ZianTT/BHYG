@@ -77,7 +77,7 @@ def verify_code_login(session, headers):
     gt = captcha["data"]["geetest"]["gt"]
     challenge = captcha["data"]["geetest"]["challenge"]
     token = captcha["data"]["token"]
-    tel = inquirer.prompt([inquirer.Text("tel", message="请输入手机号")], validate=lambda _, x: len(x) == 11)["tel"].split(" ")
+    tel = inquirer.prompt([inquirer.Text("tel", message="请输入手机号", validate=lambda _, x: len(x) == 11)])["tel"].split(" ")
     logger.info("请稍后，正在执行自动验证...")
     cap_data = _verify(gt, challenge, token)
     while cap_data == False:
