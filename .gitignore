@@ -25,3 +25,4 @@ utils.spec
 upload-error
 do-not-upload-error
 login-info
+inquirer

@@ -12,6 +12,8 @@ from sentry_sdk.integrations.loguru import LoggingLevels, LoguruIntegration
 
 from login import *
 
+import inquirer
+
 logger.remove(handler_id=0)
 handler_id = logger.add(
     sys.stderr,
@@ -24,9 +26,21 @@ if os.path.exists("upload-error"):
 elif os.path.exists("do-not-upload-error"):
     sample_rate=0
 else:
-    logger.info("可选的错误上传：您是否选择上传可能遇到的错误以帮助我们改善脚本？（Y/n）")
-    is_upload_error = input()
-    if is_upload_error.lower() == "n":
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    is_upload_error = inquirer.prompt([inquirer.List("is_upload_error", message="可选的错误上传：您是否选择上传可能遇到的错误以帮助我们改善脚本？", choices=["是", "否"], default="是")])
+    if is_upload_error["is_upload_error"] == "否":
         logger.info("已选择不上传错误")
         sample_rate=0
         with open("do-not-upload-error", "w") as f:
@@ -40,7 +54,7 @@ else:
 sentry_sdk.init(
     dsn="https://9c5cab8462254a2e1e6ea76ffb8a5e3d@sentry-inc.bitf1a5h.eu.org/3",
     release="v0.7.1",
-    # Enable performance monitoring
+    
     enable_tracing=True,
     integrations=[
         LoguruIntegration(
@@ -63,16 +77,38 @@ class HygException(Exception):
 
 
 def load_config(): 
-    # 判断是否存在config.json
+    
     if os.path.exists("config.json"):
-        is_use_config = input(
-            "已存在上一次的配置文件，是否沿用全部或只沿用登录信息（包括风控信息）？(Y/l/n)"
-        )
-        if is_use_config == "n":
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        is_use_config = inquirer.prompt([inquirer.List("is_use_config", message="已存在上一次的配置文件，是否沿用全部或只沿用登录信息（包括风控信息）？", choices=["全部", "只登录信息", "不沿用"], default="全部")])
+        if is_use_config["is_use_config"] == "不沿用":
             logger.info("重新配置")
             config = {}
             use_login = False
-        elif is_use_config == "l":
+        elif is_use_config["is_use_config"] == "只登录信息":
             logger.info("只沿用登录信息")
             with open("config.json", "r", encoding="utf-8") as f:
                 temp = json.load(f)
@@ -81,10 +117,7 @@ def load_config():
                     config["gaia_vtoken"] = temp["gaia_vtoken"]
             use_login = True
         else:
-            if is_use_config.lower() == "y":
-                logger.info("使用上次的配置文件")
-            else:
-                logger.info("已默认使用上次的配置文件")
+            logger.info("使用上次的配置文件")
             # 读取config.json，转为dict并存入config
             with open("config.json", "r", encoding="utf-8") as f:
                 config = json.load(f)

@@ -6,6 +6,7 @@ import qrcode
 import requests
 from loguru import logger
 
+import inquirer
 
 def cookie(cookies):
     lst = []
@@ -76,15 +77,7 @@ def verify_code_login(session, headers):
     gt = captcha["data"]["geetest"]["gt"]
     challenge = captcha["data"]["geetest"]["challenge"]
     token = captcha["data"]["token"]
-    tel = input("请输入手机号（非大陆手机号请添加国家号，如+1 4438888888）: ").split(
-        " "
-    )
-    if len(tel) == 1:
-        cid = "+86"
-        tel = tel[0]
-    else:
-        cid = tel[0]
-        tel = tel[1]
+    tel = inquirer.prompt([inquirer.Text("tel", message="请输入手机号")], validate=lambda _, x: len(x) == 11)["tel"].split(" ")
     logger.info("请稍后，正在执行自动验证...")
     cap_data = _verify(gt, challenge, token)
     while cap_data == False:
@@ -99,7 +92,7 @@ def verify_code_login(session, headers):
         cap_data = _verify(gt, challenge, token)
     logger.success("验证完成")
     data = {
-        "cid": cid,
+        "cid": "86",
         "tel": tel,
         "token": token,
         "challenge": cap_data["challenge"],
@@ -119,7 +112,7 @@ def verify_code_login(session, headers):
         logger.success("验证码发送成功")
         send_token = send["data"]["captcha_key"]
     while True:
-        code = input("请输入验证码: ")
+        code = inquirer.prompt([inquirer.Text("code", message="请输入验证码", validate=lambda _, x: len(x) == 6)])["code"]
         # https://passport.bilibili.com/x/passport-login/web/login/sms
         data = {"cid": cid, "tel": tel, "captcha_key": send_token, "code": code}
         login = session.post(
@@ -139,11 +132,8 @@ def password_login(session, headers):
     from Crypto.Cipher import PKCS1_v1_5
     from Crypto.PublicKey import RSA
 
-    # https://passport.bilibili.com/x/passport-login/web/key
-    username = input("请输入用户名（通常为手机号）: ")
-    import getpass
-
-    password = getpass.getpass("请输入密码：")
+    username = inquirer.prompt([inquirer.Text("username", message="请输入用户名")])["username"]
+    password = inquirer.prompt([inquirer.Password("password", message="请输入密码")])["password"]
     captcha = session.get(
         "https://passport.bilibili.com/x/passport-login/captcha", headers=headers
     ).json()
@@ -253,7 +243,7 @@ def password_login(session, headers):
                 logger.success("验证码发送成功")
                 send_token = send["data"]["captcha_key"]
             while True:
-                code = input("请输入验证码: ")
+                code = inquirer.prompt([inquirer.Text("code", message="请输入验证码", validate=lambda _, x: len(x) == 6)])["code"]
                 data = {
                     "type": "loginTelCheck",
                     "tmp_code": tmp_token,
@@ -284,13 +274,13 @@ def password_login(session, headers):
         return cookie(cookies)
 
 def sns_login(session, headers):
-    logger.info("请选择SNS登录方式\n1. 微信\n2. QQ\n3. 微博")
-    method = input("请输入数字: ")
-    if method == "1":
+    # logger.info("请选择SNS登录方式\n1. 微信\n2. QQ\n3. 微博")
+    method = inquirer.prompt([inquirer.List("method", message="请选择SNS登录方式", choices=["微信", "QQ", "微博"], default="微信")])
+    if method == "微信":
         sns = "wechat"
-    elif method == "2":
+    elif method == "QQ":
         sns = "qq"
-    elif method == "3":
+    elif method == "微博":
         sns = "weibo"
     else:
         logger.error("暂不支持此方式")
@@ -315,20 +305,24 @@ def sns_login(session, headers):
     logger.info(url)
     logger.info("请在浏览器中打开上面的链接并登录, 然后复制重定向的链接（即提示'校验失败，请重试~'的网址）")
     # https://passport.bilibili.com/x/passport-login/web/sns/login
-    redirect = input("请输入重定向链接: ")
+    redirect = inquirer.prompt([inquirer.Text("redirect", message="请输入重定向链接")])["redirect"]
     # get params from redirect
-    redirect = redirect.split("?")[1]
-    params = {}
-    for item in redirect.split("&"):
-        key, value = item.split("=")
-        params[key] = value
-    data = {
-        "csrf_state": state,
-        "gourl": params["go_url"],
-        "source": "main-fe-header",
-        "sns_platform": params["sns_platform"],
-        "code": params["code"],
-    }
+    try:
+        redirect = redirect.split("?")[1]
+        params = {}
+        for item in redirect.split("&"):
+            key, value = item.split("=")
+            params[key] = value
+        data = {
+            "csrf_state": state,
+            "gourl": params["go_url"],
+            "source": "main-fe-header",
+            "sns_platform": params["sns_platform"],
+            "code": params["code"],
+        }
+    except Exception:
+        logger.error("链接错误，请重新登录")
+        return sns_login(session, headers)
     login = session.post(
         "https://passport.bilibili.com/x/passport-login/web/sns/login",
         headers=headers,
@@ -354,19 +348,22 @@ def interactive_login():
     session = requests.session()
     session.get("https://www.bilibili.com/", headers=headers)
 
-    logger.info(
-        "请选择登录方式\n1. cookie登录\n2. 扫码登录\n3. 用户名密码登录\n4. 验证码登录\n5. SNS登录(第三方登录)"
-    )
-    method = input("请输入数字: ")
-    if method == "1":
+    method = inquirer.prompt([inquirer.List("method", message="请选择登录方式", choices=["cookie", "扫码", "用户名密码", "验证码", "SNS"], default="扫码")])
+    if method["method"] == "cookie":
         cookie_str = input("请输入cookie: ")
-    elif method == "2":
+        # verify cookie
+        try:
+            session.get("https://www.bilibili.com/", headers={"User-Agent": "Mozilla/5.0", "Cookie": cookie_str})
+        except Exception:
+            logger.error("cookie不合法")
+            return interactive_login()
+    elif method["method"] == "扫码":
         cookie_str = qr_login(session, headers)
-    elif method == "3":
+    elif method["method"] == "用户名密码":
         cookie_str = password_login(session, headers)
-    elif method == "4":
+    elif method["method"] == "验证码":
         cookie_str = verify_code_login(session, headers)
-    elif method == "5":
+    elif method["method"] == "SNS":
         cookie_str = sns_login(session, headers)
     else:
         logger.error("暂不支持此方式")
