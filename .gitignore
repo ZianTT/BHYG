@@ -1,6 +1,5 @@
 __pycache__
 /build
-main.spec
 start.spec
 /dist
 .sentryclirc
