@@ -293,11 +293,9 @@ def main():
             "buyer" not in config or "tel" not in config
         ):
             logger.info("请添加联系人信息")
-            config["buyer"] = inquirer.prompt([
-                inquirer.Text("buyer", message="联系人姓名")
-            ])["buyer"]
+            config["buyer"] = input("联系人姓名：")
             config["tel"] = inquirer.prompt([
-                inquirer.Text("tel", message="联系人手机号", validate=lambda _, x: len(x) == 11)
+                inquirer.Text("te·l", message="联系人手机号", validate=lambda _, x: len(x) == 11)
             ])["tel"]
             if "count" not in config:
                 config["count"] = inquirer.prompt([
