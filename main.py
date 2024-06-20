@@ -263,7 +263,7 @@ def main():
                 logger.error("未找到购票人，请前往实名添加购票人")
             else:
                 multiselect = True
-                if config["id_bind"] == 1:
+            if config["id_bind"] == 1:
                     logger.info("本项目只能购买一人票")
                     multiselect = False
                     if multiselect:

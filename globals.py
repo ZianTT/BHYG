@@ -15,30 +15,22 @@ from login import *
 import inquirer
 
 logger.remove(handler_id=0)
+if sys.argv[0].endswith(".py"):
+    level = "DEBUG"
+    print("WARNING: YOU ARE IN DEBUG MODE")
+else:
+    level = "INFO"
 handler_id = logger.add(
     sys.stderr,
     format="<green>{time:HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>",
-    level="INFO",  # NOTE: logger level
+    level=level,  # NOTE: logger level
 )
 
 if os.path.exists("upload-error"):
     sample_rate=1
 elif os.path.exists("do-not-upload-error"):
     sample_rate=0
-else:
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+else:    
     is_upload_error = inquirer.prompt([inquirer.List("is_upload_error", message="可选的错误上传：您是否选择上传可能遇到的错误以帮助我们改善脚本？", choices=["是", "否"], default="是")])
     if is_upload_error["is_upload_error"] == "否":
         logger.info("已选择不上传错误")
@@ -79,30 +71,6 @@ class HygException(Exception):
 def load_config(): 
     
     if os.path.exists("config.json"):
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
         is_use_config = inquirer.prompt([inquirer.List("is_use_config", message="已存在上一次的配置文件，是否沿用全部或只沿用登录信息（包括风控信息）？", choices=["全部", "只登录信息", "不沿用"], default="全部")])
         if is_use_config["is_use_config"] == "不沿用":
             logger.info("重新配置")
