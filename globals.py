@@ -14,6 +14,8 @@ from login import *
 
 import inquirer
 
+from utility import utility
+
 logger.remove(handler_id=0)
 if sys.argv[0].endswith(".py"):
     level = "DEBUG"
@@ -45,7 +47,7 @@ else:
             f.write("")
 sentry_sdk.init(
     dsn="https://9c5cab8462254a2e1e6ea76ffb8a5e3d@sentry-inc.bitf1a5h.eu.org/3",
-    release="v0.7.1",
+    release="v0.7.2",
     
     enable_tracing=True,
     integrations=[
@@ -71,12 +73,19 @@ class HygException(Exception):
 def load_config(): 
     
     if os.path.exists("config.json"):
-        is_use_config = inquirer.prompt([inquirer.List("is_use_config", message="已存在上一次的配置文件，是否沿用全部或只沿用登录信息（包括风控信息）？", choices=["全部", "只登录信息", "不沿用"], default="全部")])
-        if is_use_config["is_use_config"] == "不沿用":
+        run_info = inquirer.prompt([
+            inquirer.List(
+                "run_info",
+                message="请选择运行设置",
+                choices=["延续上次启动所有配置", "保留登录信息重新配置", "全新启动", "进入账户实用工具", "进入账户实用工具（重新登录）"],
+                default="延续上次启动所有配置"
+            )]
+        )["run_info"]
+        if run_info == "全新启动":
             logger.info("重新配置")
             config = {}
             use_login = False
-        elif is_use_config["is_use_config"] == "只登录信息":
+        elif run_info == "保留登录信息重新配置":
             logger.info("只沿用登录信息")
             with open("config.json", "r", encoding="utf-8") as f:
                 temp = json.load(f)
@@ -84,12 +93,23 @@ def load_config():
                 if "gaia_vtoken" in temp:
                     config["gaia_vtoken"] = temp["gaia_vtoken"]
             use_login = True
-        else:
+        elif run_info == "延续上次启动所有配置":
             logger.info("使用上次的配置文件")
             # 读取config.json，转为dict并存入config
             with open("config.json", "r", encoding="utf-8") as f:
                 config = json.load(f)
             use_login = True
+        elif run_info == "进入账户实用工具":
+            logger.info("进入账户实用工具")
+            go_utility = True
+            use_login = True
+            with open("config.json", "r", encoding="utf-8") as f:
+                config = json.load(f)
+        elif run_info == "进入账户实用工具（重新登录）":
+            logger.info("进入账户实用工具（重新登录）")
+            go_utility = True
+            use_login = False
+            config = {}
     else:
         # 不存在则创建config.json
         with open("config.json", "w", encoding="utf-8") as f:
@@ -105,7 +125,7 @@ def load_config():
                 with open("login-info", "w", encoding="utf-8") as f:
                     f.write(config["cookie"])
             headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.1",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.2",
                 "Cookie": config["cookie"],
             }
             user = requests.get(
@@ -122,5 +142,9 @@ def load_config():
                 break
             else:
                 logger.error("登录失败")
+                use_login = False
                 config.pop("cookie")
+    if go_utility:
+        utility(config)
+        return load_config()
     return config
