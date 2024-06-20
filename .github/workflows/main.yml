@@ -24,7 +24,7 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt
       - name: Build Binary
-        run: pyinstaller main.spec -n BHYG-Windows
+        run: pyinstaller Windows.spec
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -46,7 +46,7 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt
       - name: Build Binary
-        run: pyinstaller main.spec -n BHYG-Linux
+        run: pyinstaller Linux.spec
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -67,7 +67,7 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt
       - name: Build Binary
-        run: pyinstaller main.spec -n BHYG-macOS-Intel
+        run: pyinstaller macOS-Intel.spec
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
@@ -88,7 +88,7 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt
       - name: Build Binary
-        run: pyinstaller main.spec -n BHYG-macOS-Apple_Silicon
+        run: pyinstaller macOS-Apple_Silicon.spec
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
