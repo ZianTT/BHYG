@@ -7,7 +7,7 @@ if platform.system() == "Windows":
     name = "BHYG-Windows"
 elif platform.system() == "Linux":
     name = "BHYG-Linux"
-elif platform.system() == "macOS":
+elif platform.system() == "Darwin":
     print(platform.machine())
     if "64" in platform.machine():
         name = "BHYG-macOS-Intel"
