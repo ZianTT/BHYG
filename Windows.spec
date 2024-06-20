@@ -15,7 +15,7 @@ a = Analysis(
     optimize=0,
 )
 
-datas += copy_metadata("readchar")
+a.datas += copy_metadata("readchar")
 
 pyz = PYZ(a.pure)
 
