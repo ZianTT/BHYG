@@ -378,6 +378,18 @@ class BilibiliHyg:
             )
             return False
 
+    def logout(self):
+        #https://passport.bilibili.com/login/exit/v2
+        url = "https://passport.bilibili.com/login/exit/v2"
+        # biliCSRF	str	CSRF Token (位于 cookie 中的 bili_jct)
+        response = self.session.post(url, headers=self.headers, data={
+            "biliCSRF": self.headers["Cookie"][self.headers["Cookie"].index("bili_jct") + 9 : self.headers["Cookie"].index("bili_jct") + 41]
+        }).json()
+        if response["status"] == True:
+            logger.success("已退出登录")
+        else:
+            logger.error("退出登录失败")
+
     def try_create_order(self):
         result = self.create_order()
         if result == {}:
@@ -405,6 +417,7 @@ class BilibiliHyg:
             pay_token = result["data"]["token"]
             orderid = result["data"]["orderId"]
             if self.fake_ticket(pay_token, orderid):
+                # self.logout()
                 while self.order_status(self.order_id):
                     logger.info("订单未支付，正在等待")
                     time.sleep(3)
