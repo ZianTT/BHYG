@@ -287,9 +287,9 @@ def main():
                     )
             else:
                 index = inquirer.prompt([
-                    inquirer.List("index", message="请选择购票人", choices=[{"name": f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}", "value": i} for i in range(len(buyer_infos))])
-                ])["index"].split(".")[0]
-                config["buyer_info"].append(buyer_infos[index])
+                    inquirer.List("index", message="请选择购票人", choices=[f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for i in range(len(buyer_infos))])
+                ])["index"]
+                config["buyer_info"].append(buyer_infos[indexi.split(".")[0]])
                 logger.info("已选择购票人" + buyer_infos[index]["name"] + " " + buyer_infos[index]["personal_id"] + " " + buyer_infos[index]["tel"])
             if "count" not in config:
                 config["count"] = len(config["buyer_info"])
@@ -298,9 +298,7 @@ def main():
             "buyer" not in config or "tel" not in config
         ):
             logger.info("请添加联系人信息")
-            config["buyer"] = inquirer.prompt([
-                inquirer.Text("buyer", message="联系人姓名")
-            ])["buyer"]
+            config["buyer"] = input("联系人姓名：")
             config["tel"] = inquirer.prompt([
                 inquirer.Text("tel", message="联系人手机号", validate=lambda _, x: len(x) == 11)
             ])["tel"]
