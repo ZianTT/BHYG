@@ -18,7 +18,7 @@ class BilibiliHyg:
         self.config["gaia_vtoken"] = None
         self.session = requests.Session()
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.1",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.3",
         }
 
         self.headers["Cookie"] = self.config["cookie"]
