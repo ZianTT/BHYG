@@ -68,11 +68,12 @@ class BilibiliHyg:
                     return self.get_ticket_status()
                 else:
                     self.risk = True
-                    logger.error("暂停30s")
                     logger.error(
                         "你也可以尝试更换网络环境，如重启流量（飞行模式开关）重新拨号（重启光猫）等"
                     )
-                    time.sleep(30)
+                    input("请确认排除问题后按三下回车继续")
+                    input("请再按两下回车继续")
+                    input("请再按一下回车继续")
                     return -1, 0
             screens = response.json()["data"]["screen_list"]
             # 找到 字段id为screen_id的screen

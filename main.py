@@ -149,6 +149,7 @@ def main():
                 "http": config["proxy_auth"][2],
                 "https": config["proxy_auth"][2],
             }
+            session.keep_alive = False
             session.get("https://show.bilibili.com")
             logger.info(
                 "尝试访问B站，当前IP为："
