@@ -20,10 +20,12 @@ logger.remove(handler_id=0)
 if sys.argv[0].endswith(".py"):
     level = "DEBUG"
     format = "DEBUG MODE | <green>{time:HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>"
+    environment = "development"
     print("WARNING: YOU ARE IN DEBUG MODE")
 else:
     level = "INFO"
     format = "<green>{time:HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>"
+    environment = "production"
 handler_id = logger.add(
     sys.stderr,
     format=format,
@@ -52,7 +54,7 @@ else:
 sentry_sdk.init(
     dsn="https://9c5cab8462254a2e1e6ea76ffb8a5e3d@sentry-inc.bitf1a5h.eu.org/3",
     release="v0.7.3",
-    
+    profiles_sample_rate=sample_rate,
     enable_tracing=True,
     integrations=[
         LoguruIntegration(
@@ -60,6 +62,7 @@ sentry_sdk.init(
         ),
     ],
     sample_rate=sample_rate,
+    environment=environment
 )
 with sentry_sdk.configure_scope() as scope:
     scope.add_attachment(path="config.json")
@@ -116,13 +119,20 @@ def load_config():
         with open("config.json", "w", encoding="utf-8") as f:
             f.write("{}")
         config = {}
-
+    import ntplib
+    c = ntplib.NTPClient()
+    response = c.request('pool.ntp.org')
+    import time
+    time_offset = response.offset
+    if time_offset > 0.5:
+        logger.warning(f"当前时间偏移：{time_offset:.2f}秒，建议校准时间")
+    config["time_offset"] = time_offset
     while True:
             if os.path.exists("login-info") and use_login:
                 with open("login-info", "r", encoding="utf-8") as f:
                     config["cookie"] = f.read()
             else:
-                config["cookie"] = interactive_login()
+                config["cookie"] = interactive_login(sentry_sdk)
                 with open("login-info", "w", encoding="utf-8") as f:
                     f.write(config["cookie"])
             headers = {

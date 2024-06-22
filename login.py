@@ -29,8 +29,17 @@ def appsign(params):
     return params
 
 def _verify(gt, challenge, token):
+    global sdk
     from geetest import run
-    return run(gt, challenge, token)
+    time_start = time.time()
+    data = run(gt, challenge, token)
+    delta = time.time() - time_start
+    sdk.metrics.distribution(
+        key="gt_solve_time",
+        value=delta*1000,
+        unit="millisecond"
+    )
+    return data
 
 
 def qr_login(session, headers):
@@ -427,8 +436,9 @@ def sns_login(session, headers):
         return cookie(cookies)
 
 
-def interactive_login():
-
+def interactive_login(sentry_sdk = None):
+    global sdk
+    sdk = sentry_sdk
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.1"
     }

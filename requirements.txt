@@ -8,3 +8,4 @@ kdl
 pycryptodome
 bili_ticket_gt_python==0.2.5
 inquirer
+ntplib

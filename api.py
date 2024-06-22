@@ -27,9 +27,18 @@ class BilibiliHyg:
         self.session = session
         if self.client != None:
             self.ip = self.client.tps_current_ip(sign_type="hmacsha1")
+        if self.config["mode"] == 'time':
+            logger.info("当前为定时抢票模式")
+            logger.info("等待到达开票时间前15分钟以获取token...")
+            while self.time() < self.config["time"]-900:
+                time.sleep(10)
+                logger.info("距离开票时间还有" + str(self.config["time"]-self.time()) + "秒")
         logger.info("准备完毕，获取token中...")
         self.token = self.get_token()
         logger.info("即将开始下单")
+
+    def time(self):
+        return float(time.time() + self.config["time_offset"])
 
     def get_ticket_status(self):
         url = (
@@ -134,7 +143,14 @@ class BilibiliHyg:
 
     def verify(self, gt, challenge, token):
         from geetest import run
+        time_start = time.time()
         self.captcha_data = run(gt, challenge, token)
+        delta = time.time() - time_start
+        sdk.metrics.distribution(
+            key="gt_solve_time",
+            value=delta*1000,
+            unit="millisecond"
+        )
         self.captcha_data["csrf"] = self.headers["Cookie"][
                         self.headers["Cookie"].index("bili_jct")
                         + 9 : self.headers["Cookie"].index("bili_jct")
@@ -422,6 +438,9 @@ class BilibiliHyg:
                 if "hunter" in self.config:
                     return True
                 logger.info("订单未支付，正在等待")
+                while not self.order_status(orderid):
+                    time.sleep(1)
+                logger.success("订单支付成功")
                 self.sdk.capture_message("Exit by in-app exit")
                 return True
             else:

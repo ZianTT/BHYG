@@ -21,8 +21,10 @@ common_project_id = [
 ]
 
 def run(hyg):
+    def time():
+        return float(time.time() + hyg.config["time_offset"])
     last_reset = time.time()
-    if hyg.config["mode"]:
+    if hyg.config["mode"] == 'direct':
         while True:
             if last_reset + 60 > time.time():
                 hyg.session.close()
@@ -37,7 +39,7 @@ def run(hyg):
                         json.dump(hyg.configconfig, f)
                     logger.success(f"猎手，你的战绩：{hyg.config['hunter']}张") 
             time.sleep(hyg.config["co_delay"])
-    else:
+    elif hyg.config["mode"] == 'detect':
         while 1:
             if last_reset + 60 > time.time():
                 hyg.session.close()
@@ -89,6 +91,22 @@ def run(hyg):
             else:
                 logger.error("未知状态:" + str(status))
             time.sleep(hyg.config["status_delay"])
+    elif hyg.config["mode"] == 'time':
+        logger.info("当前为定时抢票模式")
+        logger.info("等待到达开票时间...")
+        while time() < hyg.config["time"]-60:
+            time.sleep(10)
+            logger.info("等待中，距离开票时间还有" + str(hyg.config["time"] - time()) + "秒")
+        logger.info("唤醒！即将开始抢票！")
+        while True:
+            if time() >= hyg.config["time"]:
+                break
+        while True:
+            if hyg.try_create_order():
+                hyg.sdk.capture_message("Pay success!")
+                logger.success("购票成功！")
+                return
+            time.sleep(hyg.config["co_delay"])
 
 
 def main():
@@ -106,13 +124,16 @@ def main():
         }
         session = requests.Session()
         if "mode" not in config:
-            mode_str = inquirer.prompt([inquirer.List("mode", message="是否直接抢票（不进行检测）", choices=["是", "否"], default="否")])["mode"]
-            if mode_str == "是":
-                config["mode"] = True
+            mode_str = inquirer.prompt([inquirer.List("mode", message="请选择抢票模式", choices=["直接抢票", "检测详情界面余票后抢票", "根据项目开票时间定时抢票"], default="据项目开票时间定时抢票")])["mode"]
+            if mode_str == "直接抢票":
+                config["mode"] = 'direct'
                 logger.info("已开启直接抢票模式")
-            else:
-                config["mode"] = False
+            elif mode_str == "检测详情界面余票后抢票":
+                config["mode"] = 'detect'
                 logger.info("已开启检测模式")
+            else:
+                config["mode"] = 'time'
+                logger.info("已开启定时抢票模式")
 
         if "co_delay" not in config:
             config["co_delay"] = float(inquirer.prompt([
@@ -122,7 +143,7 @@ def main():
                     default="0",
                     validate=lambda _, x: float(x) >= 0
                 )])["co_delay"])
-        if "status_delay" not in config and not config["mode"]:
+        if "status_delay" not in config and config["mode"] == 'detect':
             config["status_delay"] = float(inquirer.prompt([
                 inquirer.Text(
                     "status_delay",
@@ -223,6 +244,7 @@ def main():
             config["sku_id"] = str(tickets[int(sku_id)]["id"])
             config["pay_money"] = str(tickets[int(sku_id)]["price"])
             config["ticket_desc"] = str(tickets[int(sku_id)]["desc"])
+            config["time"] = int(screens[int(screen_id)]["start_time"])
             if config["is_paper_ticket"]:
                 if response["data"]["express_free_flag"]:
                     config["express_fee"] = 0
@@ -269,6 +291,7 @@ def main():
                 + " "
                 + config["pay_money"]
             )
+            logger.debug("您的开始销售时间为：" + str(config["time"]))
         if config["id_bind"] != 0 and ("buyer_info" not in config):
             url = "https://show.bilibili.com/api/ticket/buyer/list"
             response = session.get(url, headers=headers)
@@ -306,7 +329,7 @@ def main():
                 index = inquirer.prompt([
                     inquirer.List("index", message="请选择购票人", choices=[f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for i in range(len(buyer_infos))])
                 ])["index"]
-                config["buyer_info"].append(buyer_infos[indexi.split(".")[0]])
+                config["buyer_info"].append(buyer_infos[index.split(".")[0]])
                 logger.info("已选择购票人" + buyer_infos[index]["name"] + " " + buyer_infos[index]["personal_id"] + " " + buyer_infos[index]["tel"])
             if "count" not in config:
                 config["count"] = len(config["buyer_info"])
