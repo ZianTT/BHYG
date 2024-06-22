@@ -432,6 +432,8 @@ class BilibiliHyg:
             logger.success("已经抢到了啊喂！")
             self.sdk.capture_message("Exit by in-app exit")
             return True
+        elif result["errno"] == 219:
+            logger.info("库存不足")
         else:
             logger.error("未知错误:" + str(result))
         return False
