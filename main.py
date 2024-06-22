@@ -110,7 +110,7 @@ def run(hyg):
 
 
 def main():
-    logger.info("项目主页: https://github.com/ZianTT/BHYG GPL-3.0 删除本信息或盗版必究。")
+    logger.info("项目主页: https://github.com/biliticket/BHYG GPL-3.0 删除本信息或盗版必究。")
     global uid
     try:
         session = requests.session()
@@ -119,7 +119,7 @@ def main():
 
         config = load_config()
         headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.3",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.5",
                 "Cookie": config["cookie"],
         }
         session = requests.Session()
