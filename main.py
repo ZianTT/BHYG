@@ -27,7 +27,15 @@ def run(hyg):
             if last_reset + 60 > time.time():
                 hyg.session.close()
             if hyg.try_create_order():
-                break
+                if "hunter" not in hyg.config:
+                    hyg.sdk.capture_message("Pay success!")
+                    logger.success("购票成功！")
+                    return
+                else:
+                    hyg.config['hunter'] += 1
+                    with open("config.json", "w", encoding="utf-8") as f:
+                        json.dump(hyg.configconfig, f)
+                    logger.success(f"猎手，你的战绩：{hyg.config['hunter']}张") 
             time.sleep(hyg.config["co_delay"])
     else:
         while 1:
@@ -50,7 +58,15 @@ def run(hyg):
                     if last_reset + 60 > time.time():
                         hyg.session.close()
                     if hyg.try_create_order():
-                        break
+                        if "hunter" not in hyg.config:
+                            hyg.sdk.capture_message("Pay success!")
+                            logger.success("购票成功！")
+                            return
+                        else:
+                            hyg.config['hunter'] += 1
+                            with open("config.json", "w", encoding="utf-8") as f:
+                                json.dump(hyg.configconfig, f)
+                            logger.success(f"猎手，你的战绩：{hyg.config['hunter']}张")  
                     time.sleep(hyg.config["co_delay"])
                 break
             elif status == 1:

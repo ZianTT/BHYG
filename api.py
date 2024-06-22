@@ -418,9 +418,9 @@ class BilibiliHyg:
             orderid = result["data"]["orderId"]
             if self.fake_ticket(pay_token, orderid):
                 # self.logout()
-                while self.order_status(self.order_id):
-                    logger.info("订单未支付，正在等待")
-                    time.sleep(3)
+                if "hunter" in self.config:
+                    return True
+                logger.info("订单未支付，正在等待")
                 self.sdk.capture_message("Exit by in-app exit")
                 return True
             else:

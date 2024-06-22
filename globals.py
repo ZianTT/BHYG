@@ -140,6 +140,9 @@ def load_config():
                         "username": user["data"]["mid"]
                     }
                 )
+                if "hunter" in config:
+                    logger.success("已启用猎手模式")
+                    logger.info(f"战绩：{config['hunter']}张")           
                 break
             else:
                 logger.error("登录失败")
