@@ -306,7 +306,7 @@ def main():
                 index = inquirer.prompt([
                     inquirer.List("index", message="请选择购票人", choices=[f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for i in range(len(buyer_infos))])
                 ])["index"]
-                config["buyer_info"].append(buyer_infos[indexi.split(".")[0]])
+                config["buyer_info"].append(buyer_infos[index.split(".")[0]])
                 logger.info("已选择购票人" + buyer_infos[index]["name"] + " " + buyer_infos[index]["personal_id"] + " " + buyer_infos[index]["tel"])
             if "count" not in config:
                 config["count"] = len(config["buyer_info"])
