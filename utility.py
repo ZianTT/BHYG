@@ -6,6 +6,7 @@ def prompt(prompt):
     data = inquirer.prompt(prompt)
     if data is None:
         raise KeyboardInterrupt
+    return data
 
 def utility(config):
     def add_buyer(headers):

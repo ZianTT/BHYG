@@ -20,6 +20,7 @@ def prompt(prompt):
     data = inquirer.prompt(prompt)
     if data is None:
         raise KeyboardInterrupt
+    return data
 
 def save(data: dict):
     from Crypto.Cipher import AES
@@ -86,9 +87,10 @@ def agree_terms():
         else:
             break
     with open("agree-terms", "w") as f:
+        import machineid
         f.write(machineid.id())
     logger.info("已同意EULA")
-if not os.path.exists("agree-terms") and level != "DEBUG":
+if not os.path.exists("agree-terms"):
     agree_terms()
 else:
     with open("agree-terms", "r") as f:
