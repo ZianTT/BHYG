@@ -122,35 +122,38 @@ with sentry_sdk.configure_scope() as scope:
 import machineid
 sentry_sdk.set_user({"hwid": machineid.id()[:16]}) 
 
-import requests
-data = requests.get("https://api.github.com/repos/biliticket/BHYG/releases/latest", headers={"Accept": "application/vnd.github+json"}).json()
-if data["tag_name"] != version:
-    
-    import platform
-    if platform.system() == "Windows":
-        name = "BHYG-Windows"
-    elif platform.system() == "Linux":
-        name = "BHYG-Linux"
-    elif platform.system() == "Darwin":
-        print(platform.machine())
-        if "arm" in platform.machine():
-            name = "BHYG-macOS-Apple_Silicon"
-        elif "64" in platform.machine():
-            name = "BHYG-macOS-Intel"
+try:
+    import requests
+    data = requests.get("https://api.github.com/repos/biliticket/BHYG/releases/latest", headers={"Accept": "application/vnd.github+json"}).json()
+    if data["tag_name"] != version:
+        
+        import platform
+        if platform.system() == "Windows":
+            name = "BHYG-Windows"
+        elif platform.system() == "Linux":
+            name = "BHYG-Linux"
+        elif platform.system() == "Darwin":
+            print(platform.machine())
+            if "arm" in platform.machine():
+                name = "BHYG-macOS-Apple_Silicon"
+            elif "64" in platform.machine():
+                name = "BHYG-macOS-Intel"
+            else:
+                name = "BHYG-macOS"
         else:
-            name = "BHYG-macOS"
-    else:
-        name = "BHYG"
-    find = False
-    for distribution in data["assets"]:
-        if distribution["name"] == name:
-            logger.warning(f"发现新版本{data['tag_name']}，请前往 {distribution['browser_download_url']} 下载，大小：{distribution['size']/1024/1024:.2f}MB")
-            if data['body'] != "":
-                logger.warning(f"更新说明：{data['body']}")
-            find = True
-            break
-    if not find:
-        logger.warning(f"发现新版本{data['tag_name']}，请前往{data['html_url']}查看")
+            name = "BHYG"
+        find = False
+        for distribution in data["assets"]:
+            if distribution["name"] == name:
+                logger.warning(f"发现新版本{data['tag_name']}，请前往 {distribution['browser_download_url']} 下载，大小：{distribution['size']/1024/1024:.2f}MB")
+                if data['body'] != "":
+                    logger.warning(f"更新说明：{data['body']}")
+                find = True
+                break
+        if not find:
+            logger.warning(f"发现新版本{data['tag_name']}，请前往{data['html_url']}查看")
+except:
+    logger.warning("更新检查失败")
     
 
 class HygException(Exception):
