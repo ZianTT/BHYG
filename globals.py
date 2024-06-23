@@ -215,13 +215,15 @@ def load_config():
         response = c.request('pool.ntp.org')
     except ntplib.NTPException:
         logger.error("无法连接到时间服务器，将跳过时间检查")
-        response = None
-        response.offset = 0
-    import time
-    time_offset = response.offset
-    if time_offset > 0.5:
-        logger.warning(f"当前时间偏移：{time_offset:.2f}秒，建议校准时间")
-    config["time_offset"] = time_offset
+        skip = True
+    if not skip:
+        import time
+        time_offset = response.offset
+        if time_offset > 0.5:
+            logger.warning(f"当前时间偏移：{time_offset:.2f}秒，建议校准时间")
+        config["time_offset"] = time_offset
+    else:
+        config["time_offset"] = 0
     while True:
             if "cookie" not in config or not use_login:
                 config["cookie"] = interactive_login(sentry_sdk)
