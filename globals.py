@@ -28,11 +28,12 @@ def save(data: dict):
     import machineid
     import json
     key = machineid.id().encode()[:16]
-    cipher = AES.new(key)
+    cipher = AES.new(key, AES.MODE_CBC)
     cipher_text = cipher.encrypt(pad(json.dumps(data).encode("utf-8"), AES.block_size))
     data = base64.b64encode(cipher_text).decode("utf-8")
+    iv = base64.b64encode(cipher.iv).decode('utf-8')
     with open("data", "w", encoding="utf-8") as f:
-        f.write(data)
+        f.write(iv+"%"+data)
     return
 
 def load() -> dict:
@@ -41,11 +42,12 @@ def load() -> dict:
     import machineid
     import json
     key = machineid.id().encode()[:16]
-    with open("data", "r", encoding="utf-8") as f:
-        data = f.read()
-    cipher = AES.new(key)
-    cipher_text = base64.b64decode(data)
     try:
+        with open("data", "r", encoding="utf-8") as f:
+            iv, data = f.read().split("%")
+            iv = base64.b64decode(iv)
+            cipher = AES.new(key, AES.MODE_CBC, iv)
+        cipher_text = base64.b64decode(data)
         data = unpad(cipher.decrypt(cipher_text), AES.block_size).decode("utf-8")
         data = json.loads(data)
     except ValueError:
@@ -62,22 +64,6 @@ def load() -> dict:
             os.remove("data")
         logger.info("已销毁原数据")
     return data
-
-logger.remove(handler_id=0)
-if sys.argv[0].endswith(".py"):
-    level = "DEBUG"
-    format = "DEBUG MODE | <green>{time:HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>"
-    environment = "development"
-    print("WARNING: YOU ARE IN DEBUG MODE")
-else:
-    level = "INFO"
-    format = "<green>{time:HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>"
-    environment = "production"
-handler_id = logger.add(
-    sys.stderr,
-    format=format,
-    level=level,  # NOTE: logger level
-)
 
 def agree_terms():
     while True:
@@ -101,59 +87,79 @@ else:
             with open("agree-terms", "w") as f:
                 f.write(machineid.id())
 
-version = "v0.7.6"
+def init():
+    version = "v0.7.6"
 
-sentry_sdk.init(
-    dsn="https://9c5cab8462254a2e1e6ea76ffb8a5e3d@sentry-inc.bitf1a5h.eu.org/3",
-    release=version,
-    profiles_sample_rate=1.0,
-    enable_tracing=True,
-    integrations=[
-        LoguruIntegration(
-            level=LoggingLevels.DEBUG.value, event_level=LoggingLevels.CRITICAL.value
-        ),
-    ],
-    sample_rate=1.0,
-    environment=environment
-)
-with sentry_sdk.configure_scope() as scope:
-    scope.add_attachment(path="data")
+    logger.remove(handler_id=0)
+    if sys.argv[0].endswith(".py"):
+        level = "DEBUG"
+        format = "DEBUG MODE | <green>{time:HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>"
+        environment = "development"
+        print("WARNING: YOU ARE IN DEBUG MODE")
+    else:
+        level = "INFO"
+        format = "<green>{time:HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>"
+        environment = "production"
+    handler_id = logger.add(
+        sys.stderr,
+        format=format,
+        level=level,  # NOTE: logger level
+    )
 
-import machineid
-sentry_sdk.set_user({"hwid": machineid.id()[:16]}) 
+    sentry_sdk.init(
+        dsn="https://9c5cab8462254a2e1e6ea76ffb8a5e3d@sentry-inc.bitf1a5h.eu.org/3",
+        release=version,
+        profiles_sample_rate=1.0,
+        enable_tracing=True,
+        integrations=[
+            LoguruIntegration(
+                level=LoggingLevels.DEBUG.value, event_level=LoggingLevels.CRITICAL.value
+            ),
+        ],
+        sample_rate=1.0,
+        environment=environment
+    )
+    with sentry_sdk.configure_scope() as scope:
+        scope.add_attachment(path="data")
 
-try:
-    import requests
-    data = requests.get("https://api.github.com/repos/biliticket/BHYG/releases/latest", headers={"Accept": "application/vnd.github+json"}).json()
-    if data["tag_name"] != version:
-        
-        import platform
-        if platform.system() == "Windows":
-            name = "BHYG-Windows"
-        elif platform.system() == "Linux":
-            name = "BHYG-Linux"
-        elif platform.system() == "Darwin":
-            print(platform.machine())
-            if "arm" in platform.machine():
-                name = "BHYG-macOS-Apple_Silicon"
-            elif "64" in platform.machine():
-                name = "BHYG-macOS-Intel"
+    import machineid
+    sentry_sdk.set_user({"hwid": machineid.id()[:16]}) 
+    return version, sentry_sdk
+
+
+def check_update(version):
+    try:
+        import requests
+        data = requests.get("https://api.github.com/repos/biliticket/BHYG/releases/latest", headers={"Accept": "application/vnd.github+json"}).json()
+        if data["tag_name"] != version:
+            
+            import platform
+            if platform.system() == "Windows":
+                name = "BHYG-Windows"
+            elif platform.system() == "Linux":
+                name = "BHYG-Linux"
+            elif platform.system() == "Darwin":
+                print(platform.machine())
+                if "arm" in platform.machine():
+                    name = "BHYG-macOS-Apple_Silicon"
+                elif "64" in platform.machine():
+                    name = "BHYG-macOS-Intel"
+                else:
+                    name = "BHYG-macOS"
             else:
-                name = "BHYG-macOS"
-        else:
-            name = "BHYG"
-        find = False
-        for distribution in data["assets"]:
-            if distribution["name"] == name:
-                logger.warning(f"发现新版本{data['tag_name']}，请前往 {distribution['browser_download_url']} 下载，大小：{distribution['size']/1024/1024:.2f}MB")
-                if data['body'] != "":
-                    logger.warning(f"更新说明：{data['body']}")
-                find = True
-                break
-        if not find:
-            logger.warning(f"发现新版本{data['tag_name']}，请前往{data['html_url']}查看")
-except:
-    logger.warning("更新检查失败")
+                name = "BHYG"
+            find = False
+            for distribution in data["assets"]:
+                if distribution["name"] == name:
+                    logger.warning(f"发现新版本{data['tag_name']}，请前往 {distribution['browser_download_url']} 下载，大小：{distribution['size']/1024/1024:.2f}MB")
+                    if data['body'] != "":
+                        logger.warning(f"更新说明：{data['body']}")
+                    find = True
+                    break
+            if not find:
+                logger.warning(f"发现新版本{data['tag_name']}，请前往{data['html_url']}查看")
+    except:
+        logger.warning("更新检查失败")
     
 
 class HygException(Exception):

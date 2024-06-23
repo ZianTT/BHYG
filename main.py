@@ -32,11 +32,12 @@ def save(data: dict):
     import machineid
     import json
     key = machineid.id().encode()[:16]
-    cipher = AES.new(key)
+    cipher = AES.new(key, AES.MODE_CBC)
     cipher_text = cipher.encrypt(pad(json.dumps(data).encode("utf-8"), AES.block_size))
     data = base64.b64encode(cipher_text).decode("utf-8")
+    iv = base64.b64encode(cipher.iv).decode('utf-8')
     with open("data", "w", encoding="utf-8") as f:
-        f.write(data)
+        f.write(iv+"%"+data)
     return
 
 def load() -> dict:
@@ -45,11 +46,12 @@ def load() -> dict:
     import machineid
     import json
     key = machineid.id().encode()[:16]
-    with open("data", "r", encoding="utf-8") as f:
-        data = f.read()
-    cipher = AES.new(key)
-    cipher_text = base64.b64decode(data)
     try:
+        with open("data", "r", encoding="utf-8") as f:
+            iv, data = f.read().split("%")
+            iv = base64.b64decode(iv)
+            cipher = AES.new(key, AES.MODE_CBC, iv)
+        cipher_text = base64.b64decode(data)
         data = unpad(cipher.decrypt(cipher_text), AES.block_size).decode("utf-8")
         data = json.loads(data)
     except ValueError:
@@ -151,7 +153,10 @@ def main():
     logger.info("项目主页: https://github.com/biliticket/BHYG GPL-3.0 删除本信息或盗版必究。")
     global uid
     try:
+        version, sentry_sdk = init()
         session = requests.session()
+
+        check_update(version)
 
         config = load_config()
         headers = {

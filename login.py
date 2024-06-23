@@ -451,27 +451,31 @@ def interactive_login(sentry_sdk = None):
     session = requests.session()
     session.get("https://www.bilibili.com/", headers=headers)
 
-    method = prompt([inquirer.List("method", message="请选择登录方式", choices=["cookie", "扫码", "用户名密码", "验证码", "验证码APP版", "SNS"], default="扫码")])
-    if method["method"] == "cookie":
-        cookie_str = input("请输入cookie: ")
-        # verify cookie
-        try:
-            session.get("https://www.bilibili.com/", headers={"User-Agent": "Mozilla/5.0", "Cookie": cookie_str})
-        except Exception:
-            logger.error("cookie不合法")
+    try:
+        method = prompt([inquirer.List("method", message="请选择登录方式", choices=["cookie", "扫码", "用户名密码", "验证码", "验证码APP版", "SNS"], default="扫码")])
+        if method["method"] == "cookie":
+            cookie_str = input("请输入cookie: ")
+            # verify cookie
+            try:
+                session.get("https://www.bilibili.com/", headers={"User-Agent": "Mozilla/5.0", "Cookie": cookie_str})
+            except Exception:
+                logger.error("cookie不合法")
+                return interactive_login()
+        elif method["method"] == "扫码":
+            cookie_str = qr_login(session, headers)
+        elif method["method"] == "用户名密码":
+            cookie_str = password_login(session, headers)
+        elif method["method"] == "验证码":
+            cookie_str = verify_code_login(session, headers)
+        elif method["method"] == "SNS":
+            cookie_str = sns_login(session, headers)
+        elif method["method"] == "验证码APP版":
+            cookie_str = verify_code_login_app(session, headers)
+        else:
+            logger.error("暂不支持此方式")
             return interactive_login()
-    elif method["method"] == "扫码":
-        cookie_str = qr_login(session, headers)
-    elif method["method"] == "用户名密码":
-        cookie_str = password_login(session, headers)
-    elif method["method"] == "验证码":
-        cookie_str = verify_code_login(session, headers)
-    elif method["method"] == "SNS":
-        cookie_str = sns_login(session, headers)
-    elif method["method"] == "验证码APP版":
-        cookie_str = verify_code_login_app(session, headers)
-    else:
-        logger.error("暂不支持此方式")
+    except Exception as e:
+        logger.error("登录时出现错误，可能是风控导致的。请更换登录方式或稍后再试")
         return interactive_login()
 
     logger.debug("=" * 20)
