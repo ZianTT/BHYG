@@ -70,8 +70,6 @@ def load() -> dict:
     return data
 
 def run(hyg):
-    def get_get_time():
-        return float(time.time() + hyg.config["time_offset"])
     if hyg.config["mode"] == 'direct':
         while True:
             if hyg.try_create_order():
@@ -134,12 +132,12 @@ def run(hyg):
     elif hyg.config["mode"] == 'time':
         logger.info("当前为定时抢票模式")
         logger.info("等待到达开票时间...")
-        while get_time() < hyg.config["time"]-60:
+        while hyg.get_time() < hyg.config["time"]-60:
             time.sleep(10)
             logger.info(f"等待中，距离开票时间还有{hyg.config["time"] - get_time():.2f}秒")
         logger.info("唤醒！即将开始抢票！")# Heads up, the wheels are spinning...
         while True:
-            if get_time() >= hyg.config["time"]:
+            if hyg.get_time() >= hyg.config["time"]:
                 break
         while True:
             if hyg.try_create_order():
@@ -287,7 +285,7 @@ def main():
             config["sku_id"] = str(tickets[int(sku_id)]["id"])
             config["pay_money"] = str(tickets[int(sku_id)]["price"])
             config["ticket_desc"] = str(tickets[int(sku_id)]["desc"])
-            config["time"] = int(screens[int(screen_id)]["start_time"])
+            config["time"] = int(tickets[int(sku_id)]["saleStart"])
             if config["is_paper_ticket"]:
                 if response["data"]["express_free_flag"]:
                     config["express_fee"] = 0
