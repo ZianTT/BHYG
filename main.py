@@ -32,7 +32,7 @@ def save(data: dict):
     import machineid
     import json
     key = machineid.id().encode()[:16]
-    cipher = AES.new(key, AES.MODE_ECB)
+    cipher = AES.new(key)
     cipher_text = cipher.encrypt(pad(json.dumps(data).encode("utf-8"), AES.block_size))
     data = base64.b64encode(cipher_text).decode("utf-8")
     with open("data", "w", encoding="utf-8") as f:
@@ -47,7 +47,7 @@ def load() -> dict:
     key = machineid.id().encode()[:16]
     with open("data", "r", encoding="utf-8") as f:
         data = f.read()
-    cipher = AES.new(key, AES.MODE_ECB)
+    cipher = AES.new(key)
     cipher_text = base64.b64decode(data)
     try:
         data = unpad(cipher.decrypt(cipher_text), AES.block_size).decode("utf-8")
