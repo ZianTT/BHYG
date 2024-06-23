@@ -168,6 +168,15 @@ class HygException(Exception):
 
 def load_config(): 
     go_utility = False
+    if os.path.exists("config.json"):
+        logger.info("感谢您升级到最新版本！现在正在为您自动迁移...")
+        with open("config.json", "r", encoding="utf-8") as f:
+            config = json.load(f)
+            save(config)
+        os.remove("config.json")
+        if os.path.exists("data"):
+            os.remove("data")
+        logger.info("迁移完成")
     if os.path.exists("share.json"):
         logger.info("检测到分享文件，正在导入")
         with open("share.json", "r", encoding="utf-8") as f:
