@@ -78,7 +78,7 @@ handler_id = logger.add(
     level=level,  # NOTE: logger level
 )
 
-if not os.path.exists("agree-terms") and level != "DEBUG":
+def agree_terms():
     while True:
         agree_prompt = input("欢迎使用BHYG软件，使用前请阅读EULA(https://github.com/biliticket/BHYG)。若您使用时遇到问题，请查阅biliticket文档(https://docs.bitf1a5h.eu.org/)\n特别提醒，根据EULA，严禁任何形式通过本软件盈利。若您同意本软件EULA，请键入：我已阅读并同意EULA，黄牛倒卖狗死妈\n")
         if agree_prompt != "我已阅读并同意EULA，黄牛倒卖狗死妈":
@@ -86,8 +86,18 @@ if not os.path.exists("agree-terms") and level != "DEBUG":
         else:
             break
     with open("agree-terms", "w") as f:
-        f.write("")
+        f.write(machineid.id())
     logger.info("已同意EULA")
+if not os.path.exists("agree-terms") and level != "DEBUG":
+    agree_terms()
+else:
+    with open("agree-terms", "r") as f:
+        hwid = f.read()
+        import machineid
+        if hwid != machineid.id():
+            agree_terms()
+            with open("agree-terms", "w") as f:
+                f.write(machineid.id())
 
 sentry_sdk.init(
     dsn="https://9c5cab8462254a2e1e6ea76ffb8a5e3d@sentry-inc.bitf1a5h.eu.org/3",
