@@ -136,8 +136,8 @@ def run(hyg):
         logger.info("等待到达开票时间...")
         while get_time() < hyg.config["time"]-60:
             time.sleep(10)
-            logger.info("等待中，距离开票时间还有" + str(hyg.config["time"] - get_time()) + "秒")
-        logger.info("唤醒！即将开始抢票！")
+            logger.info(f"等待中，距离开票时间还有{hyg.config["time"] - get_time():.2f}秒")
+        logger.info("唤醒！即将开始抢票！")# Heads up, the wheels are spinning...
         while True:
             if get_time() >= hyg.config["time"]:
                 break
