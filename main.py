@@ -438,5 +438,8 @@ if __name__ == "__main__":
     client = Hub.current.client
     if client is not None:
         client.close(timeout=2.0)
-    logger.info("已安全退出，您可以关闭窗口")
-    time.sleep(10)
+    logger.info("已安全退出，您可以关闭窗口（将在15秒后自动关闭）")
+    try:
+        time.sleep(15)
+    except KeyboardInterrupt:
+        pass
