@@ -16,6 +16,47 @@ import inquirer
 
 from utility import utility
 
+def save(data: dict):
+    from Crypto.Cipher import AES
+    from Crypto.Util.Padding import pad, unpad
+    import machineid
+    import json
+    key = machineid.id().encode()[:16]
+    cipher = AES.new(key, AES.MODE_ECB)
+    cipher_text = cipher.encrypt(pad(json.dumps(data).encode("utf-8"), AES.block_size))
+    data = base64.b64encode(cipher_text).decode("utf-8")
+    with open("data", "w", encoding="utf-8") as f:
+        f.write(data)
+    return
+
+def load() -> dict:
+    from Crypto.Cipher import AES
+    from Crypto.Util.Padding import pad, unpad
+    import machineid
+    import json
+    key = machineid.id().encode()[:16]
+    with open("data", "r", encoding="utf-8") as f:
+        data = f.read()
+    cipher = AES.new(key, AES.MODE_ECB)
+    cipher_text = base64.b64decode(data)
+    try:
+        data = unpad(cipher.decrypt(cipher_text), AES.block_size).decode("utf-8")
+        data = json.loads(data)
+    except ValueError:
+        logger.error("数据错误，运行环境不符")
+        if os.path.exists("share.json"):
+            logger.info("检测到分享文件，正在迁移")
+            with open("share.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
+                save(data)
+            os.remove("share.json")
+            os.remove("data")
+        else:
+            data = {}
+            os.remove("data")
+        logger.info("已销毁原数据")
+    return data
+
 logger.remove(handler_id=0)
 if sys.argv[0].endswith(".py"):
     level = "DEBUG"
@@ -32,7 +73,7 @@ handler_id = logger.add(
     level=level,  # NOTE: logger level
 )
 
-if not os.path.exists("agree-terms") and level is not "DEBUG":
+if not os.path.exists("agree-terms") and level != "DEBUG":
     while True:
         agree_prompt = input("欢迎使用BHYG软件，使用前请阅读EULA(https://github.com/biliticket/BHYG)。若您使用时遇到问题，请查阅biliticket文档(https://docs.bitf1a5h.eu.org/)\n特别提醒，根据EULA，严禁任何形式通过本软件盈利。若您同意本软件EULA，请键入：我已阅读并同意EULA，黄牛倒卖狗死妈\n")
         if agree_prompt != "我已阅读并同意EULA，黄牛倒卖狗死妈":
@@ -57,10 +98,10 @@ sentry_sdk.init(
     environment=environment
 )
 with sentry_sdk.configure_scope() as scope:
-    scope.add_attachment(path="config.json")
+    scope.add_attachment(path="data")
 
-bhyg_username = "未知用户"
-uid = None
+import machineid
+sentry_sdk.set_user({"hwid": machineid.id()[:16]}) 
 
 class HygException(Exception):
     pass
@@ -68,7 +109,13 @@ class HygException(Exception):
 
 def load_config(): 
     go_utility = False
-    if os.path.exists("config.json"):
+    if os.path.exists("share.json"):
+        logger.info("检测到分享文件，正在导入")
+        with open("share.json", "r", encoding="utf-8") as f:
+            config = json.load(f)
+            save(config)
+        os.remove("share.json")
+    if os.path.exists("data"):
         run_info = inquirer.prompt([
             inquirer.List(
                 "run_info",
@@ -83,6 +130,8 @@ def load_config():
             use_login = False
         elif run_info == "保留登录信息重新配置":
             logger.info("只沿用登录信息")
+            temp = load()
+            config = {}
             if "gaia_vtoken" in temp:
                 config["gaia_vtoken"] = temp["gaia_vtoken"]
             if "ua" in temp:
@@ -92,25 +141,20 @@ def load_config():
             use_login = True
         elif run_info == "延续上次启动所有配置":
             logger.info("使用上次的配置文件")
-            # 读取config.json，转为dict并存入config
-            with open("config.json", "r", encoding="utf-8") as f:
-                config = json.load(f)
+            config = load()
             use_login = True
         elif run_info == "进入账户实用工具":
             logger.info("进入账户实用工具")
             go_utility = True
             use_login = True
-            with open("config.json", "r", encoding="utf-8") as f:
-                config = json.load(f)
+            config = load()
         elif run_info == "进入账户实用工具（重新登录）":
             logger.info("进入账户实用工具（重新登录）")
             go_utility = True
             use_login = False
             config = {}
     else:
-        # 不存在则创建config.json
-        with open("config.json", "w", encoding="utf-8") as f:
-            f.write("{}")
+        save({})
         config = {}
     import ntplib
     c = ntplib.NTPClient()
@@ -140,12 +184,14 @@ def load_config():
                 )
                 if "hunter" in config:
                     logger.success("已启用猎手模式")
-                    logger.info(f"战绩：{config['hunter']}张")           
+                    logger.info(f"战绩：{config['hunter']}张")  
+                save(config)         
                 break
             else:
                 logger.error("登录失败")
                 use_login = False
                 config.pop("cookie")
+                save(config)
     if go_utility:
         utility(config)
         return load_config()

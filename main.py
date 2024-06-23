@@ -20,6 +20,47 @@ common_project_id = [
     {"name": "上海·BILIBILI MACRO LINK 2024", "id": 85938}
 ]
 
+def save(data: dict):
+    from Crypto.Cipher import AES
+    from Crypto.Util.Padding import pad, unpad
+    import machineid
+    import json
+    key = machineid.id().encode()[:16]
+    cipher = AES.new(key, AES.MODE_ECB)
+    cipher_text = cipher.encrypt(pad(json.dumps(data).encode("utf-8"), AES.block_size))
+    data = base64.b64encode(cipher_text).decode("utf-8")
+    with open("data", "w", encoding="utf-8") as f:
+        f.write(data)
+    return
+
+def load() -> dict:
+    from Crypto.Cipher import AES
+    from Crypto.Util.Padding import pad, unpad
+    import machineid
+    import json
+    key = machineid.id().encode()[:16]
+    with open("data", "r", encoding="utf-8") as f:
+        data = f.read()
+    cipher = AES.new(key, AES.MODE_ECB)
+    cipher_text = base64.b64decode(data)
+    try:
+        data = unpad(cipher.decrypt(cipher_text), AES.block_size).decode("utf-8")
+        data = json.loads(data)
+    except ValueError:
+        logger.error("数据错误，运行环境不符")
+        if os.path.exists("share.json"):
+            logger.info("检测到分享文件，正在迁移")
+            with open("share.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
+                save(data)
+            os.remove("share.json")
+            os.remove("data")
+        else:
+            data = {}
+            os.remove("data")
+        logger.info("已销毁原数据")
+    return data
+
 def run(hyg):
     def time():
         return float(time.time() + hyg.config["time_offset"])
@@ -35,8 +76,7 @@ def run(hyg):
                     return
                 else:
                     hyg.config['hunter'] += 1
-                    with open("config.json", "w", encoding="utf-8") as f:
-                        json.dump(hyg.configconfig, f)
+                    save(hyg.config)
                     logger.success(f"猎手，你的战绩：{hyg.config['hunter']}张") 
             time.sleep(hyg.config["co_delay"])
     elif hyg.config["mode"] == 'detect':
@@ -66,8 +106,7 @@ def run(hyg):
                             return
                         else:
                             hyg.config['hunter'] += 1
-                            with open("config.json", "w", encoding="utf-8") as f:
-                                json.dump(hyg.configconfig, f)
+                            save(hyg.config)
                             logger.success(f"猎手，你的战绩：{hyg.config['hunter']}张")  
                     time.sleep(hyg.config["co_delay"])
                 break
@@ -114,8 +153,6 @@ def main():
     global uid
     try:
         session = requests.session()
-        if not os.path.exists("data"):
-            os.mkdir("data")
 
         config = load_config()
         headers = {
@@ -371,8 +408,7 @@ def main():
             logger.info(
                 f"共 {config['count']} 张 {config['ticket_desc']} 票，单张价格为 {int(config['pay_money'])/100}，总价为{config['all_price'] / 100}"
             )
-        with open("config.json", "w", encoding="utf-8") as f:
-            json.dump(config, f)
+        save(config)
         sentry_sdk.capture_message("config complete")
         BHYG = BilibiliHyg(config, sentry_sdk, kdl_client, session)
         run(BHYG)

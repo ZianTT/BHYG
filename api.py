@@ -9,6 +9,46 @@ import qrcode
 import requests
 from loguru import logger
 
+def save(data: dict):
+    from Crypto.Cipher import AES
+    from Crypto.Util.Padding import pad, unpad
+    import machineid
+    import json
+    key = machineid.id().encode()[:16]
+    cipher = AES.new(key, AES.MODE_ECB)
+    cipher_text = cipher.encrypt(pad(json.dumps(data).encode("utf-8"), AES.block_size))
+    data = base64.b64encode(cipher_text).decode("utf-8")
+    with open("data", "w", encoding="utf-8") as f:
+        f.write(data)
+    return
+
+def load() -> dict:
+    from Crypto.Cipher import AES
+    from Crypto.Util.Padding import pad, unpad
+    import machineid
+    import json
+    key = machineid.id().encode()[:16]
+    with open("data", "r", encoding="utf-8") as f:
+        data = f.read()
+    cipher = AES.new(key, AES.MODE_ECB)
+    cipher_text = base64.b64decode(data)
+    try:
+        data = unpad(cipher.decrypt(cipher_text), AES.block_size).decode("utf-8")
+        data = json.loads(data)
+    except ValueError:
+        logger.error("数据错误，运行环境不符")
+        if os.path.exists("share.json"):
+            logger.info("检测到分享文件，正在迁移")
+            with open("share.json", "r", encoding="utf-8") as f:
+                data = json.load(f)
+                save(data)
+            os.remove("share.json")
+            os.remove("data")
+        else:
+            data = {}
+            os.remove("data")
+        logger.info("已销毁原数据")
+    return data
 
 class BilibiliHyg:
     def __init__(self, config, sdk,client,session):
@@ -174,8 +214,7 @@ class BilibiliHyg:
                 "; x-bili-gaia-vtoken"
             )[0]
         self.headers["Cookie"] += "; x-bili-gaia-vtoken=" + token
-        with open("config.json", "w", encoding="utf-8") as f:
-            json.dump(self.config, f)
+        save(self.config)
         return success
 
     def get_token(self):

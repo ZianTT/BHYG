@@ -41,6 +41,12 @@ def utility(config):
         config.pop("hunter")
         logger.info("猎手模式已关闭")
 
+    def share_mode(config):
+        import json
+        json.dump(config, open("share.json", "w"))
+        logger.info("分享模式已启动")
+        return
+
     headers = {
         "Cookie": config["cookie"],
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.5",
@@ -50,7 +56,7 @@ def utility(config):
         inquirer.List(
             "select",
             message="请选择您要使用的实用工具",
-            choices=["添加购票人", "覆盖默认UA", "覆盖gaia_vtoken", "开启猎手模式(计数清零)", "关闭猎手模式", "返回"],
+            choices=["添加购票人", "覆盖默认UA", "覆盖gaia_vtoken", "开启猎手模式(计数清零)", "关闭猎手模式", "分享模式", "返回"],
         )])
     if select["select"] == "添加购票人":
         add_buyer(headers)
@@ -66,6 +72,9 @@ def utility(config):
         return utility(config)
     elif select["select"] == "关闭猎手模式":
         hunter_mode_off()
+        return utility(config)
+    elif select["select"] == "分享模式":
+        share_mode(config)
         return utility(config)
     elif select["select"] == "返回":
         return
