@@ -211,12 +211,13 @@ def load_config():
         config = {}
     import ntplib
     c = ntplib.NTPClient()
+    skip = False
     try:
         response = c.request('pool.ntp.org')
     except ntplib.NTPException:
         logger.error("无法连接到时间服务器，将跳过时间检查")
         skip = True
-    if not skip:
+    if skip == False:
         import time
         time_offset = response.offset
         if time_offset > 0.5:

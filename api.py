@@ -75,9 +75,9 @@ class BilibiliHyg:
         if self.config["mode"] == 'time':
             logger.info("当前为定时抢票模式")
             logger.info("等待到达开票时间前15分钟以获取token...")
-            while self.time() < self.config["time"]-900:
+            while self.get_time() < self.config["time"]-900:
                 time.sleep(10)
-                logger.info("距离开票时间还有" + str(self.config["time"]-self.time()) + "秒")
+                logger.info("距离开票时间还有" + str(self.config["time"]-self.get_time()) + "秒")
         logger.info("准备完毕，获取token中...")
         self.token = self.get_token()
         logger.info("即将开始下单")

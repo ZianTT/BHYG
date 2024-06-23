@@ -68,13 +68,10 @@ def load() -> dict:
     return data
 
 def run(hyg):
-    def time():
+    def get_get_time():
         return float(time.time() + hyg.config["time_offset"])
-    last_reset = time.time()
     if hyg.config["mode"] == 'direct':
         while True:
-            if last_reset + 60 > time.time():
-                hyg.session.close()
             if hyg.try_create_order():
                 if "hunter" not in hyg.config:
                     hyg.sdk.capture_message("Pay success!")
@@ -87,8 +84,6 @@ def run(hyg):
             time.sleep(hyg.config["co_delay"])
     elif hyg.config["mode"] == 'detect':
         while 1:
-            if last_reset + 60 > time.time():
-                hyg.session.close()
             hyg.risk = False
             if hyg.risk:
                 status = -1
@@ -103,8 +98,6 @@ def run(hyg):
                 elif status == 102:
                     logger.warning("已结束")
                 while True:
-                    if last_reset + 60 > time.time():
-                        hyg.session.close()
                     if hyg.try_create_order():
                         if "hunter" not in hyg.config:
                             hyg.sdk.capture_message("Pay success!")
@@ -139,12 +132,12 @@ def run(hyg):
     elif hyg.config["mode"] == 'time':
         logger.info("当前为定时抢票模式")
         logger.info("等待到达开票时间...")
-        while time() < hyg.config["time"]-60:
+        while get_time() < hyg.config["time"]-60:
             time.sleep(10)
-            logger.info("等待中，距离开票时间还有" + str(hyg.config["time"] - time()) + "秒")
+            logger.info("等待中，距离开票时间还有" + str(hyg.config["time"] - get_time()) + "秒")
         logger.info("唤醒！即将开始抢票！")
         while True:
-            if time() >= hyg.config["time"]:
+            if get_time() >= hyg.config["time"]:
                 break
         while True:
             if hyg.try_create_order():
