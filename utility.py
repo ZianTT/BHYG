@@ -25,6 +25,22 @@ def utility(config):
             logger.error(f"{response.json()['errno']}: {response.json()['msg']}")
             return add_buyer(headers)
 
+    def modify_ua():
+        ua = input("请输入您要覆盖的UA：")
+        config["ua"] = ua
+
+    def modify_gaia_vtoken():
+        gaia_vtoken = input("请输入您的gaia_vtoken：")
+        config["gaia_vtoken"] = gaia_vtoken
+    
+    def hunter_mode():
+        config["hunter"] = 0
+        logger.info("猎手模式已开启（归零）")
+
+    def hunter_mode_off():
+        config.pop("hunter")
+        logger.info("猎手模式已关闭")
+
     headers = {
         "Cookie": config["cookie"],
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.5",
@@ -34,22 +50,25 @@ def utility(config):
         inquirer.List(
             "select",
             message="请选择您要使用的实用工具",
-            choices=["添加购票人"],
+            choices=["添加购票人", "覆盖默认UA", "覆盖gaia_vtoken", "开启猎手模式(计数清零)", "关闭猎手模式", "返回"],
         )])
     if select["select"] == "添加购票人":
         add_buyer(headers)
+        return utility(config)
+    elif select["select"] == "覆盖默认UA":
+        modify_ua()
+        return utility(config)
+    elif select["select"] == "覆盖gaia_vtoken":
+        modify_gaia_vtoken()
+        return utility(config)
+    elif select["select"] == "开启猎手模式(计数清零)":
+        hunter_mode()
+        return utility(config)
+    elif select["select"] == "关闭猎手模式":
+        hunter_mode_off()
+        return utility(config)
+    elif select["select"] == "返回":
+        return
     else:
         logger.error("暂不支持此功能")
         return utility()
-
-if __name__ == "__main__":
-    import os
-    config = {}
-    if os.path.exists("login-info"):
-        with open("login-info", "r", encoding="utf-8") as f:
-            config["cookie"] = f.read()
-    else:
-        config["cookie"] = interactive_login()
-        with open("login-info", "w", encoding="utf-8") as f:
-            f.write(config["cookie"])
-    utility(config)

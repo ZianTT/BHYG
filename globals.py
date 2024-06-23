@@ -32,36 +32,28 @@ handler_id = logger.add(
     level=level,  # NOTE: logger level
 )
 
-if os.path.exists("upload-error") or level == "DEBUG":
-    sample_rate=1
-    if level == "DEBUG":
-        logger.debug("ERROR REPORTING IS ENABLED BY FORCE IN DEBUG MODE")
-elif os.path.exists("do-not-upload-error"):
-    sample_rate=0
-else:    
-    is_upload_error = inquirer.prompt([inquirer.List("is_upload_error", message="可选的错误上传：您是否选择上传可能遇到的错误以帮助我们改善脚本？", choices=["是", "否"], default="是")])
-    if is_upload_error["is_upload_error"] == "否":
-        logger.info("已选择不上传错误")
-        sample_rate=0
-        with open("do-not-upload-error", "w") as f:
-            f.write("")
-    else:
-        logger.info("已选择上传错误")
-        logger.info("感谢您的理解与支持！")
-        sample_rate=1
-        with open("upload-error", "w") as f:
-            f.write("")
+if not os.path.exists("agree-terms") and level is not "DEBUG":
+    while True:
+        agree_prompt = input("欢迎使用BHYG软件，使用前请阅读EULA(https://github.com/biliticket/BHYG)。若您使用时遇到问题，请查阅biliticket文档(https://docs.bitf1a5h.eu.org/)\n特别提醒，根据EULA，严禁任何形式通过本软件盈利。若您同意本软件EULA，请键入：我已阅读并同意EULA，黄牛倒卖狗死妈\n")
+        if agree_prompt != "我已阅读并同意EULA，黄牛倒卖狗死妈":
+            logger.error("输入不正确，请重试")
+        else:
+            break
+    with open("agree-terms", "w") as f:
+        f.write("")
+    logger.info("已同意EULA")
+
 sentry_sdk.init(
     dsn="https://9c5cab8462254a2e1e6ea76ffb8a5e3d@sentry-inc.bitf1a5h.eu.org/3",
     release="v0.7.5",
-    profiles_sample_rate=sample_rate,
+    profiles_sample_rate=1.0,
     enable_tracing=True,
     integrations=[
         LoguruIntegration(
             level=LoggingLevels.DEBUG.value, event_level=LoggingLevels.CRITICAL.value
         ),
     ],
-    sample_rate=sample_rate,
+    sample_rate=1.0,
     environment=environment
 )
 with sentry_sdk.configure_scope() as scope:
@@ -91,11 +83,12 @@ def load_config():
             use_login = False
         elif run_info == "保留登录信息重新配置":
             logger.info("只沿用登录信息")
-            with open("config.json", "r", encoding="utf-8") as f:
-                temp = json.load(f)
-                config = {}
-                if "gaia_vtoken" in temp:
-                    config["gaia_vtoken"] = temp["gaia_vtoken"]
+            if "gaia_vtoken" in temp:
+                config["gaia_vtoken"] = temp["gaia_vtoken"]
+            if "ua" in temp:
+                config["ua"] = temp["ua"]
+            if "cookie" in temp:
+                config["cookie"] = temp["cookie"]
             use_login = True
         elif run_info == "延续上次启动所有配置":
             logger.info("使用上次的配置文件")
@@ -128,13 +121,8 @@ def load_config():
         logger.warning(f"当前时间偏移：{time_offset:.2f}秒，建议校准时间")
     config["time_offset"] = time_offset
     while True:
-            if os.path.exists("login-info") and use_login:
-                with open("login-info", "r", encoding="utf-8") as f:
-                    config["cookie"] = f.read()
-            else:
+            if "cookie" not in config or not use_login:
                 config["cookie"] = interactive_login(sentry_sdk)
-                with open("login-info", "w", encoding="utf-8") as f:
-                    f.write(config["cookie"])
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.5",
                 "Cookie": config["cookie"],

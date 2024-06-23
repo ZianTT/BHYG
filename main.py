@@ -122,6 +122,8 @@ def main():
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.5",
                 "Cookie": config["cookie"],
         }
+        if "user-agent" in config:
+            headers["User-Agent"] = config["user-agent"]
         session = requests.Session()
         if "mode" not in config:
             mode_str = inquirer.prompt([inquirer.List("mode", message="请选择抢票模式", choices=["直接抢票", "检测详情界面余票后抢票", "根据项目开票时间定时抢票"], default="据项目开票时间定时抢票")])["mode"]
