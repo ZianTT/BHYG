@@ -50,6 +50,7 @@ def utility(config):
     def share_mode(config):
         import json
         json.dump(config, open("share.json", "w"))
+        os.remove("data")
         logger.info("分享模式已启动")
         return
 
