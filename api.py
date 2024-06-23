@@ -84,7 +84,7 @@ class BilibiliHyg:
         self.token = self.get_token()
         logger.info("即将开始下单")
 
-    def time(self):
+    def get_time(self):
         return float(time.time() + self.config["time_offset"])
 
     def get_ticket_status(self):
