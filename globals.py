@@ -76,20 +76,8 @@ def agree_terms():
         import machineid
         f.write(machineid.id())
     logger.info("已同意EULA")
-if not os.path.exists("agree-terms"):
-    agree_terms()
-else:
-    with open("agree-terms", "r") as f:
-        hwid = f.read()
-        import machineid
-        if hwid != machineid.id():
-            agree_terms()
-            with open("agree-terms", "w") as f:
-                f.write(machineid.id())
 
 def init():
-    version = "v0.7.6"
-
     logger.remove(handler_id=0)
     if sys.argv[0].endswith(".py"):
         level = "DEBUG"
@@ -105,6 +93,18 @@ def init():
         format=format,
         level=level,  # NOTE: logger level
     )
+
+    if not os.path.exists("agree-terms"):
+        agree_terms()
+    else:
+        with open("agree-terms", "r") as f:
+            hwid = f.read()
+            import machineid
+            if hwid != machineid.id():
+                agree_terms()
+                with open("agree-terms", "w") as f:
+                    f.write(machineid.id())
+    version = "v0.7.6"
 
     sentry_sdk.init(
         dsn="https://9c5cab8462254a2e1e6ea76ffb8a5e3d@sentry-inc.bitf1a5h.eu.org/3",

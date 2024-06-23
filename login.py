@@ -377,7 +377,7 @@ def password_login(session, headers):
         return cookie(cookies)
 
 def sns_login(session, headers):
-    method = prompt([inquirer.List("method", message="请选择SNS登录方式", choices=["微信", "QQ", "微博"], default="微信")])
+    method = prompt([inquirer.List("method", message="请选择SNS登录方式", choices=["微信", "QQ", "微博"], default="微信")])["method"]
     if method == "微信":
         sns = "wechat"
     elif method == "QQ":
