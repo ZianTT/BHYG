@@ -161,7 +161,7 @@ def main():
 
         config = load_config()
         headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.5",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.6",
                 "Cookie": config["cookie"],
         }
         if "user-agent" in config:
@@ -434,7 +434,6 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logger.info("已手动退出")
     from sentry_sdk import Hub
-
     client = Hub.current.client
     if client is not None:
         client.close(timeout=2.0)
