@@ -411,7 +411,7 @@ class BilibiliHyg:
             return False
 
     def order_status(self, order_id):
-        url = "https://show.bilibili.com/api/ticket/order/info?order_id=" + order_id
+        url = "https://show.bilibili.com/api/ticket/order/info?order_id=" + str(order_id)
         response = self.session.get(url, headers=self.headers)
         if response.status_code == 412:
             logger.error("被412风控，请联系作者")
@@ -482,9 +482,8 @@ class BilibiliHyg:
                 if "hunter" in self.config:
                     return True
                 logger.info("订单未支付，正在等待")
-                while not self.order_status(orderid):
+                while self.order_status(orderid):
                     time.sleep(1)
-                logger.success("订单支付成功")
                 self.sdk.capture_message("Exit by in-app exit")
                 return True
             else:
