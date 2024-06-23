@@ -82,10 +82,10 @@ handler_id = logger.add(
 def agree_terms():
     while True:
         agree_prompt = input("欢迎使用BHYG软件，使用前请阅读EULA(https://github.com/biliticket/BHYG)。若您使用时遇到问题，请查阅biliticket文档(https://docs.bitf1a5h.eu.org/)\n特别提醒，根据EULA，严禁任何形式通过本软件盈利。若您同意本软件EULA，请键入：我已阅读并同意EULA，黄牛倒卖狗死妈\n")
-        if agree_prompt != "我已阅读并同意EULA，黄牛倒卖狗死妈":
-            logger.error("输入不正确，请重试")
-        else:
+        if "同意" in agree_prompt and "死妈" in agree_prompt and "黄牛" in agree_prompt and "不" not in agree_prompt:
             break
+        else:
+            logger.error("输入不正确，请重试")
     with open("agree-terms", "w") as f:
         import machineid
         f.write(machineid.id())

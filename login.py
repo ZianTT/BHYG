@@ -137,7 +137,7 @@ def verify_code_login(session, headers):
         logger.success("验证码发送成功")
         send_token = send["data"]["captcha_key"]
     while True:
-        code = prompt
+        code = prompt([inquirer.Text("code", message="请输入验证码", validate=lambda _, x: len(x) == 6)])["code"]
         # https://passport.bilibili.com/x/passport-login/web/login/sms
         data = {"cid": "86", "tel": tel, "captcha_key": send_token, "code": code}
         login = session.post(
