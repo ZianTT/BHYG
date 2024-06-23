@@ -8,6 +8,11 @@ from loguru import logger
 
 import inquirer
 
+def prompt(prompt):
+    data = inquirer.prompt(prompt)
+    if data is None:
+        raise KeyboardInterrupt
+
 def cookie(cookies):
     lst = []
     for item in cookies.items():
@@ -96,7 +101,7 @@ def verify_code_login(session, headers):
     gt = captcha["data"]["geetest"]["gt"]
     challenge = captcha["data"]["geetest"]["challenge"]
     token = captcha["data"]["token"]
-    tel = inquirer.prompt([inquirer.Text("tel", message="请输入手机号", validate=lambda _, x: len(x) == 11)])["tel"]
+    tel = prompt([inquirer.Text("tel", message="请输入手机号", validate=lambda _, x: len(x) == 11)])["tel"]
     logger.info("请稍后，正在执行自动验证...")
     cap_data = _verify(gt, challenge, token)
     while cap_data == False:
@@ -131,7 +136,7 @@ def verify_code_login(session, headers):
         logger.success("验证码发送成功")
         send_token = send["data"]["captcha_key"]
     while True:
-        code = inquirer.prompt([inquirer.Text("code", message="请输入验证码", validate=lambda _, x: len(x) == 6)])["code"]
+        code = prompt
         # https://passport.bilibili.com/x/passport-login/web/login/sms
         data = {"cid": "86", "tel": tel, "captcha_key": send_token, "code": code}
         login = session.post(
@@ -166,7 +171,7 @@ def verify_code_login_app(session, headers):
     # gt = captcha["data"]["geetest"]["gt"]
     # challenge = captcha["data"]["geetest"]["challenge"]
     # token = captcha["data"]["token"]
-    tel = inquirer.prompt([inquirer.Text("tel", message="请输入手机号", validate=lambda _, x: len(x) == 11)])["tel"]
+    tel = prompt([inquirer.Text("tel", message="请输入手机号", validate=lambda _, x: len(x) == 11)])["tel"]
     # logger.info("请稍后，正在执行自动验证...")
     # cap_data = _verify(gt, challenge, token)
     # while cap_data == False:
@@ -210,7 +215,7 @@ def verify_code_login_app(session, headers):
         logger.success("验证码发送成功")
         send_token = send["data"]["captcha_key"]
     while True:
-        code = inquirer.prompt([inquirer.Text("code", message="请输入验证码", validate=lambda _, x: len(x) == 6)])["code"]
+        code = prompt([inquirer.Text("code", message="请输入验证码", validate=lambda _, x: len(x) == 6)])["code"]
         # https://passport.bilibili.com/x/passport-login/login/sms
         data = {"cid": 86, "tel": int(tel), "captcha_key": send_token, "code": int(code), "login_session_id": session_id}
         login = session.post(
@@ -229,8 +234,8 @@ def password_login(session, headers):
     from Crypto.Cipher import PKCS1_v1_5
     from Crypto.PublicKey import RSA
 
-    username = inquirer.prompt([inquirer.Text("username", message="请输入用户名")])["username"]
-    password = inquirer.prompt([inquirer.Password("password", message="请输入密码")])["password"]
+    username = prompt([inquirer.Text("username", message="请输入用户名")])["username"]
+    password = prompt([inquirer.Password("password", message="请输入密码")])["password"]
     captcha = session.get(
         "https://passport.bilibili.com/x/passport-login/captcha", headers=headers
     ).json()
@@ -340,7 +345,7 @@ def password_login(session, headers):
                 logger.success("验证码发送成功")
                 send_token = send["data"]["captcha_key"]
             while True:
-                code = inquirer.prompt([inquirer.Text("code", message="请输入验证码", validate=lambda _, x: len(x) == 6)])["code"]
+                code = prompt([inquirer.Text("code", message="请输入验证码", validate=lambda _, x: len(x) == 6)])["code"]
                 data = {
                     "type": "loginTelCheck",
                     "tmp_code": tmp_token,
@@ -371,8 +376,7 @@ def password_login(session, headers):
         return cookie(cookies)
 
 def sns_login(session, headers):
-    # logger.info("请选择SNS登录方式\n1. 微信\n2. QQ\n3. 微博")
-    method = inquirer.prompt([inquirer.List("method", message="请选择SNS登录方式", choices=["微信", "QQ", "微博"], default="微信")])
+    method = prompt([inquirer.List("method", message="请选择SNS登录方式", choices=["微信", "QQ", "微博"], default="微信")])
     if method == "微信":
         sns = "wechat"
     elif method == "QQ":
@@ -402,7 +406,7 @@ def sns_login(session, headers):
     logger.info(url)
     logger.info("请在浏览器中打开上面的链接并登录, 然后复制重定向的链接（即提示'校验失败，请重试~'的网址）")
     # https://passport.bilibili.com/x/passport-login/web/sns/login
-    redirect = inquirer.prompt([inquirer.Text("redirect", message="请输入重定向链接")])["redirect"]
+    redirect = prompt([inquirer.Text("redirect", message="请输入重定向链接")])["redirect"]
     # get params from redirect
     try:
         redirect = redirect.split("?")[1]
@@ -446,7 +450,7 @@ def interactive_login(sentry_sdk = None):
     session = requests.session()
     session.get("https://www.bilibili.com/", headers=headers)
 
-    method = inquirer.prompt([inquirer.List("method", message="请选择登录方式", choices=["cookie", "扫码", "用户名密码", "验证码", "验证码APP版", "SNS"], default="扫码")])
+    method = prompt([inquirer.List("method", message="请选择登录方式", choices=["cookie", "扫码", "用户名密码", "验证码", "验证码APP版", "SNS"], default="扫码")])
     if method["method"] == "cookie":
         cookie_str = input("请输入cookie: ")
         # verify cookie

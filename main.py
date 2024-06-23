@@ -20,6 +20,11 @@ common_project_id = [
     {"name": "上海·BILIBILI MACRO LINK 2024", "id": 85938}
 ]
 
+def prompt(prompt):
+    data = inquirer.prompt(prompt)
+    if data is None:
+        raise KeyboardInterrupt
+
 def save(data: dict):
     from Crypto.Cipher import AES
     from Crypto.Util.Padding import pad, unpad
@@ -163,7 +168,7 @@ def main():
             headers["User-Agent"] = config["user-agent"]
         session = requests.Session()
         if "mode" not in config:
-            mode_str = inquirer.prompt([inquirer.List("mode", message="请选择抢票模式", choices=["直接抢票", "检测详情界面余票后抢票", "根据项目开票时间定时抢票"], default="据项目开票时间定时抢票")])["mode"]
+            mode_str = prompt([inquirer.List("mode", message="请选择抢票模式", choices=["直接抢票", "检测详情界面余票后抢票", "根据项目开票时间定时抢票"], default="据项目开票时间定时抢票")])["mode"]
             if mode_str == "直接抢票":
                 config["mode"] = 'direct'
                 logger.info("已开启直接抢票模式")
@@ -175,7 +180,7 @@ def main():
                 logger.info("已开启定时抢票模式")
 
         if "co_delay" not in config:
-            config["co_delay"] = float(inquirer.prompt([
+            config["co_delay"] = float(prompt([
                 inquirer.Text(
                     "co_delay",
                     message="请输入创建订单时间间隔(该选项影响412风控概率，单开建议使用0)(秒)",
@@ -183,7 +188,7 @@ def main():
                     validate=lambda _, x: float(x) >= 0
                 )])["co_delay"])
         if "status_delay" not in config and config["mode"] == 'detect':
-            config["status_delay"] = float(inquirer.prompt([
+            config["status_delay"] = float(prompt([
                 inquirer.Text(
                     "status_delay",
                     message="请输入票务信息检测时间间隔(该选项影响412风控概率)(秒)",
@@ -191,10 +196,10 @@ def main():
                     validate=lambda _, x: float(x) >= 0
                 )])["status_delay"])
         if "proxy" not in config:
-            choice = inquirer.prompt([inquirer.List("proxy", message="是否使用代理", choices=["是", "否"], default="否")])["proxy"]
+            choice = prompt([inquirer.List("proxy", message="是否使用代理", choices=["是", "否"], default="否")])["proxy"]
             if choice == "是":
                 while True:
-                    config["proxy_auth"] = inquirer.prompt([
+                    config["proxy_auth"] = prompt([
                         inquirer.Text("proxy_auth", message="请输入代理认证信息: ",validate=lambda _, x: len(x.split(" ")) == 3)
                     ])["proxy_auth"].split(" ")
                     config["proxy"] = True
@@ -216,7 +221,7 @@ def main():
                 + kdl_client.tps_current_ip(sign_type="hmacsha1")
             )
         if "again" not in config:
-            choice = inquirer.prompt([inquirer.List("again", message="是否允许重复下单", choices=["是", "否"], default="是")])["again"]
+            choice = prompt([inquirer.List("again", message="是否允许重复下单", choices=["是", "否"], default="是")])["again"]
             if choice == "否":
                 config["again"] = False
             else:
@@ -238,7 +243,7 @@ def main():
                     )
                 if len(common_project_id) == 0:
                     logger.info("暂无")
-                config["project_id"] = inquirer.prompt([
+                config["project_id"] = prompt([
                     inquirer.Text("project_id", message="请输入项目id", validate=lambda _, x: x.isdigit())
                 ])["project_id"]
                 url = (
@@ -270,12 +275,12 @@ def main():
             config["id_bind"] = response["data"]["id_bind"]
             config["is_paper_ticket"] = response["data"]["has_paper_ticket"]
             screens = response["data"]["screen_list"]
-            screen_id = inquirer.prompt([
+            screen_id = prompt([
                 inquirer.List("screen_id", message="请选择场次", choices=[f"{i}. {screens[i]['name']}" for i in range(len(screens))])
             ])["screen_id"].split(".")[0]
             logger.info("场次：" + screens[int(screen_id)]["name"])
             tickets = screens[int(screen_id)]["ticket_list"]  # type: ignore
-            sku_id = inquirer.prompt([
+            sku_id = prompt([
                 inquirer.List("sku_id", message="请选择票档", choices=[f"{i}. {tickets[i]['desc']} {tickets[i]['price']/100}元" for i in range(len(tickets))])
             ])["sku_id"].split(".")[0]
             logger.info("票档：" + tickets[int(sku_id)]["desc"])
@@ -303,7 +308,7 @@ def main():
                 if len(addr_list) == 0:
                     logger.error("没有收货地址，请先添加收货地址")
                 else:
-                    addr = inquirer.prompt([
+                    addr = prompt([
                         inquirer.List("addr", message="请选择收货地址", choices=[{"name": f"{i}. {addr_list[i]['prov']+addr_list[i]['city']+addr_list[i]['area']+addr_list[i]['addr']} {addr_list[i]['name']} {addr_list[i]['phone']}", "value": i} for i in range(len(addr_list))])
                     ])["addr"].split(".")[0]
                     addr = addr_list[int(addr)]
@@ -346,7 +351,7 @@ def main():
                 logger.info("本项目只能购买一人票")
                 multiselect = False
             if multiselect:
-                buyerids = inquirer.prompt([
+                buyerids = prompt([
                     inquirer.Checkbox(
                         "buyerids",
                         message="请选择购票人",
@@ -365,7 +370,7 @@ def main():
                         "已选择购票人" + buyer_infos[int(select)]["name"] + " " + buyer_infos[int(select)]["personal_id"] + " " + buyer_infos[int(select)]["tel"]
                     )
             else:
-                index = inquirer.prompt([
+                index = prompt([
                     inquirer.List("index", message="请选择购票人", choices=[f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for i in range(len(buyer_infos))])
                 ])["index"]
                 config["buyer_info"].append(buyer_infos[index.split(".")[0]])
@@ -378,11 +383,11 @@ def main():
         ):
             logger.info("请添加联系人信息")
             config["buyer"] = input("联系人姓名：")
-            config["tel"] = inquirer.prompt([
+            config["tel"] = prompt([
                 inquirer.Text("tel", message="联系人手机号", validate=lambda _, x: len(x) == 11)
             ])["tel"]
             if "count" not in config:
-                config["count"] = inquirer.prompt([
+                config["count"] = prompt([
                     inquirer.Text("count", message="请输入票数", default="1",validate=lambda _, x: x.isdigit() and int(x) > 0)
                 ])["count"]
         if config["is_paper_ticket"]:
@@ -424,7 +429,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        logger.info("已手动退出")
     from sentry_sdk import Hub
 
     client = Hub.current.client

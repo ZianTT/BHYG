@@ -16,6 +16,11 @@ import inquirer
 
 from utility import utility
 
+def prompt(prompt):
+    data = inquirer.prompt(prompt)
+    if data is None:
+        raise KeyboardInterrupt
+
 def save(data: dict):
     from Crypto.Cipher import AES
     from Crypto.Util.Padding import pad, unpad
@@ -116,7 +121,7 @@ def load_config():
             save(config)
         os.remove("share.json")
     if os.path.exists("data"):
-        run_info = inquirer.prompt([
+        run_info = prompt([
             inquirer.List(
                 "run_info",
                 message="请选择运行设置",
