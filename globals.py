@@ -195,8 +195,11 @@ def load_config():
             )]
         )["run_info"]
         if run_info == "全新启动":
-            logger.info("重新配置")
+            logger.info("全新启动，但继承pushplus信息（若有）")
+            temp = load()
             config = {}
+            if "pushplus" in temp:
+                config["pushplus"] = temp["pushplus"]
             use_login = False
         elif run_info == "保留登录信息重新配置":
             logger.info("只沿用登录信息")
@@ -208,6 +211,8 @@ def load_config():
                 config["ua"] = temp["ua"]
             if "cookie" in temp:
                 config["cookie"] = temp["cookie"]
+            if "pushplus" in temp:
+                config["pushplus"] = temp["pushplus"]
             use_login = True
         elif run_info == "延续上次启动所有配置":
             logger.info("使用上次的配置文件")
