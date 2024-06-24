@@ -10,6 +10,7 @@ import requests
 from loguru import logger
 
 def save(data: dict):
+    import base64
     from Crypto.Cipher import AES
     from Crypto.Util.Padding import pad, unpad
     import machineid
@@ -24,6 +25,7 @@ def save(data: dict):
     return
 
 def load() -> dict:
+    import base64
     from Crypto.Cipher import AES
     from Crypto.Util.Padding import pad, unpad
     import machineid
@@ -69,7 +71,8 @@ class BilibiliHyg:
             }
 
         self.headers["Cookie"] = self.config["cookie"]
-        if self.config["proxy_channel"] != "0":
+        if self.config["proxy"]:
+            if self.config["proxy_channel"] != "0":
                 self.headers.append(("kdl-tps-channel", config["proxy_channel"]))
 
         self.client = client
@@ -404,7 +407,8 @@ class BilibiliHyg:
             + str(int(time.time() * 1000))
         )
         if order_id:
-            url += "&order_id=" + order_id
+            url += "&orderId=" + str(order_id)
+        logger.debug(url)
         response = self.session.get(url, headers=self.headers)
         if response.status_code == 412:
             logger.error("被412风控，请联系作者")
@@ -416,6 +420,7 @@ class BilibiliHyg:
                     )
                 self.session.close()
         response = response.json()
+        logger.debug(response)
         if response["errno"] == 0:
             self.sdk.add_breadcrumb(
                 category="success",
@@ -522,6 +527,18 @@ class BilibiliHyg:
                 orderid = result["data"]["orderId"]
             if self.fake_ticket(pay_token, order_id = orderid):
                 # self.logout()
+                if "pushplus" in self.config:
+                    # https://www.pushplus.plus/send/
+                    url = "https://www.pushplus.plus/send"
+                    response = requests.post(url, json={
+                        "token": self.config["pushplus"],
+                        "title": "BHYG通知",
+                        "content": "抢票成功，等待支付"
+                    }).json()
+                    if response["code"] == 200:
+                        logger.success(f"已发送通知，流水号 {response['data']}")
+                    else:
+                        logger.error(f"通知发送失败，返回信息 {response}")
                 if "hunter" in self.config:
                     return True
                 logger.info("订单未支付，正在等待")

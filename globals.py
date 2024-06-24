@@ -23,6 +23,7 @@ def prompt(prompt):
     return data
 
 def save(data: dict):
+    import base64
     from Crypto.Cipher import AES
     from Crypto.Util.Padding import pad, unpad
     import machineid
@@ -37,6 +38,7 @@ def save(data: dict):
     return
 
 def load() -> dict:
+    import base64
     from Crypto.Cipher import AES
     from Crypto.Util.Padding import pad, unpad
     import machineid

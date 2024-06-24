@@ -27,6 +27,7 @@ def prompt(prompt):
     return data
 
 def save(data: dict):
+    import base64
     from Crypto.Cipher import AES
     from Crypto.Util.Padding import pad, unpad
     import machineid
@@ -41,6 +42,7 @@ def save(data: dict):
     return
 
 def load() -> dict:
+    import base64
     from Crypto.Cipher import AES
     from Crypto.Util.Padding import pad, unpad
     import machineid
@@ -283,6 +285,8 @@ def main():
                 logger.info(f"已开启优惠活动：活动ID {tickets[int(sku_id)]["discount_act"]["act_id"]}")
                 config["act_id"] = tickets[int(sku_id)]["discount_act"]["act_id"]
                 config["order_type"] = tickets[int(sku_id)]["discount_act"]["act_type"]
+            else:
+                config["order_type"] = "1"
             if config["is_paper_ticket"]:
                 if response["data"]["express_free_flag"]:
                     config["express_fee"] = 0
