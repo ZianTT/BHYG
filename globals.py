@@ -106,7 +106,7 @@ def init():
                 agree_terms()
                 with open("agree-terms", "w") as f:
                     f.write(machineid.id())
-    version = "v0.7.6"
+    version = "v0.7.7"
 
     sentry_sdk.init(
         dsn="https://9c5cab8462254a2e1e6ea76ffb8a5e3d@sentry-inc.bitf1a5h.eu.org/3",
@@ -246,7 +246,7 @@ def load_config():
             if "cookie" not in config or not use_login:
                 config["cookie"] = interactive_login(sentry_sdk)
             headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.6",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.7",
                 "Cookie": config["cookie"],
             }
             user = requests.get(
