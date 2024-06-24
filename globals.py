@@ -253,9 +253,11 @@ def load_config():
             user = user.json()
             if user["data"]["isLogin"]:
                 logger.success("用户 " + user["data"]["uname"] + " 登录成功")
+                import machineid
                 sentry_sdk.set_user(
                     {
-                        "username": user["data"]["mid"]
+                        "username": user["data"]["mid"],
+                        "hwid": machineid.id()[:16]
                     }
                 )
                 if "hunter" in config:
