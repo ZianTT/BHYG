@@ -166,13 +166,15 @@ class BilibiliHyg:
         data = {
             "project_id": self.config["project_id"],
             "screen_id": self.config["screen_id"],
-            "order_type": "1",
+            "order_type": self.config["order_type"],
             "count": self.config["count"],
             "sku_id": self.config["sku_id"],
             "token": "",
             "newRisk": "true",
             "requestSource": "neul-next",
         }
+        if "act_id" in self.config:
+            data["act_id"] = self.config["act_id"]
         response = self.session.post(url, headers=self.headers, data=data)
         if response.status_code == 412:
             logger.error("被412风控，请联系作者")
@@ -219,6 +221,36 @@ class BilibiliHyg:
         save(self.config)
         return success
 
+    def confirm_info(self, token):
+        url = (
+            "https://show.bilibili.com/api/ticket/order/confirmInfo?token="
+            + token
+            + "&timestamp="
+            + str(int(time.time() * 1000))
+            + "&project_id="
+            + self.config["project_id"]
+            + "&requestSource=neul-next"
+        )
+        response = self.session.get(url, headers=self.headers)
+        if response.status_code == 412:
+            logger.error("被412风控，请联系作者")
+            if self.config["proxy"]:
+                if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
+                    logger.info(
+                        "手动切换，当前IP为："
+                        + self.client.change_tps_ip(sign_type="hmacsha1")
+                    )
+                self.session.close()
+                return self.confirm_info(token)
+        response = response.json()
+        logger.info("信息已确认")
+        logger.debug(response)
+        self.config["order_type"] = response["data"]["order_type"]
+        if response["data"]["act"] is not None:
+            logger.info("检测到优惠活动")
+            self.config["act_id"] = response["data"]["act"]["act_id"]
+        return
+
     def get_token(self):
         info = self.get_prepare()
         if info == {}:
@@ -236,6 +268,10 @@ class BilibiliHyg:
                 message=f'Order prepared as token:{info["token"]}',
                 level="info",
             )
+            try:
+                self.confirm_info(info["token"])
+            except:
+                logger.error("确认订单失败")
             return info["token"]
         else:
             logger.warning("触发风控。")
@@ -303,7 +339,7 @@ class BilibiliHyg:
             "pay_money": self.config["all_price"],
             "count": self.config["count"],
             "timestamp": int(time.time() + 5),
-            "order_type": "1",
+            "order_type": self.config["order_type"],
             "newRisk": "true",
             "requestSource": "neul-next",
             "clickPosition": self.generate_clickPosition(),
@@ -315,7 +351,8 @@ class BilibiliHyg:
             data["buyer_info"] = self.config["buyer_info"]
         if self.config["is_paper_ticket"]:
             data["deliver_info"] = self.config["deliver_info"]
-
+        if "act_id" in self.config:
+            data["act_id"] = self.config["act_id"]
         if self.config["again"]:
             data["again"] = 1
 
@@ -355,7 +392,7 @@ class BilibiliHyg:
                 return {}
         return response.json()
 
-    def fake_ticket(self, pay_token, order_id):
+    def fake_ticket(self, pay_token, order_id = None):
         url = (
             "https://show.bilibili.com/api/ticket/order/createstatus?project_id="
             + self.config["project_id"]
@@ -363,9 +400,9 @@ class BilibiliHyg:
             + pay_token
             + "&timestamp="
             + str(int(time.time() * 1000))
-            + "&orderId="
-            + str(order_id)
         )
+        if order_id:
+            url += "&order_id=" + order_id
         response = self.session.get(url, headers=self.headers)
         if response.status_code == 412:
             logger.error("被412风控，请联系作者")
@@ -478,13 +515,15 @@ class BilibiliHyg:
         elif result["errno"] == 0:
             logger.success("成功尝试下单！正在检测是否为假票")
             pay_token = result["data"]["token"]
-            orderid = result["data"]["orderId"]
-            if self.fake_ticket(pay_token, orderid):
+            orderid = None
+            if "orderId" in result["data"]:
+                orderid = result["data"]["orderId"]
+            if self.fake_ticket(pay_token, order_id = orderid):
                 # self.logout()
                 if "hunter" in self.config:
                     return True
                 logger.info("订单未支付，正在等待")
-                while self.order_status(orderid):
+                while self.order_status(self.order_id):
                     time.sleep(1)
                 self.sdk.capture_message("Exit by in-app exit")
                 return True

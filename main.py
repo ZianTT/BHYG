@@ -286,6 +286,10 @@ def main():
             config["pay_money"] = str(tickets[int(sku_id)]["price"])
             config["ticket_desc"] = str(tickets[int(sku_id)]["desc"])
             config["time"] = int(tickets[int(sku_id)]["saleStart"])
+            if tickets[int(sku_id)]["discount_act"] is not None:
+                logger.info(f"已开启优惠活动：活动ID {tickets[int(sku_id)]["discount_act"]["act_id"]}")
+                config["act_id"] = tickets[int(sku_id)]["discount_act"]["act_id"]
+                config["order_type"] = tickets[int(sku_id)]["discount_act"]["act_type"]
             if config["is_paper_ticket"]:
                 if response["data"]["express_free_flag"]:
                     config["express_fee"] = 0
