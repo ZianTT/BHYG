@@ -162,7 +162,7 @@ def main():
             headers["User-Agent"] = config["user-agent"]
         session = requests.Session()
         if "mode" not in config:
-            mode_str = prompt([inquirer.List("mode", message="请选择抢票模式", choices=["直接抢票", "检测详情界面余票后抢票", "根据项目开票时间定时抢票"], default="据项目开票时间定时抢票")])["mode"]
+            mode_str = prompt([inquirer.List("mode", message="请选择抢票模式", choices=["根据项目开票时间定时抢票", "直接抢票", "检测详情界面余票后抢票"], default="根据项目开票时间定时抢票")])["mode"]
             if mode_str == "直接抢票":
                 config["mode"] = 'direct'
                 logger.info("已开启直接抢票模式")
