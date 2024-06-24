@@ -141,9 +141,14 @@ def run(hyg):
                 break
         while True:
             if hyg.try_create_order():
-                hyg.sdk.capture_message("Pay success!")
-                logger.success("购票成功！")
-                return
+                if "hunter" not in hyg.config:
+                    hyg.sdk.capture_message("Pay success!")
+                    logger.success("购票成功！")
+                    return
+                else:
+                    hyg.config['hunter'] += 1
+                    save(hyg.config)
+                    logger.success(f"猎手，你的战绩：{hyg.config['hunter']}张")
 
 
 def main():
