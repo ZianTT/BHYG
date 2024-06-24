@@ -68,6 +68,9 @@ def utility(config):
         import os
         os.remove("data")
         logger.info("分享模式已启动")
+        logger.info("自动退出中……")
+        import sys
+        sys.exit(0)
         return
 
     def pushplus_config(config):
