@@ -69,6 +69,8 @@ class BilibiliHyg:
             }
 
         self.headers["Cookie"] = self.config["cookie"]
+        if self.config["proxy_channel"] != "0":
+                self.headers.append(("kdl-tps-channel", config["proxy_channel"]))
 
         self.client = client
         self.session = session

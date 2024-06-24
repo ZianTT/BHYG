@@ -199,6 +199,9 @@ def main():
                     config["proxy_auth"] = prompt([
                         inquirer.Text("proxy_auth", message="请输入代理认证信息: ",validate=lambda _, x: len(x.split(" ")) == 3)
                     ])["proxy_auth"].split(" ")
+                    config["proxy_channel"] = prompt([
+                        inquirer.Text("proxy_channel", message="请输入代理通道(0则不指定)", validate=lambda _, x: x.isdigit())
+                    ])["proxy_channel"]
                     config["proxy"] = True
                     break
             else:
@@ -211,6 +214,8 @@ def main():
                 "http": config["proxy_auth"][2],
                 "https": config["proxy_auth"][2],
             }
+            if config["proxy_channel"] != "0":
+                headers.append(("kdl-tps-channel", config["proxy_channel"]))
             session.keep_alive = False
             session.get("https://show.bilibili.com")
             logger.info(
