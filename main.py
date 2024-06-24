@@ -80,8 +80,7 @@ def run(hyg):
                 else:
                     hyg.config['hunter'] += 1
                     save(hyg.config)
-                    logger.success(f"猎手，你的战绩：{hyg.config['hunter']}张") 
-            time.sleep(hyg.config["co_delay"])
+                    logger.success(f"猎手，你的战绩：{hyg.config['hunter']}张")
     elif hyg.config["mode"] == 'detect':
         while 1:
             hyg.risk = False
@@ -106,8 +105,7 @@ def run(hyg):
                         else:
                             hyg.config['hunter'] += 1
                             save(hyg.config)
-                            logger.success(f"猎手，你的战绩：{hyg.config['hunter']}张")  
-                    time.sleep(hyg.config["co_delay"])
+                            logger.success(f"猎手，你的战绩：{hyg.config['hunter']}张")
                 break
             elif status == 1:
                 logger.warning("未开放购票")
@@ -144,7 +142,6 @@ def run(hyg):
                 hyg.sdk.capture_message("Pay success!")
                 logger.success("购票成功！")
                 return
-            time.sleep(hyg.config["co_delay"])
 
 
 def main():
@@ -175,15 +172,6 @@ def main():
             else:
                 config["mode"] = 'time'
                 logger.info("已开启定时抢票模式")
-
-        if "co_delay" not in config:
-            config["co_delay"] = float(prompt([
-                inquirer.Text(
-                    "co_delay",
-                    message="请输入创建订单时间间隔(该选项影响412风控概率，单开建议使用0)(秒)",
-                    default="0",
-                    validate=lambda _, x: float(x) >= 0
-                )])["co_delay"])
         if "status_delay" not in config and config["mode"] == 'detect':
             config["status_delay"] = float(prompt([
                 inquirer.Text(
