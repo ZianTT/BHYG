@@ -147,6 +147,7 @@ def run(hyg):
 
 
 def main():
+    easter_egg = False
     logger.info("项目主页: https://github.com/biliticket/BHYG GPL-3.0 删除本信息或盗版必究。")
     global uid
     try:
@@ -359,6 +360,8 @@ def main():
                 ])["buyerids"]
                 buyerids = [int(i.split(".")[0]) for i in buyerids]
                 config["buyer_info"] = []
+                female = False
+                male = False
                 for select in buyerids:
                     config["buyer_info"].append(
                         buyer_infos[int(select)]
@@ -367,6 +370,22 @@ def main():
                     logger.info(
                         "已选择购票人" + buyer_infos[int(select)]["name"] + " " + buyer_infos[int(select)]["personal_id"] + " " + buyer_infos[int(select)]["tel"]
                     )
+                    if int(buyer_infos[int(select)]["personal_id"][16]) % 2 == 0:
+                        female = True
+                    else:
+                        male = True
+                if easter_egg:
+                    if len(buyerids) == 1:
+                        logger.info("单身是这样的🤣不会吧不会吧，不会真有人一个人去逛漫展吧")
+                    else:
+                        if male and female:
+                            logger.error("小情侣不得house😡")
+                        elif male and not female:
+                            logger.error("我朝，有南通啊！")
+                            if len(buyerids) == 4:
+                                logger.error("我朝，开impart啊！")
+                        elif female and not male:
+                            logger.error("我朝，有女同啊！")
             else:
                 index = prompt([
                     inquirer.List("index", message="请选择购票人", choices=[f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for i in range(len(buyer_infos))])
