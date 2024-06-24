@@ -533,7 +533,7 @@ class BilibiliHyg:
                     response = requests.post(url, json={
                         "token": self.config["pushplus"],
                         "title": "BHYG通知",
-                        "content": "抢票成功，等待支付"
+                        "content": f"抢票成功，等待支付，订单号{self.order_id}",
                     }).json()
                     if response["code"] == 200:
                         logger.success(f"已发送通知，流水号 {response['data']}")
