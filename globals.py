@@ -239,9 +239,9 @@ def load_config():
     c = ntplib.NTPClient()
     skip = False
     try:
-        response = c.request('ntp.aliyun.com')
-    except ntplib.NTPException:
-        logger.error("无法连接到时间服务器，将跳过时间检查")
+        response = c.request('ntp.sjtu.edu.cn')
+    except Exception:
+        logger.error("时间同步出现错误，将跳过时间检查")
         skip = True
     if skip == False:
         import time
