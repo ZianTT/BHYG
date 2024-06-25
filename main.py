@@ -15,6 +15,8 @@ from globals import *
 
 import inquirer
 
+from i18n import i18n
+
 common_project_id = [
     {"name": "上海·BilibiliWorld 2024", "id": 85939},
     {"name": "上海·BILIBILI MACRO LINK 2024", "id": 85938}
@@ -57,9 +59,9 @@ def load() -> dict:
         data = unpad(cipher.decrypt(cipher_text), AES.block_size).decode("utf-8")
         data = json.loads(data)
     except ValueError:
-        logger.error("数据错误，运行环境不符")
+        logger.error(i18n["zh"]["data_error"])
         if os.path.exists("share.json"):
-            logger.info("检测到分享文件，正在迁移")
+            logger.info(i18n["zh"]["migrate_share"])
             with open("share.json", "r", encoding="utf-8") as f:
                 data = json.load(f)
                 save(data)
@@ -68,7 +70,7 @@ def load() -> dict:
         else:
             data = {}
             os.remove("data")
-        logger.info("已销毁原数据")
+        logger.info(i18n["zh"]["has_destroyed"])
     return data
 
 def run(hyg):
@@ -77,12 +79,12 @@ def run(hyg):
             if hyg.try_create_order():
                 if "hunter" not in hyg.config:
                     hyg.sdk.capture_message("Pay success!")
-                    logger.success("购票成功！")
+                    logger.success(i18n["zh"]["pay_success"])
                     return
                 else:
                     hyg.config['hunter'] += 1
                     save(hyg.config)
-                    logger.success(f"猎手，你的战绩：{hyg.config['hunter']}张")
+                    logger.success(i18n["zh"]["hunter_prompt"].format(hyg.config['hunter']))
     elif hyg.config["mode"] == 'detect':
         while 1:
             hyg.risk = False
@@ -134,7 +136,7 @@ def run(hyg):
         logger.info("等待到达开票时间...")
         while hyg.get_time() < hyg.config["time"]-60:
             time.sleep(10)
-            logger.info(f"等待中，距离开票时间还有{hyg.config["time"] - get_time():.2f}秒")
+            logger.info(f"等待中，距离开票时间还有{hyg.config['time'] - get_time():.2f}秒")
         logger.info("唤醒！即将开始抢票！")# Heads up, the wheels are spinning...
         while True:
             if hyg.get_time() >= hyg.config["time"]:
@@ -153,7 +155,7 @@ def run(hyg):
 
 def main():
     easter_egg = False
-    logger.info("项目主页: https://github.com/biliticket/BHYG GPL-3.0 删除本信息或盗版必究。")
+    logger.info(i18n["zh"]["start_up"])
     global uid
     try:
         version, sentry_sdk = init()
@@ -170,33 +172,35 @@ def main():
             headers["User-Agent"] = config["user-agent"]
         session = requests.Session()
         if "mode" not in config:
-            mode_str = prompt([inquirer.List("mode", message="请选择抢票模式", choices=["根据项目开票时间定时抢票", "直接抢票", "检测详情界面余票后抢票"], default="根据项目开票时间定时抢票")])["mode"]
-            if mode_str == "直接抢票":
+            mode_str = prompt([inquirer.List("mode", message=i18n["zh"]["choose_mode"], choices=[
+                i18n["zh"]["mode_time"], i18n["zh"]["mode_direct"], i18n["zh"]["mode_detect"]
+            ], default=i18n["zh"]["mode_time"])])["mode"]
+            if mode_str == i18n["zh"]["mode_direct"]:
                 config["mode"] = 'direct'
-                logger.info("已开启直接抢票模式")
-            elif mode_str == "检测详情界面余票后抢票":
+                logger.info(i18n["zh"]["mode_direct_on"])
+            elif mode_str == i18n["zh"]["mode_detect"]:
                 config["mode"] = 'detect'
-                logger.info("已开启检测模式")
+                logger.info(i18n["zh"]["mode_detect_on"])
             else:
                 config["mode"] = 'time'
-                logger.info("已开启定时抢票模式")
+                logger.info(i18n["zh"]["mode_time_on"])
         if "status_delay" not in config and config["mode"] == 'detect':
             config["status_delay"] = float(prompt([
                 inquirer.Text(
                     "status_delay",
-                    message="请输入票务信息检测时间间隔(该选项影响412风控概率)(秒)",
+                    message=i18n["zh"]["input_status_delay"],
                     default="0.2",
                     validate=lambda _, x: float(x) >= 0
                 )])["status_delay"])
         if "proxy" not in config:
-            choice = prompt([inquirer.List("proxy", message="是否使用代理", choices=["是", "否"], default="否")])["proxy"]
-            if choice == "是":
+            choice = prompt([inquirer.List("proxy", message=i18n["zh"]["input_is_use_proxy"], choices=[i18n["zh"]["yes"], i18n["zh"]["no"]], default=i18n["zh"]["no"])])["proxy"]
+            if choice == i18n["zh"]["yes"]:
                 while True:
                     config["proxy_auth"] = prompt([
-                        inquirer.Text("proxy_auth", message="请输入代理认证信息: ",validate=lambda _, x: len(x.split(" ")) == 3)
+                        inquirer.Text("proxy_auth", message=i18n["zh"]["input_proxy"],validate=lambda _, x: len(x.split(" ")) == 3)
                     ])["proxy_auth"].split(" ")
                     config["proxy_channel"] = prompt([
-                        inquirer.Text("proxy_channel", message="请输入代理通道(0则不指定)", validate=lambda _, x: x.isdigit())
+                        inquirer.Text("proxy_channel", message=i18n["zh"]["input_proxy_channel"], validate=lambda _, x: x.isdigit())
                     ])["proxy_channel"]
                     config["proxy"] = True
                     break
@@ -211,16 +215,15 @@ def main():
                 "https": config["proxy_auth"][2],
             }
             if config["proxy_channel"] != "0":
-                headers.append(("kdl-tps-channel", config["proxy_channel"]))
+                headers["kdl-tps-channel"] = config["proxy_channel"]
             session.keep_alive = False
             session.get("https://show.bilibili.com")
             logger.info(
-                "尝试访问B站，当前IP为："
-                + kdl_client.tps_current_ip(sign_type="hmacsha1")
+                i18n["zh"]["test_proxy"].format(kdl_client.tps_current_ip(sign_type="hmacsha1"))
             )
         if "again" not in config:
-            choice = prompt([inquirer.List("again", message="是否允许重复下单", choices=["是", "否"], default="是")])["again"]
-            if choice == "否":
+            choice = prompt([inquirer.List("again", message=i18n["zh"]["input_is_allow_again"], choices=[i18n["zh"]["yes"], i18n["zh"]["no"]], default=i18n["zh"]["yes"])])["again"]
+            if choice == i18n["zh"]["no"]:
                 config["again"] = False
             else:
                 config["again"] = True
@@ -232,7 +235,7 @@ def main():
             or "id_bind" not in config
         ):
             while True:
-                logger.info("常用项目id如下：")
+                logger.info(i18n["zh"]["common_project_id"])
                 for i in range(len(common_project_id)):
                     logger.info(
                         common_project_id[i]["name"]
@@ -240,9 +243,9 @@ def main():
                         + str(common_project_id[i]["id"])
                     )
                 if len(common_project_id) == 0:
-                    logger.info("暂无")
+                    logger.info(i18n["zh"]["empty"])
                 config["project_id"] = prompt([
-                    inquirer.Text("project_id", message="请输入项目id", validate=lambda _, x: x.isdigit())
+                    inquirer.Text("project_id", message=i18n["zh"]["input_project_id"], validate=lambda _, x: x.isdigit())
                 ])["project_id"]
                 url = (
                     "https://show.bilibili.com/api/ticket/project/getV2?version=134&id="
@@ -250,26 +253,27 @@ def main():
                 )
                 response = session.get(url, headers=headers)
                 if response.status_code == 412:
-                    logger.error("被412风控，请联系作者")
+                    logger.error(i18n["zh"]["not_handled_412"])
                     if config["proxy"]:
                         logger.info(
-                            "手动切换，当前IP为："
-                            + kdl_client.change_tps_ip(sign_type="hmacsha1")
+                            i18n["zh"]["manual_change_ip"].format(
+                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                            )
                         )
                         session.close()
                 response = response.json()
                 if response["errno"] == 3:
-                    logger.error("未找到项目ID")
+                    logger.error(i18n["zh"]["project_id_not_found"])
                     continue
                 if response["data"] == {}:
-                    logger.error("服务器无返回")
+                    logger.error(i18n["zh"]["server_no_response"])
                     continue
                 if response["data"]["is_sale"] == 0:
-                    logger.info("项目名称：" + response["data"]["name"])
-                    logger.error("项目不可售")
+                    logger.info(i18n["zh"]["project_name"].format(response["data"]["name"]))
+                    logger.error(i18n["zh"]["not_salable"])
                     continue
                 break
-            logger.info("项目名称：" + response["data"]["name"])
+            logger.info(i18n["zh"]["project_name"].format(response["data"]["name"]))
             config["id_bind"] = response["data"]["id_bind"]
             config["is_paper_ticket"] = response["data"]["has_paper_ticket"]
             screens = response["data"]["screen_list"]
@@ -301,11 +305,12 @@ def main():
                 url = "https://show.bilibili.com/api/ticket/addr/list"
                 resp_ticket = session.get(url, headers=headers)
                 if resp_ticket.status_code == 412:
-                    logger.error("被412风控，请联系作者")
+                    logger.error(i18n["zh"]["not_handled_412"])
                     if config["proxy"]:
                         logger.info(
-                            "手动切换，当前IP为："
-                            + kdl_client.change_tps_ip(sign_type="hmacsha1")
+                            i18n["zh"]["manual_change_ip"].format(
+                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                            )
                         )
                         session.close()
                 addr_list = resp_ticket.json()["data"]["addr_list"]
@@ -344,7 +349,7 @@ def main():
             url = "https://show.bilibili.com/api/ticket/buyer/list"
             response = session.get(url, headers=headers)
             if response.status_code == 412:
-                logger.error("被412风控，请联系作者")
+                logger.error(i18n["zh"]["not_handled_412"])
             buyer_infos = response.json()["data"]["list"]
             config["buyer_info"] = []
             if len(buyer_infos) == 0:

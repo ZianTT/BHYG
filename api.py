@@ -9,6 +9,8 @@ import qrcode
 import requests
 from loguru import logger
 
+from i18n import i18n
+
 def save(data: dict):
     import base64
     from Crypto.Cipher import AES
@@ -73,7 +75,7 @@ class BilibiliHyg:
         self.headers["Cookie"] = self.config["cookie"]
         if self.config["proxy"]:
             if self.config["proxy_channel"] != "0":
-                self.headers.append(("kdl-tps-channel", config["proxy_channel"]))
+                self.headers["kdl-tps-channel"] = config["proxy_channel"]
 
         self.client = client
         self.session = session
@@ -108,9 +110,10 @@ class BilibiliHyg:
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                        "手动切换，当前IP为："
-                        + self.client.change_tps_ip(sign_type="hmacsha1")
-                    )
+                            i18n["zh"]["manual_change_ip"].format(
+                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                            )
+                        )
                 self.session.close()
                 return self.get_ticket_status()
             return -1, 0
@@ -122,8 +125,9 @@ class BilibiliHyg:
                 if self.config["proxy"]:
                     if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                         logger.info(
-                            "手动切换，当前IP为："
-                            + self.client.change_tps_ip(sign_type="hmacsha1")
+                            i18n["zh"]["manual_change_ip"].format(
+                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                            )
                         )
                     self.session.close()
                     return self.get_ticket_status()
@@ -182,13 +186,14 @@ class BilibiliHyg:
             data["act_id"] = self.config["act_id"]
         response = self.session.post(url, headers=self.headers, data=data)
         if response.status_code == 412:
-            logger.error("被412风控，请联系作者")
+            logger.error(i18n["zh"]["not_handled_412"])
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                        "手动切换，当前IP为："
-                        + self.client.change_tps_ip(sign_type="hmacsha1")
-                    )
+                            i18n["zh"]["manual_change_ip"].format(
+                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                            )
+                        )
                 self.session.close()
                 return self.get_prepare()
         if response.json()["errno"] != 0 and response.json()["errno"] != -401:
@@ -272,13 +277,14 @@ class BilibiliHyg:
         )
         response = self.session.get(url, headers=self.headers)
         if response.status_code == 412:
-            logger.error("被412风控，请联系作者")
+            logger.error(i18n["zh"]["not_handled_412"])
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                        "手动切换，当前IP为："
-                        + self.client.change_tps_ip(sign_type="hmacsha1")
-                    )
+                            i18n["zh"]["manual_change_ip"].format(
+                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                            )
+                        )
                 self.session.close()
                 return self.confirm_info(token)
         response = response.json()
@@ -359,7 +365,7 @@ class BilibiliHyg:
                 logger.warning("暂不支持文字验证码验证，请参考高级用户指南手动填入风控信息")
             else:
                 logger.error("未知风控类型")
-                logger..warning("暂不支持该验证，请参考高级用户指南手动填入风控信息")
+                logger.warning("暂不支持该验证，请参考高级用户指南手动填入风控信息")
             self.sdk.add_breadcrumb(
                 category="gaia",
                 message="Gaia passed",
@@ -423,9 +429,10 @@ class BilibiliHyg:
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                        "手动切换，当前IP为："
-                        + self.client.change_tps_ip(sign_type="hmacsha1")
-                    )
+                            i18n["zh"]["manual_change_ip"].format(
+                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                            )
+                        )
                 self.session.close()
             return self.create_order()
         if response.status_code == 412:
@@ -436,9 +443,10 @@ class BilibiliHyg:
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                        "手动切换，当前IP为："
-                        + self.client.change_tps_ip(sign_type="hmacsha1")
-                    )
+                            i18n["zh"]["manual_change_ip"].format(
+                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                            )
+                        )
                 self.session.close()
                 return self.create_order()
             else:
@@ -462,13 +470,14 @@ class BilibiliHyg:
         logger.debug(url)
         response = self.session.get(url, headers=self.headers)
         if response.status_code == 412:
-            logger.error("被412风控，请联系作者")
+            logger.error(i18n["zh"]["not_handled_412"])
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                        "手动切换，当前IP为："
-                        + self.client.change_tps_ip(sign_type="hmacsha1")
-                    )
+                            i18n["zh"]["manual_change_ip"].format(
+                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                            )
+                        )
                 self.session.close()
         response = response.json()
         logger.debug(response)
@@ -511,13 +520,14 @@ class BilibiliHyg:
         url = "https://show.bilibili.com/api/ticket/order/info?order_id=" + str(order_id)
         response = self.session.get(url, headers=self.headers)
         if response.status_code == 412:
-            logger.error("被412风控，请联系作者")
+            logger.error(i18n["zh"]["not_handled_412"])
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                        "手动切换，当前IP为："
-                        + self.client.change_tps_ip(sign_type="hmacsha1")
-                    )
+                            i18n["zh"]["manual_change_ip"].format(
+                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                            )
+                        )
                 self.session.close()
         response = response.json()
         if response["data"]["status"] == 1:

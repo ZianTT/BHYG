@@ -265,7 +265,7 @@ def load_config():
             if user["data"]["isLogin"]:
                 logger.success("用户 " + user["data"]["uname"] + " 登录成功")
                 if user["data"]["vipStatus"] == 1:
-                    logger.info(f"用户为大会员，距离到期还有{user['data']['vipDue']-user['data']['now']/1000/60/60/24:.2f}天")
+                    logger.info(f"用户为大会员，距离到期还有{(user['data']['vipDueDate']/1000-time.time())/60/60/24:.2f}天")
                 import machineid
                 sentry_sdk.set_user(
                     {
