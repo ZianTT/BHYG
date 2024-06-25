@@ -195,7 +195,7 @@ class BilibiliHyg:
             logger.error(response.json()["msg"])
         return response.json()["data"]
 
-    def verify(self, gt, challenge, token):
+    def gee_verify(self, gt, challenge, token):
         from geetest import run
         time_start = time.time()
         self.captcha_data = run(gt, challenge, token)
@@ -216,6 +216,40 @@ class BilibiliHyg:
                         headers=self.headers,
                         data=self.captcha_data,
         ).json()["data"]["is_valid"]
+        self.config["gaia_vtoken"] = token
+        self.captcha_data = None
+        if self.headers["Cookie"].find("x-bili-gaia-vtoken") != -1:
+            self.headers["Cookie"] = self.headers["Cookie"].split(
+                "; x-bili-gaia-vtoken"
+            )[0]
+        self.headers["Cookie"] += "; x-bili-gaia-vtoken=" + token
+        save(self.config)
+        return success
+
+    def phone_verify(self, token):
+        if "phone" in self.config:
+            phone = self.config["phone"]
+        else:
+            phone = input("请输入手机号：")
+        self.captcha_data = {
+            "code": code,
+        }
+        self.captcha_data["csrf"] = self.headers["Cookie"][
+                        self.headers["Cookie"].index("bili_jct")
+                        + 9 : self.headers["Cookie"].index("bili_jct")
+                        + 41
+                    ]
+        self.captcha_data["token"] = token
+        success = self.session.post(
+                        "https://api.bilibili.com/x/gaia-vgate/v1/validate",
+                        headers=self.headers,
+                        data=self.captcha_data,
+        ).json()["data"]["is_valid"]
+        if not success:
+            logger.error("验证失败")
+            if "phone" in self.config:
+                self.config.pop("phone")
+            return False
         self.config["gaia_vtoken"] = token
         self.captcha_data = None
         if self.headers["Cookie"].find("x-bili-gaia-vtoken") != -1:
@@ -280,7 +314,6 @@ class BilibiliHyg:
             return info["token"]
         else:
             logger.warning("触发风控。")
-            logger.warning("类型：验证码 ")
             self.sdk.add_breadcrumb(
                 category="gaia",
                 message="Gaia found",
@@ -288,27 +321,45 @@ class BilibiliHyg:
             )
             riskParam = info["ga_data"]["riskParams"]
             # https://api.bilibili.com/x/gaia-vgate/v1/register
-            gtest = self.session.post(
+            risk = self.session.post(
                 "https://api.bilibili.com/x/gaia-vgate/v1/register",
                 headers=self.headers,
                 data=riskParam,
             ).json()
-            while gtest["code"] != 0:
-                gtest = self.session.post(
+            while risk["code"] != 0:
+                risk = self.session.post(
                     "https://api.bilibili.com/x/gaia-vgate/v1/register",
                     headers=self.headers,
                     data=riskParam,
                 ).json()
-            gt, challenge, token = (
-                gtest["data"]["geetest"]["gt"],
-                gtest["data"]["geetest"]["challenge"],
-                gtest["data"]["token"],
-            )
-            cap_data = self.verify(gt, challenge, token)
-            while cap_data == False:
-                logger.error("验证失败，请重新验证")
-                return self.get_token()
-            logger.info("验证成功")
+            if risk["data"]["type"] == "geetest":
+                logger.warning("类型：验证码 ")
+                gt, challenge, token = (
+                    gtest["data"]["geetest"]["gt"],
+                    gtest["data"]["geetest"]["challenge"],
+                    gtest["data"]["token"],
+                )
+                cap_data = self.verify(gt, challenge, token)
+                while cap_data == False:
+                    logger.error("验证失败，请重新验证")
+                    return self.get_token()
+                logger.info("验证成功")
+            elif risk["data"]["type"] == "phone":
+                logger.warning("类型：手机验证")
+                token = risk["data"]["token"]
+                cap_data = self.phone_verify(token)
+                while cap_data == False:
+                    logger.error("验证失败，请重新验证")
+                    return self.get_token()
+            elif risk["data"]["type"] == "sms":
+                logger.warning("类型：短信验证")
+                logger.warning("暂不支持短信验证，请参考高级用户指南手动填入风控信息")
+            elif risk["data"]["type"] == "biliword":
+                logger.warning("类型：文字验证码")
+                logger.warning("暂不支持文字验证码验证，请参考高级用户指南手动填入风控信息")
+            else:
+                logger.error("未知风控类型")
+                logger..warning("暂不支持该验证，请参考高级用户指南手动填入风控信息")
             self.sdk.add_breadcrumb(
                 category="gaia",
                 message="Gaia passed",

@@ -85,6 +85,12 @@ def utility(config):
         logger.info("PushPlus推送已开启")
         save(config)
 
+    def save_phone(config):
+        phone = input("请输入您的手机号码：")
+        config["phone"] = phone
+        logger.info("手机号码已保存")
+        save(config)
+    
     headers = {
         "Cookie": config["cookie"],
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.7",
@@ -94,7 +100,7 @@ def utility(config):
         inquirer.List(
             "select",
             message="请选择您要使用的实用工具",
-            choices=["添加购票人", "覆盖默认UA", "覆盖gaia_vtoken", "开启猎手模式(计数清零)", "关闭猎手模式", "分享模式", "PushPlus推送", "返回"],
+            choices=["添加购票人", "覆盖默认UA", "覆盖gaia_vtoken", "开启猎手模式(计数清零)", "关闭猎手模式", "分享模式", "PushPlus推送", "预填绑定手机号", "返回"],
         )])
     if select["select"] == "添加购票人":
         add_buyer(headers)
@@ -117,6 +123,8 @@ def utility(config):
     elif select["select"] == "PushPlus推送":
         pushplus_config(config)
         return utility(config)
+    elif select["select"] == "预填绑定手机号":
+        save_phone(config)
     elif select["select"] == "返回":
         return
     else:
