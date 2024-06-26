@@ -69,7 +69,7 @@ class BilibiliHyg:
             }
         else:
             self.headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.7",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",
             }
 
         self.headers["Cookie"] = self.config["cookie"]
