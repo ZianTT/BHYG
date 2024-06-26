@@ -50,7 +50,7 @@ def run(gt, challenge, token, mode = "local_gt", key = None):
         except Exception as e:
             logger.error(f"Error: {e}")
             return
-        if response["code"] == 0:
+        if response["status"] == 0:
             data = {
                         "success": True,
                         "challenge": response["data"]["challenge"],
@@ -73,5 +73,7 @@ if __name__ == "__main__":
     challenge = captcha["data"]["geetest"]["challenge"]
     token = captcha["data"]["token"]
     # validate = run(gt, challenge, token)
+    start_time = time.time()
     validate = run(gt, challenge, token, mode="rrocr", key="FILTERED")
+    print(f"Time: {time.time() - start_time}")
     print(validate)
