@@ -445,7 +445,7 @@ def interactive_login(sentry_sdk = None):
     global sdk
     sdk = sentry_sdk
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.7"
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BiliApp/80000100"
     }
 
     session = requests.session()
@@ -457,7 +457,7 @@ def interactive_login(sentry_sdk = None):
             cookie_str = input("请输入cookie: ")
             # verify cookie
             try:
-                session.get("https://www.bilibili.com/", headers={"User-Agent": "Mozilla/5.0", "Cookie": cookie_str})
+                session.get("https://www.bilibili.com/", headers={"User-Agent": "Mozilla/5.0 BiliApp/80000100", "Cookie": cookie_str})
             except Exception:
                 logger.error("cookie不合法")
                 return interactive_login()

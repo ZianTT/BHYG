@@ -255,7 +255,7 @@ def load_config():
             if "cookie" not in config or not use_login:
                 config["cookie"] = interactive_login(sentry_sdk)
             headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.7",
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BiliApp/80000100",
                 "Cookie": config["cookie"],
             }
             user = requests.get(
