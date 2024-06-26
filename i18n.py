@@ -47,7 +47,7 @@ i18n = {
         "buyer_empty": "未找到购票人，请前往实名添加购票人",
         "select_buyer": "请选择购票人",
         "selected_buyer": "已选择购票人：{} {} {}",
-        "show_all_price_e_ticket": "共 {} 张 {} 票，单张价格为 {}，总价为{}"
+        "show_all_price_e_ticket": "共 {} 张 {} 票，单张价格为 {}，总价为{}",
         "id_bind_single": "本项目只能购买一人票",
         "qr_login": "请使用Bilibili手机客户端扫描二维码",
         "login_success": "登录成功",
