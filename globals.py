@@ -204,6 +204,8 @@ def load_config():
             config = {}
             if "pushplus" in temp:
                 config["pushplus"] = temp["pushplus"]
+            if "ua" in temp:
+                config["ua"] = temp["pushplus"]
             use_login = False
         elif run_info == "保留登录信息重新配置":
             logger.info("只沿用登录信息")
