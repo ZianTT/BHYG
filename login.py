@@ -6,13 +6,11 @@ import qrcode
 import requests
 from loguru import logger
 
+from utils import prompt
+
 import inquirer
 
-def prompt(prompt):
-    data = inquirer.prompt(prompt)
-    if data is None:
-        raise KeyboardInterrupt
-    return data
+from i18n import i18n
 
 def cookie(cookies):
     lst = []
@@ -64,7 +62,7 @@ def qr_login(session, headers):
     qr.print_ascii(invert=True)
     img = qr.make_image()
     img.show()
-    logger.info("请使用Bilibili手机客户端扫描二维码")
+    logger.info(i18n["zh"]["qr_login"])
     while True:
         time.sleep(1)
         url = (
@@ -75,7 +73,7 @@ def qr_login(session, headers):
         # read as utf-8
         check = req.json()["data"]
         if check["code"] == 0:
-            logger.success("登录成功")
+            logger.success(i18n["zh"]["login_success"])
             cookies = requests.utils.dict_from_cookiejar(session.cookies)
             break
         elif check["code"] == 86101:
@@ -148,7 +146,7 @@ def verify_code_login(session, headers):
         if login["code"] != 0:
             logger.error(f"{login['code']}: {login['message']}")
         else:
-            logger.success("登录成功")
+            logger.success(i18n["zh"]["login_success"])
             cookies = requests.utils.dict_from_cookiejar(session.cookies)
             return cookie(cookies)
 
@@ -362,7 +360,7 @@ def password_login(session, headers):
                 if send["code"] != 0:
                     logger.error(f"{send['code']}: {send['message']}")
                 else:
-                    logger.success("登录成功")
+                    logger.success(i18n["zh"]["login_success"])
                     code = send["data"]["code"]
                     data = {"source": "risk", "code": code}
                     session.post(
@@ -372,7 +370,7 @@ def password_login(session, headers):
                     ).json()
                     cookies = requests.utils.dict_from_cookiejar(session.cookies)
                     return cookie(cookies)
-        logger.success("登录成功")
+        logger.success(i18n["zh"]["login_success"])
         cookies = requests.utils.dict_from_cookiejar(session.cookies)
         return cookie(cookies)
 
@@ -436,7 +434,7 @@ def sns_login(session, headers):
         if not login["data"]["has_bind"]:
             logger.error("未绑定SNS账号")
             return sns_login(session, headers)
-        logger.success("登录成功")
+        logger.success(i18n["zh"]["login_success"])
         cookies = requests.utils.dict_from_cookiejar(session.cookies)
         return cookie(cookies)
 
@@ -472,10 +470,10 @@ def interactive_login(sentry_sdk = None):
         elif method["method"] == "验证码APP版":
             cookie_str = verify_code_login_app(session, headers)
         else:
-            logger.error("暂不支持此方式")
+            logger.error(i18n["zh"]["login_not_supported"])
             return interactive_login()
     except Exception as e:
-        logger.error("登录时出现错误，可能是风控导致的。请更换登录方式或稍后再试")
+        logger.error(i18n["zh"]["login_failed"])
         return interactive_login()
 
     logger.debug("=" * 20)

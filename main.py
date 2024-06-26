@@ -106,7 +106,7 @@ def run(hyg):
 
 def main():
     easter_egg = False
-    logger.info(i18n["zh"]["start_up"])
+    print(i18n["zh"]["start_up"])
     global uid
     try:
         version, sentry_sdk = init()
@@ -216,27 +216,30 @@ def main():
                     logger.info(i18n["zh"]["project_name"].format(response["data"]["name"]))
                     logger.error(i18n["zh"]["not_salable"])
                     continue
+                if len(response["data"]["screen_list"]) == 0:
+                    logger.error(i18n["zh"]["no_screen"])
+                    continue
                 break
             logger.info(i18n["zh"]["project_name"].format(response["data"]["name"]))
             config["id_bind"] = response["data"]["id_bind"]
             config["is_paper_ticket"] = response["data"]["has_paper_ticket"]
             screens = response["data"]["screen_list"]
             screen_id = prompt([
-                inquirer.List("screen_id", message="请选择场次", choices=[f"{i}. {screens[i]['name']}" for i in range(len(screens))])
+                inquirer.List("screen_id", message=i18n["zh"]["select_screen"], choices=[f"{i}. {screens[i]['name']}" for i in range(len(screens))])
             ])["screen_id"].split(".")[0]
-            logger.info("场次：" + screens[int(screen_id)]["name"])
+            logger.info(i18n["zh"]["show_screen"].format(screens[int(screen_id)]["name"]))
             tickets = screens[int(screen_id)]["ticket_list"]  # type: ignore
             sku_id = prompt([
-                inquirer.List("sku_id", message="请选择票档", choices=[f"{i}. {tickets[i]['desc']} {tickets[i]['price']/100}元" for i in range(len(tickets))])
+                inquirer.List("sku_id", message=i18n["zh"]["select_sku"], choices=[f"{i}. {tickets[i]['desc']} {tickets[i]['price']/100}元" for i in range(len(tickets))])
             ])["sku_id"].split(".")[0]
-            logger.info("票档：" + tickets[int(sku_id)]["desc"])
+            logger.info(i18n["zh"]["show_sku"].format(tickets[int(sku_id)]["desc"]))
             config["screen_id"] = str(screens[int(screen_id)]["id"])
             config["sku_id"] = str(tickets[int(sku_id)]["id"])
             config["pay_money"] = str(tickets[int(sku_id)]["price"])
             config["ticket_desc"] = str(tickets[int(sku_id)]["desc"])
             config["time"] = int(tickets[int(sku_id)]["saleStart"])
             if tickets[int(sku_id)]["discount_act"] is not None:
-                logger.info(f"已开启优惠活动：活动ID {tickets[int(sku_id)]["discount_act"]["act_id"]}")
+                logger.info(i18n["zh"]["show_act"].format(tickets[int(sku_id)]["discount_act"]["act_id"]))
                 config["act_id"] = tickets[int(sku_id)]["discount_act"]["act_id"]
                 config["order_type"] = tickets[int(sku_id)]["discount_act"]["act_type"]
             else:
@@ -297,17 +300,17 @@ def main():
             buyer_infos = response.json()["data"]["list"]
             config["buyer_info"] = []
             if len(buyer_infos) == 0:
-                logger.error("未找到购票人，请前往实名添加购票人")
+                logger.error(i18n["zh"]["buyer_empty"])
             else:
                 multiselect = True
             if config["id_bind"] == 1:
-                logger.info("本项目只能购买一人票")
+                logger.info(i18n["zh"]["id_bind_single"])
                 multiselect = False
             if multiselect:
                 buyerids = prompt([
                     inquirer.Checkbox(
                         "buyerids",
-                        message="请选择购票人",
+                        message=i18n["zh"]["select_buyer"],
                         choices=[f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for i in range(len(buyer_infos))],
                         validate=lambda _, x: len(x) > 0
                     )
@@ -319,10 +322,13 @@ def main():
                 for select in buyerids:
                     config["buyer_info"].append(
                         buyer_infos[int(select)]
-                    )  # type: ignore
-                    # type: ignore
+                    )
                     logger.info(
-                        "已选择购票人" + buyer_infos[int(select)]["name"] + " " + buyer_infos[int(select)]["personal_id"] + " " + buyer_infos[int(select)]["tel"]
+                        i18n["zh"]["selected_buyer"].format(
+                            buyer_infos[int(select)]["name"],
+                            buyer_infos[int(select)]["personal_id"],
+                            buyer_infos[int(select)]["tel"],
+                        )
                     )
                     if int(buyer_infos[int(select)]["personal_id"][16]) % 2 == 0:
                         female = True
@@ -342,10 +348,16 @@ def main():
                             logger.error("我朝，有女同啊！")
             else:
                 index = prompt([
-                    inquirer.List("index", message="请选择购票人", choices=[f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for i in range(len(buyer_infos))])
+                    inquirer.List("index", message=i18n["zh"]["select_buyer"], choices=[f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for i in range(len(buyer_infos))])
                 ])["index"]
                 config["buyer_info"].append(buyer_infos[int(index.split(".")[0])])
-                logger.info("已选择购票人" + config["buyer_info"][0]["name"] + " " + config["buyer_info"][0]["personal_id"] + " " + config["buyer_info"][0]["tel"])
+                logger.info(
+                        i18n["zh"]["selected_buyer"].format(
+                            buyer_infos[int(select)]["name"],
+                            buyer_infos[int(select)]["personal_id"],
+                            buyer_infos[int(select)]["tel"],
+                        )
+                    )
             if "count" not in config:
                 config["count"] = len(config["buyer_info"])
             config["buyer_info"] = json.dumps(config["buyer_info"])
@@ -382,19 +394,23 @@ def main():
                 config["count"]
             )
             logger.info(
-                f"共 {config['count']} 张 {config['ticket_desc']} 票，单张价格为 {int(config['pay_money'])/100}，总价为{config['all_price'] / 100}"
+                i18n["zh"]["show_all_price_e_ticket"].format(
+                    config["count"],
+                    config["ticket_desc"],
+                    int(config["pay_money"]) / 100,
+                    config["all_price"] / 100,
+                )
             )
         save(config)
         sentry_sdk.capture_message("config complete")
         BHYG = BilibiliHyg(config, sentry_sdk, kdl_client, session)
         run(BHYG)
     except KeyboardInterrupt:
-        logger.info("已手动退出")
+        logger.info(i18n["zh"]["exit_manual"])
         return
     except Exception as e:
         track = sentry_sdk.capture_exception(e)
-        logger.exception("程序出现错误，错误信息：" + str(e))
-        logger.error("错误追踪ID(可提供给开发者)：" + str(track))
+        logger.error(i18n["zh"]["error_occured"].format(str(e), str(track)))
         return
     return
 
@@ -403,12 +419,12 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        logger.info("已手动退出")
+        logger.info(i18n["zh"]["exit_manual"])
     from sentry_sdk import Hub
     client = Hub.current.client
     if client is not None:
         client.close(timeout=2.0)
-    logger.info("已安全退出，您可以关闭窗口（将在15秒后自动关闭）")
+    logger.info(i18n["zh"]["exit_sleep_15s"])
     try:
         time.sleep(15)
     except KeyboardInterrupt:

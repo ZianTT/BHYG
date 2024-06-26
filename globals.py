@@ -6,6 +6,8 @@ import sys
 import os
 import json 
 
+import inquirer
+
 import sentry_sdk
 from loguru import logger
 from sentry_sdk.integrations.loguru import LoggingLevels, LoguruIntegration
