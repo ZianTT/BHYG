@@ -48,7 +48,7 @@ def run(gt, challenge, token, mode = "local_gt", key = None):
         try:
             response = requests.post("http://api.rrocr.com/api/recognize.html", data=param).json()
         except Exception as e:
-            logger.error(f"Error: {e}")
+            print(f"Error: {e}")
             return
         if response["status"] == 0:
             data = {
@@ -59,7 +59,23 @@ def run(gt, challenge, token, mode = "local_gt", key = None):
                 }
             return data
         else:
-            logger.error(f"Error: {response['msg']}")
+            print(f"Error: {response['msg']}")
+    elif mode == "manual":
+        print("请手动完成验证码")
+        print(gt+" "+challenge)
+        import pyperclip
+        try:
+            pyperclip.copy(gt+" "+challenge)
+        except pyperclip.PyperclipException:
+            print("请手动复制。若您为linux，请运行`sudo apt-get install xclip`")
+        validate = input("请输入验证码：")
+        data = {
+                    "success": True,
+                    "challenge": challenge,
+                    "validate": validate,
+                    "seccode": validate,
+            }
+        return data
     else:
         logger.critical("暂不支持该验证码模式")
 
@@ -74,6 +90,6 @@ if __name__ == "__main__":
     token = captcha["data"]["token"]
     # validate = run(gt, challenge, token)
     start_time = time.time()
-    validate = run(gt, challenge, token, mode="rrocr", key="FILTERED")
+    validate = run(gt, challenge, token, mode="manual")
     print(f"Time: {time.time() - start_time}")
     print(validate)

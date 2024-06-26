@@ -107,6 +107,8 @@ def utility(config):
         elif choice == i18n["zh"]["rrocr"]:
             config["captcha"] = "rrocr"
             config["rrocr_key"] = input("请输入RROCR KEY：")
+        elif choice == i18n["zh"]["manual"]:
+            config["captcha"] = "manual"
         else:
             logger.error(i18n["zh"]["captcha_mode_not_supported"])
         save(config)
