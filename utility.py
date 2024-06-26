@@ -93,7 +93,7 @@ def utility(config):
     
     headers = {
         "Cookie": config["cookie"],
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) BHYG/0.7.7",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)",
         "Referer": "https://show.bilibili.com"
     }
     select = prompt([
