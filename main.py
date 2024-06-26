@@ -24,6 +24,7 @@ common_project_id = [
     {"name": "上海·BILIBILI MACRO LINK 2024", "id": 85938}
 ]
 
+
 def run(hyg):
     if hyg.config["mode"] == 'direct':
         while True:
@@ -85,10 +86,10 @@ def run(hyg):
     elif hyg.config["mode"] == 'time':
         logger.info("当前为定时抢票模式")
         logger.info("等待到达开票时间...")
-        while hyg.get_time() < hyg.config["time"]-60:
+        while hyg.get_time() < hyg.config["time"] - 60:
             time.sleep(10)
             logger.info(f"等待中，距离开票时间还有{hyg.config['time'] - get_time():.2f}秒")
-        logger.info("唤醒！即将开始抢票！")# Heads up, the wheels are spinning...
+        logger.info("唤醒！即将开始抢票！")  # Heads up, the wheels are spinning...
         while True:
             if hyg.get_time() >= hyg.config["time"]:
                 break
@@ -116,8 +117,8 @@ def main():
 
         config = load_config()
         headers = {
-                "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/618.1.15.10.15 (KHTML, like Gecko) Mobile/21F90 BiliApp/77900100 os/ios model/iPhone 15 mobi_app/iphone build/77900100 osVer/17.5.1 network/2 channel/AppStore c_locale/zh-Hans_CN s_locale/zh-Hans_CH disable_rcmd/0",
-                "Cookie": config["cookie"],
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/618.1.15.10.15 (KHTML, like Gecko) Mobile/21F90 BiliApp/77900100 os/ios model/iPhone 15 mobi_app/iphone build/77900100 osVer/17.5.1 network/2 channel/AppStore c_locale/zh-Hans_CN s_locale/zh-Hans_CH disable_rcmd/0",
+            "Cookie": config["cookie"],
         }
         if "user-agent" in config:
             headers["User-Agent"] = config["user-agent"]
@@ -166,17 +167,19 @@ def main():
                 i18n["zh"]["test_proxy"].format(kdl_client.tps_current_ip(sign_type="hmacsha1"))
             )
         if "again" not in config:
-            choice = prompt([inquirer.List("again", message=i18n["zh"]["input_is_allow_again"], choices=[i18n["zh"]["yes"], i18n["zh"]["no"]], default=i18n["zh"]["yes"])])["again"]
+            choice = prompt([inquirer.List("again", message=i18n["zh"]["input_is_allow_again"],
+                                           choices=[i18n["zh"]["yes"], i18n["zh"]["no"]], default=i18n["zh"]["yes"])])[
+                "again"]
             if choice == i18n["zh"]["no"]:
                 config["again"] = False
             else:
                 config["again"] = True
         if (
-            "project_id" not in config
-            or "screen_id" not in config
-            or "sku_id" not in config
-            or "pay_money" not in config
-            or "id_bind" not in config
+                "project_id" not in config
+                or "screen_id" not in config
+                or "sku_id" not in config
+                or "pay_money" not in config
+                or "id_bind" not in config
         ):
             while True:
                 logger.info(i18n["zh"]["common_project_id"])
@@ -189,11 +192,12 @@ def main():
                 if len(common_project_id) == 0:
                     logger.info(i18n["zh"]["empty"])
                 config["project_id"] = prompt([
-                    inquirer.Text("project_id", message=i18n["zh"]["input_project_id"], validate=lambda _, x: x.isdigit())
+                    inquirer.Text("project_id", message=i18n["zh"]["input_project_id"],
+                                  validate=lambda _, x: x.isdigit())
                 ])["project_id"]
                 url = (
-                    "https://show.bilibili.com/api/ticket/project/getV2?version=134&id="
-                    + config["project_id"]
+                        "https://show.bilibili.com/api/ticket/project/getV2?version=134&id="
+                        + config["project_id"]
                 )
                 response = session.get(url, headers=headers)
                 if response.status_code == 412:
@@ -225,12 +229,15 @@ def main():
             config["is_paper_ticket"] = response["data"]["has_paper_ticket"]
             screens = response["data"]["screen_list"]
             screen_id = prompt([
-                inquirer.List("screen_id", message=i18n["zh"]["select_screen"], choices=[f"{i}. {screens[i]['name']}" for i in range(len(screens))])
+                inquirer.List("screen_id", message=i18n["zh"]["select_screen"],
+                              choices=[f"{i}. {screens[i]['name']}" for i in range(len(screens))])
             ])["screen_id"].split(".")[0]
             logger.info(i18n["zh"]["show_screen"].format(screens[int(screen_id)]["name"]))
             tickets = screens[int(screen_id)]["ticket_list"]  # type: ignore
             sku_id = prompt([
-                inquirer.List("sku_id", message=i18n["zh"]["select_sku"], choices=[f"{i}. {tickets[i]['desc']} {tickets[i]['price']/100}元" for i in range(len(tickets))])
+                inquirer.List("sku_id", message=i18n["zh"]["select_sku"],
+                              choices=[f"{i}. {tickets[i]['desc']} {tickets[i]['price'] / 100}元" for i in
+                                       range(len(tickets))])
             ])["sku_id"].split(".")[0]
             logger.info(i18n["zh"]["show_sku"].format(tickets[int(sku_id)]["desc"]))
             config["screen_id"] = str(screens[int(screen_id)]["id"])
@@ -265,11 +272,14 @@ def main():
                     logger.error("没有收货地址，请先添加收货地址")
                 else:
                     addr = prompt([
-                        inquirer.List("addr", message="请选择收货地址", choices=[{"name": f"{i}. {addr_list[i]['prov']+addr_list[i]['city']+addr_list[i]['area']+addr_list[i]['addr']} {addr_list[i]['name']} {addr_list[i]['phone']}", "value": i} for i in range(len(addr_list))])
+                        inquirer.List("addr", message="请选择收货地址", choices=[{
+                                                                                     "name": f"{i}. {addr_list[i]['prov'] + addr_list[i]['city'] + addr_list[i]['area'] + addr_list[i]['addr']} {addr_list[i]['name']} {addr_list[i]['phone']}",
+                                                                                     "value": i} for i in
+                                                                                 range(len(addr_list))])
                     ])["addr"].split(".")[0]
                     addr = addr_list[int(addr)]
                     logger.info(
-                        f"已选择收货地址：{addr['prov']+addr['city']+addr['area']+addr['addr']} {addr['name']} {addr['phone']}"
+                        f"已选择收货地址：{addr['prov'] + addr['city'] + addr['area'] + addr['addr']} {addr['name']} {addr['phone']}"
                     )
                     config["deliver_info"] = json.dumps(
                         {
@@ -277,9 +287,9 @@ def main():
                             "tel": addr["phone"],
                             "addr_id": addr["addr"],
                             "addr": addr["prov"]
-                            + addr["city"]
-                            + addr["area"]
-                            + addr["addr"],
+                                    + addr["city"]
+                                    + addr["area"]
+                                    + addr["addr"],
                         },
                         ensure_ascii=False,
                     )
@@ -311,7 +321,9 @@ def main():
                     inquirer.Checkbox(
                         "buyerids",
                         message=i18n["zh"]["select_buyer"],
-                        choices=[f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for i in range(len(buyer_infos))],
+                        choices=[
+                            f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for
+                            i in range(len(buyer_infos))],
                         validate=lambda _, x: len(x) > 0
                     )
                 ])["buyerids"]
@@ -348,21 +360,23 @@ def main():
                             logger.error("我朝，有女同啊！")
             else:
                 index = prompt([
-                    inquirer.List("index", message=i18n["zh"]["select_buyer"], choices=[f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for i in range(len(buyer_infos))])
+                    inquirer.List("index", message=i18n["zh"]["select_buyer"], choices=[
+                        f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for i
+                        in range(len(buyer_infos))])
                 ])["index"]
                 config["buyer_info"].append(buyer_infos[int(index.split(".")[0])])
                 logger.info(
-                        i18n["zh"]["selected_buyer"].format(
-                            buyer_infos[int(select)]["name"],
-                            buyer_infos[int(select)]["personal_id"],
-                            buyer_infos[int(select)]["tel"],
-                        )
+                    i18n["zh"]["selected_buyer"].format(
+                        buyer_infos[int(select)]["name"],
+                        buyer_infos[int(select)]["personal_id"],
+                        buyer_infos[int(select)]["tel"],
                     )
+                )
             if "count" not in config:
                 config["count"] = len(config["buyer_info"])
             config["buyer_info"] = json.dumps(config["buyer_info"])
         if config["id_bind"] == 0 and (
-            "buyer" not in config or "tel" not in config
+                "buyer" not in config or "tel" not in config
         ):
             logger.info("请添加联系人信息")
             config["buyer"] = input("联系人姓名：")
@@ -371,7 +385,8 @@ def main():
             ])["tel"]
             if "count" not in config:
                 config["count"] = prompt([
-                    inquirer.Text("count", message="请输入票数", default="1",validate=lambda _, x: x.isdigit() and int(x) > 0)
+                    inquirer.Text("count", message="请输入票数", default="1",
+                                  validate=lambda _, x: x.isdigit() and int(x) > 0)
                 ])["count"]
         if config["is_paper_ticket"]:
             if config["express_fee"] == 0:
@@ -379,15 +394,15 @@ def main():
                     config["count"]
                 )
                 logger.info(
-                    f"共 {config['count']} 张 {config['ticket_desc']} 票，单张价格为 {int(config['pay_money'])/100}，纸质票，邮费免去，总价为{config['all_price'] / 100}"
+                    f"共 {config['count']} 张 {config['ticket_desc']} 票，单张价格为 {int(config['pay_money']) / 100}，纸质票，邮费免去，总价为{config['all_price'] / 100}"
                 )
             else:
                 config["all_price"] = (
-                    int(config["pay_money"]) * int(config["count"])
-                    + config["express_fee"]
+                        int(config["pay_money"]) * int(config["count"])
+                        + config["express_fee"]
                 )
                 logger.info(
-                    f"共 {config['count']} 张 {config['ticket_desc']} 票，单张价格为 {int(config['pay_money'])/100}，纸质票，邮费为 {config['express_fee'] / 100}，总价为{config['all_price'] / 100}"
+                    f"共 {config['count']} 张 {config['ticket_desc']} 票，单张价格为 {int(config['pay_money']) / 100}，纸质票，邮费为 {config['express_fee'] / 100}，总价为{config['all_price'] / 100}"
                 )
         else:
             config["all_price"] = int(config["pay_money"]) * int(
@@ -421,6 +436,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         logger.info(i18n["zh"]["exit_manual"])
     from sentry_sdk import Hub
+
     client = Hub.current.client
     if client is not None:
         client.close(timeout=2.0)

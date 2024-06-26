@@ -5,6 +5,7 @@ def prompt(prompt):
         raise KeyboardInterrupt
     return data
 
+
 def save(data: dict):
     import base64
     from Crypto.Cipher import AES
@@ -17,8 +18,9 @@ def save(data: dict):
     data = base64.b64encode(cipher_text).decode("utf-8")
     iv = base64.b64encode(cipher.iv).decode('utf-8')
     with open("data", "w", encoding="utf-8") as f:
-        f.write(iv+"%"+data)
+        f.write(iv + "%" + data)
     return
+
 
 def load() -> dict:
     import base64

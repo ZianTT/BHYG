@@ -12,6 +12,7 @@ import inquirer
 
 from i18n import i18n
 
+
 def cookie(cookies):
     lst = []
     for item in cookies.items():
@@ -20,17 +21,19 @@ def cookie(cookies):
     cookie_str = ";".join(lst)
     return cookie_str
 
+
 def appsign(params):
     import hashlib
     import urllib.parse
     appkey = '1d8b6e7d45233436'
     appsec = '560c52ccd288fed045859ed18bffd973'
     params.update({'appkey': appkey})
-    params = dict(sorted(params.items())) # 按照 key 重排参数
-    query = urllib.parse.urlencode(params) # 序列化参数
-    sign = hashlib.md5((query+appsec).encode()).hexdigest() # 计算 api 签名
-    params.update({'sign':sign})
+    params = dict(sorted(params.items()))  # 按照 key 重排参数
+    query = urllib.parse.urlencode(params)  # 序列化参数
+    sign = hashlib.md5((query + appsec).encode()).hexdigest()  # 计算 api 签名
+    params.update({'sign': sign})
     return params
+
 
 def _verify(gt, challenge, token):
     global sdk
@@ -40,7 +43,7 @@ def _verify(gt, challenge, token):
     delta = time.time() - time_start
     sdk.metrics.distribution(
         key="gt_solve_time",
-        value=delta*1000,
+        value=delta * 1000,
         unit="millisecond"
     )
     return data
@@ -66,8 +69,8 @@ def qr_login(session, headers):
     while True:
         time.sleep(1)
         url = (
-            "https://passport.bilibili.com/x/passport-login/web/qrcode/poll?source=main-fe-header&qrcode_key="
-            + generate["data"]["qrcode_key"]
+                "https://passport.bilibili.com/x/passport-login/web/qrcode/poll?source=main-fe-header&qrcode_key="
+                + generate["data"]["qrcode_key"]
         )
         req = session.get(url, headers=headers)
         # read as utf-8
@@ -150,6 +153,7 @@ def verify_code_login(session, headers):
             cookies = requests.utils.dict_from_cookiejar(session.cookies)
             return cookie(cookies)
 
+
 def verify_code_login_app(session, headers):
     logger.warning("该方法尚在测试中")
     import uuid
@@ -163,6 +167,7 @@ def verify_code_login_app(session, headers):
         md5 = hashlib.md5(":".join(mac).encode()).hexdigest()
         md5Arr = list(md5)
         return f"XY{md5Arr[2]}{md5Arr[12]}{md5Arr[22]}{md5}"
+
     # https://passport.bilibili.com/x/passport-login/captcha
     # captcha = session.get(
     #     "https://passport.bilibili.com/x/passport-login/captcha", headers=headers
@@ -216,7 +221,8 @@ def verify_code_login_app(session, headers):
     while True:
         code = prompt([inquirer.Text("code", message="请输入验证码", validate=lambda _, x: len(x) == 6)])["code"]
         # https://passport.bilibili.com/x/passport-login/login/sms
-        data = {"cid": 86, "tel": int(tel), "captcha_key": send_token, "code": int(code), "login_session_id": session_id}
+        data = {"cid": 86, "tel": int(tel), "captcha_key": send_token, "code": int(code),
+                "login_session_id": session_id}
         login = session.post(
             "https://passport.bilibili.com/x/passport-login/login/sms",
             headers=headers,
@@ -228,6 +234,7 @@ def verify_code_login_app(session, headers):
             logger.success("登录成功")
             cookies = requests.utils.dict_from_cookiejar(session.cookies)
             return cookie(cookies)
+
 
 def password_login(session, headers):
     from Crypto.Cipher import PKCS1_v1_5
@@ -344,7 +351,8 @@ def password_login(session, headers):
                 logger.success("验证码发送成功")
                 send_token = send["data"]["captcha_key"]
             while True:
-                code = prompt([inquirer.Text("code", message="请输入验证码", validate=lambda _, x: len(x) == 6)])["code"]
+                code = prompt([inquirer.Text("code", message="请输入验证码", validate=lambda _, x: len(x) == 6)])[
+                    "code"]
                 data = {
                     "type": "loginTelCheck",
                     "tmp_code": tmp_token,
@@ -374,8 +382,11 @@ def password_login(session, headers):
         cookies = requests.utils.dict_from_cookiejar(session.cookies)
         return cookie(cookies)
 
+
 def sns_login(session, headers):
-    method = prompt([inquirer.List("method", message="请选择SNS登录方式", choices=["微信", "QQ", "微博"], default="微信")])["method"]
+    method = \
+    prompt([inquirer.List("method", message="请选择SNS登录方式", choices=["微信", "QQ", "微博"], default="微信")])[
+        "method"]
     if method == "微信":
         sns = "wechat"
     elif method == "QQ":
@@ -429,7 +440,7 @@ def sns_login(session, headers):
         data=data,
     ).json()
     if login["code"] != 0:
-            logger.error(f"{login['code']}: {login['message']}")
+        logger.error(f"{login['code']}: {login['message']}")
     else:
         if not login["data"]["has_bind"]:
             logger.error("未绑定SNS账号")
@@ -439,7 +450,7 @@ def sns_login(session, headers):
         return cookie(cookies)
 
 
-def interactive_login(sentry_sdk = None):
+def interactive_login(sentry_sdk=None):
     global sdk
     sdk = sentry_sdk
     headers = {
@@ -450,12 +461,15 @@ def interactive_login(sentry_sdk = None):
     session.get("https://www.bilibili.com/", headers=headers)
 
     try:
-        method = prompt([inquirer.List("method", message="请选择登录方式", choices=["cookie", "扫码", "用户名密码", "验证码", "验证码APP版", "SNS"], default="扫码")])
+        method = prompt([inquirer.List("method", message="请选择登录方式",
+                                       choices=["cookie", "扫码", "用户名密码", "验证码", "验证码APP版", "SNS"],
+                                       default="扫码")])
         if method["method"] == "cookie":
             cookie_str = input("请输入cookie: ")
             # verify cookie
             try:
-                session.get("https://www.bilibili.com/", headers={"User-Agent": "Mozilla/5.0 BiliApp/80000100", "Cookie": cookie_str})
+                session.get("https://www.bilibili.com/",
+                            headers={"User-Agent": "Mozilla/5.0 BiliApp/80000100", "Cookie": cookie_str})
             except Exception:
                 logger.error("cookie不合法")
                 return interactive_login()
