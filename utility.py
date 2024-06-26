@@ -6,12 +6,15 @@ from utils import prompt, save, load
 
 from i18n import i18n
 
+
 def utility(config):
     import base64
     def add_buyer(headers):
         name = input("请输入购票人姓名：")
-        id_type = prompt([inquirer.List("id_type", message="请选择证件类型", choices=["0. 身份证", "1. 护照", "2. 港澳居民往来内地通行证", "3. 台湾居民往来大陆通行证"], default="身份证"),
-        ])
+        id_type = prompt([inquirer.List("id_type", message="请选择证件类型",
+                                        choices=["0. 身份证", "1. 护照", "2. 港澳居民往来内地通行证",
+                                                 "3. 台湾居民往来大陆通行证"], default="身份证"),
+                          ])
         personal_id = input("请输入购票人证件号码：")
         tel = input("请输入购票人手机号码：")
         data = {
@@ -37,7 +40,7 @@ def utility(config):
     def modify_gaia_vtoken():
         gaia_vtoken = input("请输入您的gaia_vtoken：")
         config["gaia_vtoken"] = gaia_vtoken
-    
+
     def hunter_mode():
         config["hunter"] = 0
         logger.info("猎手模式已开启（归零）")
@@ -75,9 +78,11 @@ def utility(config):
         config["phone"] = phone
         logger.info("手机号码已保存")
         save(config)
-    
+
     def use_proxy(config):
-        choice = prompt([inquirer.List("proxy", message=i18n["zh"]["input_is_use_proxy"], choices=[i18n["zh"]["yes"], i18n["zh"]["no"]], default=i18n["zh"]["no"])])["proxy"]
+        choice = prompt([inquirer.List("proxy", message=i18n["zh"]["input_is_use_proxy"],
+                                       choices=[i18n["zh"]["yes"], i18n["zh"]["no"]], default=i18n["zh"]["no"])])[
+            "proxy"]
         if choice == i18n["zh"]["yes"]:
             while True:
                 while True:
@@ -88,7 +93,8 @@ def utility(config):
                         logger.error(i18n["zh"]["wrong_proxy_format"])
                         continue
                 config["proxy_channel"] = prompt([
-                    inquirer.Text("proxy_channel", message=i18n["zh"]["input_proxy_channel"], validate=lambda _, x: x.isdigit())
+                    inquirer.Text("proxy_channel", message=i18n["zh"]["input_proxy_channel"],
+                                  validate=lambda _, x: x.isdigit())
                 ])["proxy_channel"]
                 config["proxy"] = True
                 break
@@ -122,7 +128,8 @@ def utility(config):
         inquirer.List(
             "select",
             message="请选择您要使用的实用工具",
-            choices=["添加购票人", "覆盖默认UA", "覆盖gaia_vtoken", "开启猎手模式(计数清零)", "关闭猎手模式", "分享模式", "PushPlus推送", "预填绑定手机号", "代理设置", "选择验证码模式", "返回"],
+            choices=["添加购票人", "覆盖默认UA", "覆盖gaia_vtoken", "开启猎手模式(计数清零)", "关闭猎手模式",
+                     "分享模式", "PushPlus推送", "预填绑定手机号", "代理设置", "选择验证码模式", "返回"],
         )])
     if select["select"] == "添加购票人":
         add_buyer(headers)

@@ -43,7 +43,7 @@ class BilibiliHyg:
             logger.info("等待到达开票时间前15分钟以获取token...")
             while self.get_time() < self.config["time"]-900:
                 time.sleep(10)
-                logger.info(f"距离开票时间还有{(self.config["time"]-self.get_time()):.2f}秒")
+                logger.info("距离开票时间还有{:.2f}秒".format((self.config["time"]-self.get_time())))
         logger.info("准备完毕，获取token中...")
         self.token = self.get_token()
         logger.info("即将开始下单")

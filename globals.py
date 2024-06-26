@@ -4,7 +4,7 @@
 
 import sys
 import os
-import json 
+import json
 
 import inquirer
 
@@ -20,9 +20,11 @@ from utils import prompt, save, load
 
 import time
 
+
 def agree_terms():
     while True:
-        agree_prompt = input("欢迎使用BHYG软件，使用前请阅读EULA(https://github.com/biliticket/BHYG)。若您使用时遇到问题，请查阅biliticket文档(https://docs.bitf1a5h.eu.org/)\n特别提醒，根据EULA，严禁任何形式通过本软件盈利。若您同意本软件EULA，请键入：我已阅读并同意EULA，黄牛倒卖狗死妈\n")
+        agree_prompt = input(
+            "欢迎使用BHYG软件，使用前请阅读EULA(https://github.com/biliticket/BHYG)。若您使用时遇到问题，请查阅biliticket文档(https://docs.bitf1a5h.eu.org/)\n特别提醒，根据EULA，严禁任何形式通过本软件盈利。若您同意本软件EULA，请键入：我已阅读并同意EULA，黄牛倒卖狗死妈\n")
         if "同意" in agree_prompt and "死妈" in agree_prompt and "黄牛" in agree_prompt and "不" not in agree_prompt:
             break
         else:
@@ -31,6 +33,7 @@ def agree_terms():
         import machineid
         f.write(machineid.id())
     logger.info("已同意EULA")
+
 
 def init():
     logger.remove(handler_id=0)
@@ -78,16 +81,17 @@ def init():
         scope.add_attachment(path="data")
 
     import machineid
-    sentry_sdk.set_user({"hwid": machineid.id()[:16]}) 
+    sentry_sdk.set_user({"hwid": machineid.id()[:16]})
     return version, sentry_sdk
 
 
 def check_update(version):
     try:
         import requests
-        data = requests.get("https://api.github.com/repos/biliticket/BHYG/releases/latest", headers={"Accept": "application/vnd.github+json"}).json()
+        data = requests.get("https://api.github.com/repos/biliticket/BHYG/releases/latest",
+                            headers={"Accept": "application/vnd.github+json"}).json()
         if data["tag_name"] != version:
-            
+
             import platform
             if platform.system() == "Windows":
                 name = "BHYG-Windows"
@@ -106,7 +110,8 @@ def check_update(version):
             find = False
             for distribution in data["assets"]:
                 if distribution["name"] == name:
-                    logger.warning(f"发现新版本{data['tag_name']}，请前往 {distribution['browser_download_url']} 下载，大小：{distribution['size']/1024/1024:.2f}MB")
+                    logger.warning(
+                        f"发现新版本{data['tag_name']}，请前往 {distribution['browser_download_url']} 下载，大小：{distribution['size'] / 1024 / 1024:.2f}MB")
                     if data['body'] != "":
                         logger.warning(f"更新说明：{data['body']}")
                     find = True
@@ -115,13 +120,13 @@ def check_update(version):
                 logger.warning(f"发现新版本{data['tag_name']}，请前往{data['html_url']}查看")
     except:
         logger.warning("更新检查失败")
-    
+
 
 class HygException(Exception):
     pass
 
 
-def load_config(): 
+def load_config():
     go_utility = False
     if os.path.exists("config.json"):
         logger.info("感谢您升级到最新版本！现在正在为您自动迁移...")
@@ -147,7 +152,8 @@ def load_config():
             inquirer.List(
                 "run_info",
                 message="请选择运行设置",
-                choices=["延续上次启动所有配置", "保留登录信息重新配置", "全新启动", "进入账户实用工具", "进入账户实用工具（重新登录）"],
+                choices=["延续上次启动所有配置", "保留登录信息重新配置", "全新启动", "进入账户实用工具",
+                         "进入账户实用工具（重新登录）"],
                 default="延续上次启动所有配置"
             )]
         )["run_info"]
@@ -216,37 +222,38 @@ def load_config():
     else:
         config["time_offset"] = 0
     while True:
-            if "cookie" not in config or not use_login:
-                config["cookie"] = interactive_login(sentry_sdk)
-            headers = {
-                "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/618.1.15.10.15 (KHTML, like Gecko) Mobile/21F90 BiliApp/77900100 os/ios model/iPhone 15 mobi_app/iphone build/77900100 osVer/17.5.1 network/2 channel/AppStore c_locale/zh-Hans_CN s_locale/zh-Hans_CH disable_rcmd/0",
-                "Cookie": config["cookie"],
-            }
-            user = requests.get(
-                "https://api.bilibili.com/x/web-interface/nav", headers=headers
+        if "cookie" not in config or not use_login:
+            config["cookie"] = interactive_login(sentry_sdk)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/618.1.15.10.15 (KHTML, like Gecko) Mobile/21F90 BiliApp/77900100 os/ios model/iPhone 15 mobi_app/iphone build/77900100 osVer/17.5.1 network/2 channel/AppStore c_locale/zh-Hans_CN s_locale/zh-Hans_CH disable_rcmd/0",
+            "Cookie": config["cookie"],
+        }
+        user = requests.get(
+            "https://api.bilibili.com/x/web-interface/nav", headers=headers
+        )
+        user = user.json()
+        if user["data"]["isLogin"]:
+            logger.success("用户 " + user["data"]["uname"] + " 登录成功")
+            if user["data"]["vipStatus"] == 1:
+                logger.info(
+                    f"用户为大会员，距离到期还有{(user['data']['vipDueDate'] / 1000 - time.time()) / 60 / 60 / 24:.2f}天")
+            import machineid
+            sentry_sdk.set_user(
+                {
+                    "username": user["data"]["mid"],
+                    "hwid": machineid.id()[:16]
+                }
             )
-            user = user.json()
-            if user["data"]["isLogin"]:
-                logger.success("用户 " + user["data"]["uname"] + " 登录成功")
-                if user["data"]["vipStatus"] == 1:
-                    logger.info(f"用户为大会员，距离到期还有{(user['data']['vipDueDate']/1000-time.time())/60/60/24:.2f}天")
-                import machineid
-                sentry_sdk.set_user(
-                    {
-                        "username": user["data"]["mid"],
-                        "hwid": machineid.id()[:16]
-                    }
-                )
-                if "hunter" in config:
-                    logger.success("已启用猎手模式")
-                    logger.info(f"战绩：{config['hunter']}张")  
-                save(config)         
-                break
-            else:
-                logger.error("登录失败")
-                use_login = False
-                config.pop("cookie")
-                save(config)
+            if "hunter" in config:
+                logger.success("已启用猎手模式")
+                logger.info(f"战绩：{config['hunter']}张")
+            save(config)
+            break
+        else:
+            logger.error("登录失败")
+            use_login = False
+            config.pop("cookie")
+            save(config)
     if go_utility:
         utility(config)
         return load_config()
