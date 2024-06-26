@@ -62,7 +62,7 @@ def init():
                 agree_terms()
                 with open("agree-terms", "w") as f:
                     f.write(machineid.id())
-    version = "v0.7.7"
+    version = "v0.7.8"
 
     sentry_sdk.init(
         dsn="https://9c5cab8462254a2e1e6ea76ffb8a5e3d@sentry-inc.bitf1a5h.eu.org/3",
@@ -94,7 +94,7 @@ def check_update(version):
 
             import platform
             if platform.system() == "Windows":
-                name = "BHYG-Windows"
+                name = "BHYG-Windows.exe"
             elif platform.system() == "Linux":
                 name = "BHYG-Linux"
             elif platform.system() == "Darwin":
@@ -118,6 +118,8 @@ def check_update(version):
                     break
             if not find:
                 logger.warning(f"发现新版本{data['tag_name']}，请前往{data['html_url']}查看")
+                if data['body'] != "":
+                        logger.warning(f"更新说明：{data['body']}")
     except:
         logger.warning("更新检查失败")
 
