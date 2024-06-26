@@ -12,60 +12,11 @@ from sentry_sdk.integrations.loguru import LoggingLevels, LoguruIntegration
 
 from login import *
 
-import inquirer
-
 from utility import utility
 
-def prompt(prompt):
-    data = inquirer.prompt(prompt)
-    if data is None:
-        raise KeyboardInterrupt
-    return data
+from utils import prompt, save, load
 
-def save(data: dict):
-    import base64
-    from Crypto.Cipher import AES
-    from Crypto.Util.Padding import pad, unpad
-    import machineid
-    import json
-    key = machineid.id().encode()[:16]
-    cipher = AES.new(key, AES.MODE_CBC)
-    cipher_text = cipher.encrypt(pad(json.dumps(data).encode("utf-8"), AES.block_size))
-    data = base64.b64encode(cipher_text).decode("utf-8")
-    iv = base64.b64encode(cipher.iv).decode('utf-8')
-    with open("data", "w", encoding="utf-8") as f:
-        f.write(iv+"%"+data)
-    return
-
-def load() -> dict:
-    import base64
-    from Crypto.Cipher import AES
-    from Crypto.Util.Padding import pad, unpad
-    import machineid
-    import json
-    key = machineid.id().encode()[:16]
-    try:
-        with open("data", "r", encoding="utf-8") as f:
-            iv, data = f.read().split("%")
-            iv = base64.b64decode(iv)
-            cipher = AES.new(key, AES.MODE_CBC, iv)
-        cipher_text = base64.b64decode(data)
-        data = unpad(cipher.decrypt(cipher_text), AES.block_size).decode("utf-8")
-        data = json.loads(data)
-    except ValueError:
-        logger.error("数据错误，运行环境不符")
-        if os.path.exists("share.json"):
-            logger.info("检测到分享文件，正在迁移")
-            with open("share.json", "r", encoding="utf-8") as f:
-                data = json.load(f)
-                save(data)
-            os.remove("share.json")
-            os.remove("data")
-        else:
-            data = {}
-            os.remove("data")
-        logger.info("已销毁原数据")
-    return data
+import time
 
 def agree_terms():
     while True:
@@ -199,13 +150,17 @@ def load_config():
             )]
         )["run_info"]
         if run_info == "全新启动":
-            logger.info("全新启动，但继承pushplus信息（若有）")
+            logger.info("全新启动，但继承部分信息（若有）")
             temp = load()
             config = {}
             if "pushplus" in temp:
                 config["pushplus"] = temp["pushplus"]
             if "ua" in temp:
                 config["ua"] = temp["pushplus"]
+            if "captcha" in temp:
+                config["captcha"] = temp["captcha"]
+            if "rrocr" in temp:
+                config["rrocr"] = temp["rrocr"]
             use_login = False
         elif run_info == "保留登录信息重新配置":
             logger.info("只沿用登录信息")
@@ -219,6 +174,12 @@ def load_config():
                 config["cookie"] = temp["cookie"]
             if "pushplus" in temp:
                 config["pushplus"] = temp["pushplus"]
+            if "phone" in temp:
+                config["phone"] = temp["phone"]
+            if "captcha" in temp:
+                config["captcha"] = temp["captcha"]
+            if "rrocr" in temp:
+                config["rrocr"] = temp["rrocr"]
             use_login = True
         elif run_info == "延续上次启动所有配置":
             logger.info("使用上次的配置文件")
@@ -246,7 +207,6 @@ def load_config():
         logger.error("时间同步出现错误，将跳过时间检查")
         skip = True
     if skip == False:
-        import time
         time_offset = response.offset
         if time_offset > 0.5:
             logger.warning(f"当前时间偏移：{time_offset:.2f}秒，建议校准时间")

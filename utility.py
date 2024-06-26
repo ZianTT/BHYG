@@ -2,27 +2,12 @@ import inquirer
 import requests
 from loguru import logger
 
-def prompt(prompt):
-    data = inquirer.prompt(prompt)
-    if data is None:
-        raise KeyboardInterrupt
-    return data
+from utils import prompt, save, load
+
+from i18n import i18n
 
 def utility(config):
     import base64
-    def save(data: dict):
-        from Crypto.Cipher import AES
-        from Crypto.Util.Padding import pad, unpad
-        import machineid
-        import json
-        key = machineid.id().encode()[:16]
-        cipher = AES.new(key, AES.MODE_CBC)
-        cipher_text = cipher.encrypt(pad(json.dumps(data).encode("utf-8"), AES.block_size))
-        data = base64.b64encode(cipher_text).decode("utf-8")
-        iv = base64.b64encode(cipher.iv).decode('utf-8')
-        with open("data", "w", encoding="utf-8") as f:
-            f.write(iv+"%"+data)
-        return
     def add_buyer(headers):
         name = input("请输入购票人姓名：")
         id_type = prompt([inquirer.List("id_type", message="请选择证件类型", choices=["0. 身份证", "1. 护照", "2. 港澳居民往来内地通行证", "3. 台湾居民往来大陆通行证"], default="身份证"),
@@ -91,6 +76,41 @@ def utility(config):
         logger.info("手机号码已保存")
         save(config)
     
+    def use_proxy(config):
+        choice = prompt([inquirer.List("proxy", message=i18n["zh"]["input_is_use_proxy"], choices=[i18n["zh"]["yes"], i18n["zh"]["no"]], default=i18n["zh"]["no"])])["proxy"]
+        if choice == i18n["zh"]["yes"]:
+            while True:
+                while True:
+                    try:
+                        config["proxy_auth"] = input(i18n["zh"]["input_proxy"]).split(" ")
+                        assert len(config["proxy_auth"]) == 3
+                    except:
+                        logger.error(i18n["zh"]["wrong_proxy_format"])
+                        continue
+                config["proxy_channel"] = prompt([
+                    inquirer.Text("proxy_channel", message=i18n["zh"]["input_proxy_channel"], validate=lambda _, x: x.isdigit())
+                ])["proxy_channel"]
+                config["proxy"] = True
+                break
+        else:
+            config["proxy"] = False
+        save(config)
+
+    def captcha_mode(config):
+        choice = prompt([inquirer.List("captcha", message=i18n["zh"]["input_use_captcha_mode"], choices=[
+            i18n["zh"]["local_gt"],
+            i18n["zh"]["rrocr"],
+            i18n["zh"]["manual"],
+        ], default=i18n["zh"]["manual"])])["captcha"]
+        if choice == i18n["zh"]["local_gt"]:
+            config["captcha"] = "local_gt"
+        elif choice == i18n["zh"]["rrocr"]:
+            config["captcha"] = "rrocr"
+            config["rrocr_key"] = input("请输入RROCR KEY：")
+        else:
+            logger.error(i18n["zh"]["captcha_mode_not_supported"])
+        save(config)
+
     headers = {
         "Cookie": config["cookie"],
         "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/618.1.15.10.15 (KHTML, like Gecko) Mobile/21F90 BiliApp/77900100 os/ios model/iPhone 15 mobi_app/iphone build/77900100 osVer/17.5.1 network/2 channel/AppStore c_locale/zh-Hans_CN s_locale/zh-Hans_CH disable_rcmd/0",
@@ -100,7 +120,7 @@ def utility(config):
         inquirer.List(
             "select",
             message="请选择您要使用的实用工具",
-            choices=["添加购票人", "覆盖默认UA", "覆盖gaia_vtoken", "开启猎手模式(计数清零)", "关闭猎手模式", "分享模式", "PushPlus推送", "预填绑定手机号", "返回"],
+            choices=["添加购票人", "覆盖默认UA", "覆盖gaia_vtoken", "开启猎手模式(计数清零)", "关闭猎手模式", "分享模式", "PushPlus推送", "预填绑定手机号", "代理设置", "选择验证码模式", "返回"],
         )])
     if select["select"] == "添加购票人":
         add_buyer(headers)
@@ -125,6 +145,13 @@ def utility(config):
         return utility(config)
     elif select["select"] == "预填绑定手机号":
         save_phone(config)
+        return utility(config)
+    elif select["select"] == "代理设置":
+        use_proxy(config)
+        return utility(config)
+    elif select["select"] == "选择验证码模式":
+        captcha_mode(config)
+        return utility(config)
     elif select["select"] == "返回":
         return
     else:

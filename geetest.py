@@ -22,20 +22,46 @@ class Validator():
         except Exception as e:
             return ""
 
-def run(gt, challenge, token):
-    try:
-        validator = Validator()
-        validate_string = validator.validate(gt, challenge)
-        data = {
-                    "success": True,
-                    "challenge": challenge,
-                    "validate": validate_string,
-                    "seccode": validate_string,
-            }
-            
-        return data
-    except Exception as e:
-        print(f"Error: {e}")
+def run(gt, challenge, token, mode = "local_gt", key = None):
+    if mode == "local_gt":
+        try:
+            validator = Validator()
+            validate_string = validator.validate(gt, challenge)
+            data = {
+                        "success": True,
+                        "challenge": challenge,
+                        "validate": validate_string,
+                        "seccode": validate_string,
+                }
+                
+            return data
+        except Exception as e:
+            print(f"Error: {e}")
+    elif mode == "rrocr":
+        # http://api.rrocr.com/api/recognize.html
+        param = {
+            "appkey": key,
+            "gt": gt,
+            "challenge": challenge,
+            "referer": "https://passport.bilibili.com/login",
+        }
+        try:
+            response = requests.post("http://api.rrocr.com/api/recognize.html", data=param).json()
+        except Exception as e:
+            logger.error(f"Error: {e}")
+            return
+        if response["code"] == 0:
+            data = {
+                        "success": True,
+                        "challenge": response["data"]["challenge"],
+                        "validate": response["data"]["validate"],
+                        "seccode": response["data"]["validate"],
+                }
+            return data
+        else:
+            logger.error(f"Error: {response['msg']}")
+    else:
+        logger.critical("暂不支持该验证码模式")
 
 if __name__ == "__main__":
     captcha = requests.get(
@@ -46,6 +72,6 @@ if __name__ == "__main__":
     gt = captcha["data"]["geetest"]["gt"]
     challenge = captcha["data"]["geetest"]["challenge"]
     token = captcha["data"]["token"]
-    validator = Validator()
-    validate = validator.validate(gt, challenge)
+    # validate = run(gt, challenge, token)
+    validate = run(gt, challenge, token, mode="rrocr", key="FILTERED")
     print(validate)

@@ -38,7 +38,7 @@ def _verify(gt, challenge, token):
     global sdk
     from geetest import run
     time_start = time.time()
-    data = run(gt, challenge, token)
+    data = run(gt, challenge, token, "local_gt")
     delta = time.time() - time_start
     sdk.metrics.distribution(
         key="gt_solve_time",
