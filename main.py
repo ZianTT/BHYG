@@ -271,10 +271,7 @@ def main():
                     logger.error("没有收货地址，请先添加收货地址")
                 else:
                     addr = prompt([
-                        inquirer.List("addr", message="请选择收货地址", choices=[{
-                                                                                     "name": f"{i}. {addr_list[i]['prov'] + addr_list[i]['city'] + addr_list[i]['area'] + addr_list[i]['addr']} {addr_list[i]['name']} {addr_list[i]['phone']}",
-                                                                                     "value": i} for i in
-                                                                                 range(len(addr_list))])
+                        inquirer.List("addr", message="请选择收货地址", choices=[f"{i}. {addr_list[i]['prov'] + addr_list[i]['city'] + addr_list[i]['area'] + addr_list[i]['addr']} {addr_list[i]['name']} {addr_list[i]['phone']}" for i in range(len(addr_list))])
                     ])["addr"].split(".")[0]
                     addr = addr_list[int(addr)]
                     logger.info(
@@ -366,9 +363,9 @@ def main():
                 config["buyer_info"].append(buyer_infos[int(index.split(".")[0])])
                 logger.info(
                     i18n["zh"]["selected_buyer"].format(
-                        buyer_infos[int(select)]["name"],
-                        buyer_infos[int(select)]["personal_id"],
-                        buyer_infos[int(select)]["tel"],
+                        buyer_infos[int(index.split(".")[0])]["name"],
+                        buyer_infos[int(index.split(".")[0])]["personal_id"],
+                        buyer_infos[int(index.split(".")[0])]["tel"],
                     )
                 )
             if "count" not in config:
