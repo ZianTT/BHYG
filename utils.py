@@ -26,8 +26,9 @@ def load() -> dict:
     import base64
     from Crypto.Cipher import AES
     from Crypto.Util.Padding import pad, unpad
+    from loguru import logger
     import machineid
-    import json
+    import json,os
     key = machineid.id().encode()[:16]
     try:
         with open("data", "r", encoding="utf-8") as f:
