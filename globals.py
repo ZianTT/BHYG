@@ -108,18 +108,29 @@ def check_update(version):
             else:
                 name = "BHYG"
             find = False
+            force = False
             for distribution in data["assets"]:
                 if distribution["name"] == name:
                     logger.warning(
-                        f"发现新版本{data['tag_name']}，请前往 {distribution['browser_download_url']} 下载，大小：{distribution['size'] / 1024 / 1024:.2f}MB")
+                        f"发现新版本{data['tag_name']}，请前往 {distribution['browser_download_url']} 下载并替换软件本体，大小：{distribution['size'] / 1024 / 1024:.2f}MB")
                     if data['body'] != "":
                         logger.warning(f"更新说明：{data['body']}")
+                    if "force" in data["body"] or "强制" in data["body"]:
+                        force = True
                     find = True
                     break
             if not find:
                 logger.warning(f"发现新版本{data['tag_name']}，请前往{data['html_url']}查看")
                 if data['body'] != "":
-                        logger.warning(f"更新说明：{data['body']}")
+                    logger.warning(f"更新说明：{data['body']}")
+                    if "force" in data["body"] or "强制" in data["body"]:
+                        force = True    
+                find = True
+            if force:
+                logger.warning("由于反滥用机制，该更新要求强制更新，更新后继续使用")
+                logger.info("你可以打开下载地址后关闭本窗口")
+                while True:
+                    pass
     except:
         logger.warning("更新检查失败")
 
