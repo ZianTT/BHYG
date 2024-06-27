@@ -62,7 +62,7 @@ def init():
                 agree_terms()
                 with open("agree-terms", "w") as f:
                     f.write(machineid.id())
-    version = "v0.8.0"
+    version = "v0.8.1"
 
     sentry_sdk.init(
         dsn="https://9c5cab8462254a2e1e6ea76ffb8a5e3d@sentry-inc.bitf1a5h.eu.org/3",
