@@ -131,8 +131,21 @@ def check_update(version):
                 logger.info("你可以打开下载地址后关闭本窗口")
                 while True:
                     pass
+    except KeyboardInterrupt:
+        logger.error("更新检查被中断")
+        raise KeyboardInterrupt
     except:
-        logger.warning("更新检查失败")
+        try:
+            logger.warning("更新检查失败")
+            if not os.path.exists("skip-update"):
+                logger.error("程序禁止运行，请重试或更换网络环境")
+                while True:
+                    pass
+            else:
+                logger.warning("已跳过更新检查")
+        except KeyboardInterrupt:
+            logger.error("更新检查被中断")
+            raise KeyboardInterrupt
 
 
 class HygException(Exception):
