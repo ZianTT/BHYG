@@ -516,6 +516,10 @@ class BilibiliHyg:
             logger.error("退出登录失败")
 
     def try_create_order(self):
+        if not self.waited:
+            logger.info("等待4.96秒")
+            time.sleep(4.96)
+            self.waited = True
         result = self.create_order()
         if result == {}:
             return False
@@ -527,10 +531,6 @@ class BilibiliHyg:
             self.waited = False
         elif result["errno"] == 3:
             logger.warning("慢一点（强制5秒）")
-            if not self.waited:
-                logger.info("等待4.88秒")
-                time.sleep(4.88)
-                self.waited = True
         elif result["errno"] == 100001:
             logger.warning("小电视速率限制")
         elif result["errno"] == 100041:

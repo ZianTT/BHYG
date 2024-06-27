@@ -415,6 +415,7 @@ def main():
         save(config)
         sentry_sdk.capture_message("config complete")
         BHYG = BilibiliHyg(config, sentry_sdk, kdl_client, session)
+        BHYG.waited = True
         run(BHYG)
     except KeyboardInterrupt:
         logger.info(i18n["zh"]["exit_manual"])
