@@ -4,9 +4,21 @@
 
 购票辅助工具。
 
+文档链接 [biliticket Docs](https://docs.bitf1a5h.eu.org)
+
 请认真阅读本软件EULA、隐私政策后使用。
 
 TG群 <https://t.me/bilibilihyg>
+
+## 友情链接
+
+[mikumifa/biliTickerBuy](https://github.com/mikumifa/biliTickerBuy)
+
+同类购票辅助工具
+
+[bilibili-ticket/bilibili-ticket-python(Pre-release)](https://github.com/bilibili-ticket/bilibili-ticket-python)
+
+同类购票辅助工具
 
 ## BHYG最终用户许可协议（EULA）
 
