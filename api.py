@@ -194,7 +194,7 @@ class BilibiliHyg:
         else:
             phone = input("请输入手机号：")
         self.captcha_data = {
-            "code": code,
+            "code": phone,
         }
         self.captcha_data["csrf"] = self.headers["Cookie"][
                         self.headers["Cookie"].index("bili_jct")
