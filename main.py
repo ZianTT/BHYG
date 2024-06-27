@@ -216,9 +216,8 @@ def main():
                 if response["data"] == {}:
                     logger.error(i18n["zh"]["server_no_response"])
                     continue
-                if response["data"]["is_sale"] == 0:
-                    logger.info(i18n["zh"]["project_name"].format(response["data"]["name"]))
-                    logger.error(i18n["zh"]["not_salable"])
+                if "screen_list" not in response['data']:
+                    logger.error(i18n["zh"]["no_screen"])
                     continue
                 if len(response["data"]["screen_list"]) == 0:
                     logger.error(i18n["zh"]["no_screen"])
