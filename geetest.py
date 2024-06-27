@@ -4,7 +4,7 @@ import time
 import requests
 
 import bili_ticket_gt_python
-import loguru
+from loguru import logger
 
 
 # REF: https://github.com/mikumifa/biliTickerBuy
