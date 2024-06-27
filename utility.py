@@ -85,19 +85,17 @@ def utility(config):
             "proxy"]
         if choice == i18n["zh"]["yes"]:
             while True:
-                while True:
-                    try:
-                        config["proxy_auth"] = input(i18n["zh"]["input_proxy"]).split(" ")
-                        assert len(config["proxy_auth"]) == 3
-                    except:
-                        logger.error(i18n["zh"]["wrong_proxy_format"])
-                        continue
-                config["proxy_channel"] = prompt([
-                    inquirer.Text("proxy_channel", message=i18n["zh"]["input_proxy_channel"],
-                                  validate=lambda _, x: x.isdigit())
-                ])["proxy_channel"]
-                config["proxy"] = True
-                break
+                try:
+                    config["proxy_auth"] = input(i18n["zh"]["input_proxy"]).split(" ")
+                    assert len(config["proxy_auth"]) == 3
+                    break
+                except:
+                    logger.error(i18n["zh"]["wrong_proxy_format"])
+                    continue
+            config["proxy_channel"] = prompt([
+                    inquirer.Text("proxy_channel", message=i18n["zh"]["input_proxy_channel"],validate=lambda _, x: x.isdigit())
+            ])["proxy_channel"]
+            config["proxy"] = True
         else:
             config["proxy"] = False
         save(config)
