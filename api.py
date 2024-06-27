@@ -298,11 +298,11 @@ class BilibiliHyg:
             if risk["data"]["type"] == "geetest":
                 logger.warning("类型：验证码 ")
                 gt, challenge, token = (
-                    gtest["data"]["geetest"]["gt"],
-                    gtest["data"]["geetest"]["challenge"],
-                    gtest["data"]["token"],
+                    risk["data"]["geetest"]["gt"],
+                    risk["data"]["geetest"]["challenge"],
+                    risk["data"]["token"],
                 )
-                cap_data = self.verify(gt, challenge, token)
+                cap_data = self.gee_verify(gt, challenge, token)
                 while cap_data == False:
                     logger.error("验证失败，请重新验证")
                     return self.get_token()
