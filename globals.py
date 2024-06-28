@@ -85,68 +85,69 @@ def init():
     return version, sentry_sdk
 
 
+# def check_update(version):
+#     try:
+#         import requests
+#         data = requests.get("https://api.github.com/repos/biliticket/BHYG/releases/latest",
+#                             headers={"Accept": "application/vnd.github+json"}).json()
+#         if data["tag_name"] != version:
+
+#             import platform
+#             if platform.system() == "Windows":
+#                 name = "BHYG-Windows.exe"
+#             elif platform.system() == "Linux":
+#                 name = "BHYG-Linux"
+#             elif platform.system() == "Darwin":
+#                 print(platform.machine())
+#                 if "arm" in platform.machine():
+#                     name = "BHYG-macOS-Apple_Silicon"
+#                 elif "64" in platform.machine():
+#                     name = "BHYG-macOS-Intel"
+#                 else:
+#                     name = "BHYG-macOS"
+#             else:
+#                 name = "BHYG"
+#             find = False
+#             force = False
+#             for distribution in data["assets"]:
+#                 if distribution["name"] == name:
+#                     logger.warning(
+#                         f"发现新版本{data['tag_name']}，请前往 {distribution['browser_download_url']} 下载并替换软件本体，大小：{distribution['size'] / 1024 / 1024:.2f}MB")
+#                     if data['body'] != "":
+#                         logger.warning(f"更新说明：{data['body']}")
+#                     if "force" in data["body"] or "强制" in data["body"]:
+#                         force = True
+#                     find = True
+#                     break
+#             if not find:
+#                 logger.warning(f"发现新版本{data['tag_name']}，请前往{data['html_url']}查看")
+#                 if data['body'] != "":
+#                     logger.warning(f"更新说明：{data['body']}")
+#                     if "force" in data["body"] or "强制" in data["body"]:
+#                         force = True    
+#                 find = True
+#             if force:
+#                 logger.warning("由于反滥用机制，该更新要求强制更新，更新后继续使用")
+#                 logger.info("你可以打开下载地址后关闭本窗口")
+#                 while True:
+#                     pass
+#     except KeyboardInterrupt:
+#         logger.error("更新检查被中断")
+#         raise KeyboardInterrupt
+#     except:
+#         try:
+#             logger.warning("更新检查失败")
+#             if not os.path.exists("skip-update"):
+#                 logger.error("程序禁止运行，请重试或更换网络环境")
+#                 while True:
+#                     pass
+#             else:
+#                 logger.warning("已跳过更新检查")
+#         except KeyboardInterrupt:
+#             logger.error("更新检查被中断")
+#             raise KeyboardInterrupt
 def check_update(version):
-    try:
-        import requests
-        data = requests.get("https://api.github.com/repos/biliticket/BHYG/releases/latest",
-                            headers={"Accept": "application/vnd.github+json"}).json()
-        if data["tag_name"] != version:
-
-            import platform
-            if platform.system() == "Windows":
-                name = "BHYG-Windows.exe"
-            elif platform.system() == "Linux":
-                name = "BHYG-Linux"
-            elif platform.system() == "Darwin":
-                print(platform.machine())
-                if "arm" in platform.machine():
-                    name = "BHYG-macOS-Apple_Silicon"
-                elif "64" in platform.machine():
-                    name = "BHYG-macOS-Intel"
-                else:
-                    name = "BHYG-macOS"
-            else:
-                name = "BHYG"
-            find = False
-            force = False
-            for distribution in data["assets"]:
-                if distribution["name"] == name:
-                    logger.warning(
-                        f"发现新版本{data['tag_name']}，请前往 {distribution['browser_download_url']} 下载并替换软件本体，大小：{distribution['size'] / 1024 / 1024:.2f}MB")
-                    if data['body'] != "":
-                        logger.warning(f"更新说明：{data['body']}")
-                    if "force" in data["body"] or "强制" in data["body"]:
-                        force = True
-                    find = True
-                    break
-            if not find:
-                logger.warning(f"发现新版本{data['tag_name']}，请前往{data['html_url']}查看")
-                if data['body'] != "":
-                    logger.warning(f"更新说明：{data['body']}")
-                    if "force" in data["body"] or "强制" in data["body"]:
-                        force = True    
-                find = True
-            if force:
-                logger.warning("由于反滥用机制，该更新要求强制更新，更新后继续使用")
-                logger.info("你可以打开下载地址后关闭本窗口")
-                while True:
-                    pass
-    except KeyboardInterrupt:
-        logger.error("更新检查被中断")
-        raise KeyboardInterrupt
-    except:
-        try:
-            logger.warning("更新检查失败")
-            if not os.path.exists("skip-update"):
-                logger.error("程序禁止运行，请重试或更换网络环境")
-                while True:
-                    pass
-            else:
-                logger.warning("已跳过更新检查")
-        except KeyboardInterrupt:
-            logger.error("更新检查被中断")
-            raise KeyboardInterrupt
-
+    pass
 
 class HygException(Exception):
     pass
