@@ -248,7 +248,7 @@ def load_config():
     c = ntplib.NTPClient()
     skip = False
     try:
-        response = c.request('ntp.sjtu.edu.cn')
+        response = c.request('ntp.tencent.com')
     except Exception:
         logger.error("时间同步出现错误，将跳过时间检查")
         skip = True
