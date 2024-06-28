@@ -8,9 +8,9 @@ import json
 
 import inquirer
 
-import sentry_sdk
+# import sentry_sdk
 from loguru import logger
-from sentry_sdk.integrations.loguru import LoggingLevels, LoguruIntegration
+# from sentry_sdk.integrations.loguru import LoggingLevels, LoguruIntegration
 
 from login import *
 
@@ -19,6 +19,9 @@ from utility import utility
 from utils import prompt, save, load
 
 import time
+
+
+sentry_sdk=None
 
 
 def agree_terms():
@@ -64,24 +67,25 @@ def init():
                     f.write(machineid.id())
     version = "v0.8.3"
 
-    sentry_sdk.init(
-        dsn="https://9c5cab8462254a2e1e6ea76ffb8a5e3d@sentry-inc.bitf1a5h.eu.org/3",
-        release=version,
-        profiles_sample_rate=1.0,
-        enable_tracing=True,
-        integrations=[
-            LoguruIntegration(
-                level=LoggingLevels.DEBUG.value, event_level=LoggingLevels.CRITICAL.value
-            ),
-        ],
-        sample_rate=1.0,
-        environment=environment
-    )
-    with sentry_sdk.configure_scope() as scope:
-        scope.add_attachment(path="data")
+    # sentry_sdk.init(
+    #     dsn="https://9c5cab8462254a2e1e6ea76ffb8a5e3d@sentry-inc.bitf1a5h.eu.org/3",
+    #     release=version,
+    #     profiles_sample_rate=1.0,
+    #     enable_tracing=True,
+    #     integrations=[
+    #         LoguruIntegration(
+    #             level=LoggingLevels.DEBUG.value, event_level=LoggingLevels.CRITICAL.value
+    #         ),
+    #     ],
+    #     sample_rate=1.0,
+    #     environment=environment
+    # )
+    # with sentry_sdk.configure_scope() as scope:
+    #     scope.add_attachment(path="data")
 
-    import machineid
-    sentry_sdk.set_user({"hwid": machineid.id()[:16]})
+    # import machineid
+    # sentry_sdk.set_user({"hwid": machineid.id()[:16]})
+    
     return version, sentry_sdk
 
 
@@ -276,13 +280,13 @@ def load_config():
             if user["data"]["vipStatus"] != 0:
                 logger.info(
                     f"用户为大会员，距离到期还有{(user['data']['vipDueDate'] / 1000 - time.time()) / 60 / 60 / 24:.2f}天")
-            import machineid
-            sentry_sdk.set_user(
-                {
-                    "username": user["data"]["mid"],
-                    "hwid": machineid.id()[:16]
-                }
-            )
+            # import machineid
+            # sentry_sdk.set_user(
+            #     {
+            #         "username": user["data"]["mid"],
+            #         "hwid": machineid.id()[:16]
+            #     }
+            # )
             if "hunter" in config:
                 logger.success("已启用猎手模式")
                 logger.info(f"战绩：{config['hunter']}张")

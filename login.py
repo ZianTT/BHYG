@@ -36,16 +36,16 @@ def appsign(params):
 
 
 def _verify(gt, challenge, token):
-    global sdk
+    # global sdk
     from geetest import run
     time_start = time.time()
     data = run(gt, challenge, token, "local_gt")
     delta = time.time() - time_start
-    sdk.metrics.distribution(
-        key="gt_solve_time",
-        value=delta * 1000,
-        unit="millisecond"
-    )
+    # sdk.metrics.distribution(
+    #     key="gt_solve_time",
+    #     value=delta * 1000,
+    #     unit="millisecond"
+    # )
     return data
 
 
@@ -451,8 +451,8 @@ def sns_login(session, headers):
 
 
 def interactive_login(sentry_sdk=None):
-    global sdk
-    sdk = sentry_sdk
+    # global sdk
+    # sdk = sentry_sdk
     headers = {
         "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/618.1.15.10.15 (KHTML, like Gecko) Mobile/21F90 BiliApp/77900100 os/ios model/iPhone 15 mobi_app/iphone build/77900100 osVer/17.5.1 network/2 channel/AppStore c_locale/zh-Hans_CN s_locale/zh-Hans_CH disable_rcmd/0"
     }

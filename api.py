@@ -16,7 +16,7 @@ from utils import save, load
 class BilibiliHyg:
     def __init__(self, config, sdk,client,session):
         self.waited = False
-        self.sdk = sdk
+        # self.sdk = sdk
         self.config = config
         self.config["gaia_vtoken"] = None
         self.session = requests.Session()
@@ -162,11 +162,11 @@ class BilibiliHyg:
         time_start = time.time()
         self.captcha_data = run(gt, challenge, token, mode = self.config["captcha"], key = self.config["rrocr"])
         delta = time.time() - time_start
-        self.sdk.metrics.distribution(
-            key="gt_solve_time",
-            value=delta*1000,
-            unit="millisecond"
-        )
+        # self.sdk.metrics.distribution(
+        #     key="gt_solve_time",
+        #     value=delta*1000,
+        #     unit="millisecond"
+        # )
         self.captcha_data["csrf"] = self.headers["Cookie"][
                         self.headers["Cookie"].index("bili_jct")
                         + 9 : self.headers["Cookie"].index("bili_jct")
@@ -265,11 +265,11 @@ class BilibiliHyg:
                 + "https://show.bilibili.com/platform/confirmOrder.html?token="
                 + info["token"]
             )
-            self.sdk.add_breadcrumb(
-                category="prepare",
-                message=f'Order prepared as token:{info["token"]}',
-                level="info",
-            )
+            # self.sdk.add_breadcrumb(
+            #     category="prepare",
+            #     message=f'Order prepared as token:{info["token"]}',
+            #     level="info",
+            # )
             try:
                 self.confirm_info(info["token"])
             except:
@@ -277,11 +277,11 @@ class BilibiliHyg:
             return info["token"]
         else:
             logger.warning("触发风控。")
-            self.sdk.add_breadcrumb(
-                category="gaia",
-                message="Gaia found",
-                level="info",
-            )
+            # self.sdk.add_breadcrumb(
+            #     category="gaia",
+            #     message="Gaia found",
+            #     level="info",
+            # )
             riskParam = info["ga_data"]["riskParams"]
             # https://api.bilibili.com/x/gaia-vgate/v1/register
             risk = self.session.post(
@@ -322,12 +322,12 @@ class BilibiliHyg:
                 logger.warning("暂不支持文字验证码验证，请参考高级用户指南手动填入风控信息")
             else:
                 logger.error("未知风控类型")
-                logger.warning("暂不支持该验证，请参考高级用户指南手动填入风控信息")
-            self.sdk.add_breadcrumb(
-                category="gaia",
-                message="Gaia passed",
-                level="info",
-            )
+            #     logger.warning("暂不支持该验证，请参考高级用户指南手动填入风控信息")
+            # self.sdk.add_breadcrumb(
+            #     category="gaia",
+            #     message="Gaia passed",
+            #     level="info",
+            # )
             return self.get_token()
 
     def generate_clickPosition(self) -> dict:
@@ -439,11 +439,11 @@ class BilibiliHyg:
         response = response.json()
         logger.debug(response)
         if response["errno"] == 0:
-            self.sdk.add_breadcrumb(
-                category="success",
-                message=f'Success, orderid:{response["data"]["order_id"]}, payurl:https://pay.bilibili.com/payplatform-h5/pccashier.html?params="{urllib.parse.quote(json.dumps(response["data"]["payParam"], ensure_ascii=False))}',
-                level="info",
-            )
+            # self.sdk.add_breadcrumb(
+            #     category="success",
+            #     message=f'Success, orderid:{response["data"]["order_id"]}, payurl:https://pay.bilibili.com/payplatform-h5/pccashier.html?params="{urllib.parse.quote(json.dumps(response["data"]["payParam"], ensure_ascii=False))}',
+            #     level="info",
+            # )
             logger.success("成功购票")
             order_id = response["data"]["order_id"]
             pay_url = response["data"]["payParam"]["code_url"]
@@ -562,7 +562,7 @@ class BilibiliHyg:
                 logger.info("订单未支付，正在等待")
                 while self.order_status(self.order_id):
                     time.sleep(1)
-                self.sdk.capture_message("Exit by in-app exit")
+                # self.sdk.capture_message("Exit by in-app exit")
                 return True
             else:
                 logger.error("假票，继续抢票")
@@ -571,7 +571,7 @@ class BilibiliHyg:
         elif result["errno"] == 100079 or result["errno"] == 100048:
             logger.info(result["msg"])
             logger.success("已经抢到了啊喂！")
-            self.sdk.capture_message("Exit by in-app exit")
+            # self.sdk.capture_message("Exit by in-app exit")
             return True
         elif result["errno"] == 219:
             logger.info("库存不足")

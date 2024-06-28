@@ -30,7 +30,7 @@ def run(hyg):
         while True:
             if hyg.try_create_order():
                 if "hunter" not in hyg.config:
-                    hyg.sdk.capture_message("Pay success!")
+                    # hyg.sdk.capture_message("Pay success!")
                     logger.success(i18n["zh"]["pay_success"])
                     return
                 else:
@@ -55,7 +55,7 @@ def run(hyg):
                 while True:
                     if hyg.try_create_order():
                         if "hunter" not in hyg.config:
-                            hyg.sdk.capture_message("Pay success!")
+                            # hyg.sdk.capture_message("Pay success!")
                             logger.success("购票成功！")
                             return
                         else:
@@ -73,7 +73,7 @@ def run(hyg):
                 logger.warning("不可售")
             elif status == 6:
                 logger.error("免费票，程序尚未适配")
-                sentry_sdk.capture_message("Exit by in-app exit")
+                # sentry_sdk.capture_message("Exit by in-app exit")
                 return
             elif status == 8:
                 logger.warning("暂时售罄，即将放票")
@@ -96,7 +96,7 @@ def run(hyg):
         while True:
             if hyg.try_create_order():
                 if "hunter" not in hyg.config:
-                    hyg.sdk.capture_message("Pay success!")
+                    # hyg.sdk.capture_message("Pay success!")
                     logger.success("购票成功！")
                     return
                 else:
@@ -110,7 +110,7 @@ def main():
     print(i18n["zh"]["start_up"])
     global uid
     try:
-        version, sentry_sdk = init()
+        version, _ = init()
         session = requests.session()
 
         check_update(version)
@@ -398,7 +398,7 @@ def main():
                 )
             )
         save(config)
-        sentry_sdk.capture_message("config complete")
+        # sentry_sdk.capture_message("config complete")
         BHYG = BilibiliHyg(config, sentry_sdk, kdl_client, session)
         BHYG.waited = True
         run(BHYG)
@@ -406,8 +406,8 @@ def main():
         logger.info(i18n["zh"]["exit_manual"])
         return
     except Exception as e:
-        track = sentry_sdk.capture_exception(e)
-        logger.error(i18n["zh"]["error_occured"].format(str(e), str(track)))
+        # track = sentry_sdk.capture_exception(e)
+        logger.error(i18n["zh"]["error_occured"].format(str(e), str("Removed")))
         return
     return
 
@@ -417,11 +417,11 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         logger.info(i18n["zh"]["exit_manual"])
-    from sentry_sdk import Hub
+    # from sentry_sdk import Hub
 
-    client = Hub.current.client
-    if client is not None:
-        client.close(timeout=2.0)
+    # client = Hub.current.client
+    # if client is not None:
+        # client.close(timeout=2.0)
     logger.info(i18n["zh"]["exit_sleep_15s"])
     try:
         time.sleep(15)
