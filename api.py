@@ -9,15 +9,13 @@ import qrcode
 import requests
 from loguru import logger
 
-from i18n import i18n
+from i18n import *
 
 from utils import save, load
 from globals import *
 
 class BilibiliHyg:
     global sdk
-    global i18n_lang
-    from globals import i18n_lang
     def __init__(self, config, sdk,client,session):
         self.waited = False
         self.sdk = sdk
@@ -43,14 +41,14 @@ class BilibiliHyg:
         if self.client != None:
             self.ip = self.client.tps_current_ip(sign_type="hmacsha1")
         if self.config["mode"] == 'time':
-            logger.info(i18n[i18n_lang]["now_mode_time_on"])
-            logger.info(i18n[i18n_lang]["get_token_15min"])
+            logger.info(i18n_gt()["now_mode_time_on"])
+            logger.info(i18n_gt()["get_token_15min"])
             while self.get_time() < self.config["time"]-900:
                 time.sleep(10)
-                logger.info(i18n[i18n_lang]["now_waiting_info"].format((self.config["time"]-self.get_time())))
-        logger.info(i18n[i18n_lang]["get_token_finish"])
+                logger.info(i18n_gt()["now_waiting_info"].format((self.config["time"]-self.get_time())))
+        logger.info(i18n_gt()["get_token_finish"])
         self.token = self.get_token()
-        logger.info(i18n[i18n_lang]["will_pay_bill"])
+        logger.info(i18n_gt()["will_pay_bill"])
 
     def get_time(self):
         return float(time.time() + self.config["time_offset"])
@@ -67,11 +65,11 @@ class BilibiliHyg:
             requests.exceptions.ReadTimeout,
             requests.exceptions.ConnectionError,
         ):
-            logger.error(i18n[i18n_lang]["network_timeout"])
+            logger.error(i18n_gt()["network_timeout"])
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                            i18n[i18n_lang]["manual_change_ip"].format(
+                            i18n_gt()["manual_change_ip"].format(
                                 self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
@@ -80,11 +78,11 @@ class BilibiliHyg:
             return -1, 0
         try:
             if response.status_code == 412:
-                logger.error(i18n[i18n_lang]["wind_control"])
+                logger.error(i18n_gt()["wind_control"])
                 if self.config["proxy"]:
                     if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                         logger.info(
-                            i18n[i18n_lang]["manual_change_ip"].format(
+                            i18n_gt()["manual_change_ip"].format(
                                 self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
@@ -92,10 +90,10 @@ class BilibiliHyg:
                     return self.get_ticket_status()
                 else:
                     self.risk = True
-                    logger.error(i18n[i18n_lang]["net_method"])
-                    input(i18n[i18n_lang]["res_3_returns"])
-                    input(i18n[i18n_lang]["res_2_returns"])
-                    input(i18n[i18n_lang]["res_1_return"])
+                    logger.error(i18n_gt()["net_method"])
+                    input(i18n_gt()["res_3_returns"])
+                    input(i18n_gt()["res_2_returns"])
+                    input(i18n_gt()["res_1_return"])
                     return -1, 0
             screens = response.json()["data"]["screen_list"]
             # 找到 字段id为screen_id的screen
@@ -105,7 +103,7 @@ class BilibiliHyg:
                     screen = screens[i]
                     break
             if screen == {}:
-                logger.error(i18n[i18n_lang]["no_found_screen"])
+                logger.error(i18n_gt()["no_found_screen"])
                 return -1, 0
             # 找到 字段id为sku_id的sku
             skus = screen["ticket_list"]
@@ -115,11 +113,11 @@ class BilibiliHyg:
                     sku = skus[i]
                     break
             if sku == {}:
-                logger.error(i18n[i18n_lang]["no_found_sku"])
+                logger.error(i18n_gt()["no_found_sku"])
                 return -1, 0
             return int(sku["sale_flag_number"]), sku["clickable"]
         except:
-            logger.error(i18n[i18n_lang]["may_wind_control"])
+            logger.error(i18n_gt()["may_wind_control"])
             return -1, 0
 
     def get_prepare(self):
@@ -143,11 +141,11 @@ class BilibiliHyg:
             data["act_id"] = self.config["act_id"]
         response = self.session.post(url, headers=self.headers, data=data)
         if response.status_code == 412:
-            logger.error(i18n[i18n_lang]["not_handled_412"])
+            logger.error(i18n_gt()["not_handled_412"])
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                            i18n[i18n_lang]["manual_change_ip"].format(
+                            i18n_gt()["manual_change_ip"].format(
                                 self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
@@ -192,7 +190,7 @@ class BilibiliHyg:
         if "phone" in self.config:
             phone = self.config["phone"]
         else:
-            phone = input(i18n[i18n_lang]["input_phone_num"]+": ")
+            phone = input(i18n_gt()["input_phone_num"]+": ")
         self.captcha_data = {
             "code": phone,
         }
@@ -208,7 +206,7 @@ class BilibiliHyg:
                         data=self.captcha_data,
         ).json()["data"]["is_valid"]
         if not success:
-            logger.error(i18n[i18n_lang]["input_verify_fail"])
+            logger.error(i18n_gt()["input_verify_fail"])
             if "phone" in self.config:
                 self.config.pop("phone")
             return False
@@ -234,34 +232,34 @@ class BilibiliHyg:
         )
         response = self.session.get(url, headers=self.headers)
         if response.status_code == 412:
-            logger.error(i18n[i18n_lang]["not_handled_412"])
+            logger.error(i18n_gt()["not_handled_412"])
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                            i18n[i18n_lang]["manual_change_ip"].format(
+                            i18n_gt()["manual_change_ip"].format(
                                 self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
                 self.session.close()
                 return self.confirm_info(token)
         response = response.json()
-        logger.info(i18n[i18n_lang]["info_confirmed"])
+        logger.info(i18n_gt()["info_confirmed"])
         logger.debug(response)
         self.config["order_type"] = response["data"]["order_type"]
         if response["data"]["act"] is not None:
-            logger.info(i18n[i18n_lang]["info_discount"])
+            logger.info(i18n_gt()["info_discount"])
             self.config["act_id"] = response["data"]["act"]["act_id"]
         return
 
     def get_token(self):
         info = self.get_prepare()
         if info == {}:
-            logger.warning(i18n[i18n_lang]["info_no_ticket"])
+            logger.warning(i18n_gt()["info_no_ticket"])
             time.sleep(1)
             self.get_token()
         if info["token"]:
             logger.success(
-                i18n[i18n_lang]["info_bill_ok"]
+                i18n_gt()["info_bill_ok"]
                 + "https://show.bilibili.com/platform/confirmOrder.html?token="
                 + info["token"]
             )
@@ -273,10 +271,10 @@ class BilibiliHyg:
             try:
                 self.confirm_info(info["token"])
             except:
-                logger.error(i18n[i18n_lang]["info_bill_fail"])
+                logger.error(i18n_gt()["info_bill_fail"])
             return info["token"]
         else:
-            logger.warning(i18n[i18n_lang]["info_wind_control"])
+            logger.warning(i18n_gt()["info_wind_control"])
             self.sdk.add_breadcrumb(
                 category="gaia",
                 message="Gaia found",
@@ -296,7 +294,7 @@ class BilibiliHyg:
                     data=riskParam,
                 ).json()
             if risk["data"]["type"] == "geetest":
-                logger.warning(i18n[i18n_lang]["type_captcha"])
+                logger.warning(i18n_gt()["type_captcha"])
                 gt, challenge, token = (
                     risk["data"]["geetest"]["gt"],
                     risk["data"]["geetest"]["challenge"],
@@ -304,25 +302,25 @@ class BilibiliHyg:
                 )
                 cap_data = self.gee_verify(gt, challenge, token)
                 while cap_data == False:
-                    logger.error(i18n[i18n_lang]["input_verify_fail"])
+                    logger.error(i18n_gt()["input_verify_fail"])
                     return self.get_token()
-                logger.info(i18n[i18n_lang]["input_verify_success"])
+                logger.info(i18n_gt()["input_verify_success"])
             elif risk["data"]["type"] == "phone":
-                logger.warning(i18n[i18n_lang]["type_mobile"])
+                logger.warning(i18n_gt()["type_mobile"])
                 token = risk["data"]["token"]
                 cap_data = self.phone_verify(token)
                 while cap_data == False:
-                    logger.error(i18n[i18n_lang]["input_verify_fail"])
+                    logger.error(i18n_gt()["input_verify_fail"])
                     return self.get_token()
             elif risk["data"]["type"] == "sms":
-                logger.warning(i18n[i18n_lang]["type_sms"])
-                logger.warning(i18n[i18n_lang]["unsupport_sms"])
+                logger.warning(i18n_gt()["type_sms"])
+                logger.warning(i18n_gt()["unsupport_sms"])
             elif risk["data"]["type"] == "biliword":
-                logger.warning(i18n[i18n_lang]["type_sms"])
-                logger.warning(i18n[i18n_lang]["unsupport_text"])
+                logger.warning(i18n_gt()["type_sms"])
+                logger.warning(i18n_gt()["unsupport_text"])
             else:
-                logger.error(i18n[i18n_lang]["unknown_wind"])
-                logger.warning(i18n[i18n_lang]["unsupport_captcha"])
+                logger.error(i18n_gt()["unknown_wind"])
+                logger.warning(i18n_gt()["unsupport_captcha"])
             self.sdk.add_breadcrumb(
                 category="gaia",
                 message="Gaia passed",
@@ -382,23 +380,23 @@ class BilibiliHyg:
             requests.exceptions.ReadTimeout,
             requests.exceptions.ConnectionError,
         ):
-            logger.error(i18n[i18n_lang]["network_timeout"])
+            logger.error(i18n_gt()["network_timeout"])
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                            i18n[i18n_lang]["manual_change_ip"].format(
+                            i18n_gt()["manual_change_ip"].format(
                                 self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
                 self.session.close()
             return self.create_order()
         if response.status_code == 412:
-            logger.error(i18n[i18n_lang]["wind_control"])
+            logger.error(i18n_gt()["wind_control"])
             logger.info(response.text)
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                            i18n[i18n_lang]["manual_change_ip"].format(
+                            i18n_gt()["manual_change_ip"].format(
                                 self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
@@ -406,7 +404,7 @@ class BilibiliHyg:
                 return self.create_order()
             else:
                 self.risk = True
-                logger.error(i18n[i18n_lang]["pause_60s"])
+                logger.error(i18n_gt()["pause_60s"])
                 time.sleep(60)
                 return {}
         return response.json()
@@ -425,11 +423,11 @@ class BilibiliHyg:
         logger.debug(url)
         response = self.session.get(url, headers=self.headers)
         if response.status_code == 412:
-            logger.error(i18n[i18n_lang]["not_handled_412"])
+            logger.error(i18n_gt()["not_handled_412"])
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                            i18n[i18n_lang]["manual_change_ip"].format(
+                            i18n_gt()["manual_change_ip"].format(
                                 self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
@@ -442,44 +440,44 @@ class BilibiliHyg:
                 message=f'Success, orderid:{response["data"]["order_id"]}, payurl:https://pay.bilibili.com/payplatform-h5/pccashier.html?params="{urllib.parse.quote(json.dumps(response["data"]["payParam"], ensure_ascii=False))}',
                 level="info",
             )
-            logger.success(i18n[i18n_lang]["pay_success"])
+            logger.success(i18n_gt()["pay_success"])
             order_id = response["data"]["order_id"]
             pay_url = response["data"]["payParam"]["code_url"]
             response["data"]["payParam"].pop("code_url")
             response["data"]["payParam"].pop("expire_time")
             response["data"]["payParam"].pop("pay_type")
             response["data"]["payParam"].pop("use_huabei")
-            logger.info(i18n[i18n_lang]["bill_serial"] + order_id)
+            logger.info(i18n_gt()["bill_serial"] + order_id)
             self.order_id = order_id
-            logger.info(i18n[i18n_lang]["bill_pay_hint"])
-            logger.info(i18n[i18n_lang]["bill_qr"] + pay_url)
+            logger.info(i18n_gt()["bill_pay_hint"])
+            logger.info(i18n_gt()["bill_qr"] + pay_url)
             qr = qrcode.QRCode()
             qr.add_data(pay_url)
             qr.print_ascii(invert=True)
             img = qr.make_image()
             img.show()
             logger.info(
-                i18n[i18n_lang]["bill_open"] + " https://pay.bilibili.com/payplatform-h5/pccashier.html?params="
+                i18n_gt()["bill_open"] + " https://pay.bilibili.com/payplatform-h5/pccashier.html?params="
                 + urllib.parse.quote(
                     json.dumps(response["data"]["payParam"], ensure_ascii=False)
                 )
-                + " " + i18n[i18n_lang]["bill_pay_ok"]
+                + " " + i18n_gt()["bill_pay_ok"]
             )
-            logger.info(i18n[i18n_lang]["bill_manual"])
+            logger.info(i18n_gt()["bill_manual"])
             return True
         else:
-            logger.error(i18n[i18n_lang]["bill_fail"])
+            logger.error(i18n_gt()["bill_fail"])
             return False
 
     def order_status(self, order_id):
         url = "https://show.bilibili.com/api/ticket/order/info?order_id=" + str(order_id)
         response = self.session.get(url, headers=self.headers)
         if response.status_code == 412:
-            logger.error(i18n[i18n_lang]["not_handled_412"])
+            logger.error(i18n_gt()["not_handled_412"])
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                            i18n[i18n_lang]["manual_change_ip"].format(
+                            i18n_gt()["manual_change_ip"].format(
                                 self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
@@ -488,14 +486,14 @@ class BilibiliHyg:
         if response["data"]["status"] == 1:
             return True
         elif response["data"]["status"] == 2:
-            logger.success(i18n[i18n_lang]["pay_ok"])
+            logger.success(i18n_gt()["pay_ok"])
             return False
         elif response["data"]["status"] == 4:
-            logger.warning(i18n[i18n_lang]["bill_cancel"])
+            logger.warning(i18n_gt()["bill_cancel"])
             return False
         else:
             logger.warning(
-                i18n[i18n_lang]["status_unknown"] + ": "
+                i18n_gt()["status_unknown"] + ": "
                 + response["data"]["status_name"]
                 + response["data"]["sub_status_name"]
             )
@@ -509,34 +507,34 @@ class BilibiliHyg:
             "biliCSRF": self.headers["Cookie"][self.headers["Cookie"].index("bili_jct") + 9 : self.headers["Cookie"].index("bili_jct") + 41]
         }).json()
         if response["status"] == True:
-            logger.success(i18n[i18n_lang]["quit_login"])
+            logger.success(i18n_gt()["quit_login"])
         else:
-            logger.error(i18n[i18n_lang]["logout_fail"])
+            logger.error(i18n_gt()["logout_fail"])
 
     def try_create_order(self):
         if not self.waited:
-            logger.info(i18n[i18n_lang]["wait_4_96s"])
+            logger.info(i18n_gt()["wait_4_96s"])
             time.sleep(4.96)
             self.waited = True
         result = self.create_order()
         if result == {}:
             return False
         if result["errno"] == 100009:
-            logger.warning(i18n[i18n_lang]["ticketless"])
+            logger.warning(i18n_gt()["ticketless"])
             self.waited = False
         elif result["errno"] == 100017:
-            logger.warning(i18n[i18n_lang]["ticket_unbuyable"])
+            logger.warning(i18n_gt()["ticket_unbuyable"])
             self.waited = False
         elif result["errno"] == 3:
-            logger.warning(i18n[i18n_lang]["slowdown_5s"])
+            logger.warning(i18n_gt()["slowdown_5s"])
         elif result["errno"] == 100001:
-            logger.warning(i18n[i18n_lang]["bili_speed_limit"])
+            logger.warning(i18n_gt()["bili_speed_limit"])
         elif result["errno"] == 100041:
-            logger.warning(i18n[i18n_lang]["tokenless"])
+            logger.warning(i18n_gt()["tokenless"])
         elif result["errno"] == 100016:
-            logger.error(i18n[i18n_lang]["not_salable"])
+            logger.error(i18n_gt()["not_salable"])
         elif result["errno"] == 0:
-            logger.success(i18n[i18n_lang]["bill_push_ok"])
+            logger.success(i18n_gt()["bill_push_ok"])
             pay_token = result["data"]["token"]
             orderid = None
             if "orderId" in result["data"]:
@@ -548,33 +546,33 @@ class BilibiliHyg:
                     url = "https://www.pushplus.plus/send"
                     response = requests.post(url, json={
                         "token": self.config["pushplus"],
-                        "title": i18n[i18n_lang]["BHYG_notify"],
-                        "content": i18n[i18n_lang]["rob_ok_paying"]+self.order_id,
+                        "title": i18n_gt()["BHYG_notify"],
+                        "content": i18n_gt()["rob_ok_paying"]+self.order_id,
                     }).json()
                     if response["code"] == 200:
-                        logger.success(i18n[i18n_lang]["notify_ok"]+" "+response['data'])
+                        logger.success(i18n_gt()["notify_ok"]+" "+response['data'])
                     else:
-                        logger.error(i18n[i18n_lang]["notify_fail"]+" "+response)
+                        logger.error(i18n_gt()["notify_fail"]+" "+response)
                 if "hunter" in self.config:
                     return True
-                logger.info(i18n[i18n_lang]["unpaid_bill"])
+                logger.info(i18n_gt()["unpaid_bill"])
                 while self.order_status(self.order_id):
                     time.sleep(1)
                 self.sdk.capture_message("Exit by in-app exit")
                 return True
             else:
-                logger.error(i18n[i18n_lang]["fake_ticket"])
+                logger.error(i18n_gt()["fake_ticket"])
         elif result["errno"] == 100051:
             self.token = self.get_token()
         elif result["errno"] == 100079 or result["errno"] == 100048:
             logger.info(result["msg"])
-            logger.success(i18n[i18n_lang]["rob_already_ok"])
+            logger.success(i18n_gt()["rob_already_ok"])
             self.sdk.capture_message("Exit by in-app exit")
             return True
         elif result["errno"] == 219:
-            logger.info(i18n[i18n_lang]["ticket_sto_less"])
+            logger.info(i18n_gt()["ticket_sto_less"])
         else:
-            logger.error(i18n[i18n_lang]["unknown_error"] + str(result))
+            logger.error(i18n_gt()["unknown_error"] + str(result))
         return False
 
     @staticmethod

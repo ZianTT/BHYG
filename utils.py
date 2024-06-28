@@ -24,9 +24,7 @@ def save(data: dict):
 
 
 def load() -> dict:
-    from i18n import i18n
-    global i18n_lang
-    from globals import i18n_lang
+    from i18n import i18n_gt
     import base64
     from Crypto.Cipher import AES
     from Crypto.Util.Padding import pad, unpad
@@ -44,9 +42,9 @@ def load() -> dict:
         data = unpad(cipher.decrypt(cipher_text), AES.block_size).decode("utf-8")
         data = json.loads(data)
     except ValueError:
-        logger.error(i18n[i18n_lang]["data_error"])
+        logger.error(i18n_gt()["data_error"])
         if os.path.exists("share.json"):
-            logger.info(i18n[i18n_lang]["migrate_share"])
+            logger.info(i18n_gt()["migrate_share"])
             with open("share.json", "r", encoding="utf-8") as f:
                 data = json.load(f)
                 save(data)
@@ -55,14 +53,13 @@ def load() -> dict:
         else:
             data = {}
             os.remove("data")
-        logger.info(i18n[i18n_lang]["has_destroyed"])
+        logger.info(i18n_gt()["has_destroyed"])
     return data
 
 def check_policy():
     import requests
-    from i18n import i18n
-    global i18n_lang
-    from globals import i18n_lang,version
+    from i18n import i18n_gt
+    from globals import version
     import os
     import sys
     from loguru import logger
@@ -72,21 +69,21 @@ def check_policy():
             policy = requests.get("https://bhyg.bitf1a5h.eu.org/policy.json").json()
             break
         except Exception:
-            logger.error(i18n[i18n_lang]["policy_error"])
+            logger.error(i18n_gt()["policy_error"])
     if "policy" not in locals():
-        logger.error(i18n[i18n_lang]["policy_get_failed"])
+        logger.error(i18n_gt()["policy_get_failed"])
         sys.exit(1)
     if version not in policy["allowed versions"]:
-        logger.error(i18n[i18n_lang]["version_not_allowed"])
+        logger.error(i18n_gt()["version_not_allowed"])
         allow = False
     import machineid
     if policy["type"] == "blacklist":
         if machineid.id() in policy["list"]:
-            logger.error(i18n[i18n_lang]["blacklist"])
+            logger.error(i18n_gt()["blacklist"])
             allow = False
     elif policy["type"] == "whitelist":
         if machineid.id() not in policy["list"]:
-            logger.error(i18n[i18n_lang]["whitelist"])
+            logger.error(i18n_gt()["whitelist"])
             allow = False
     elif policy["type"] == "none":
         pass

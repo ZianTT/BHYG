@@ -1,6 +1,10 @@
 # Copyright (c) 2023-2024 ZianTT, FriendshipEnder
+i18n_lang = "NaN"
+
+i18n_tuple = ("中文", "English", "中文(猫娘)")
+
 i18n = {
-    "中文": {
+    i18n_tuple[0]: {
         "data_error": "数据错误，运行环境不符",
         "migrate_share": "检测到分享文件，正在迁移",
         "has_destroyed": "已销毁原数据",
@@ -230,13 +234,13 @@ i18n = {
         "rob_already_ok":     "已经抢到了啊喂！",
         "ticket_sto_less":    "库存不足",
         "unknown_error":      "未知错误:",
-        "whitelist": "当前处于白名单模式，你的机器码不在白名单",
-        "blacklist": "当前处于黑名单模式，你的机器码在黑名单",
+        "whitelist": "当前处于白名单模式，你的机器不在白名单",
+        "blacklist": "当前处于黑名单模式，你的机器在黑名单",
         "version_not_allowed": "当前版本不允许使用，请更新到最新版本",
         "policy_error": "获取配置失败，正在重试…",
         "policy_get_failed": "重试失败，非法运行，请确认可以访问bhyg.bitf1a5h.eu.org，即将退出",
     },
-    "English": {
+    i18n_tuple[1]: {
         "data_error": "Data error! Environment is not OK!",
         "migrate_share": "Shared-data detected. Migrating shared-data.",
         "has_destroyed": "Original data has destroyed safety.",
@@ -472,13 +476,13 @@ i18n = {
         "rob_already_ok":     "Already grabbed a ticket!",
         "ticket_sto_less":    "Out of stock",
         "unknown_error":      "Unknown error:",
-        "whitelist": "当前处于白名单模式，你的机器码不在白名单",
-        "blacklist": "当前处于黑名单模式，你的机器码在黑名单",
-        "version_not_allowed": "当前版本不允许使用，请更新到最新版本",
-        "policy_error": "获取配置失败，正在重试…",
-        "policy_get_failed": "重试失败，非法运行，请确认可以访问bhyg.bitf1a5h.eu.org，即将退出",
+        "whitelist": "Currently in whitelist mode, your machine is not in whitelist.",
+        "blacklist": "Currently in blacklist mode, your machine is in blacklist.",
+        "version_not_allowed": "The current version is not allowed, please update to the latest version.",
+        "policy_error": "Failed to get configuration. Retrying...",
+        "policy_get_failed": "Retry failed, illegal operation. Please confirm that you can access bhyg.bitf1a5h.eu.org. Program will exit.",
     },
-    "中文(猫娘)": {
+    i18n_tuple[2]: {
         "data_error": "数据错误喵~，运行需要的小窝不符合本猫的需要喵~",
         "migrate_share": "检测到原主人的分享文件，正在迁移喵~",
         "has_destroyed": "原数据被我销毁了喵°",
@@ -577,12 +581,12 @@ i18n = {
         "connect_link_error": "链接错误，请重新登录喵啊!",
         "connect_no_account": "你这个平台上没有绑定B站账号喵~",
         "bi_login_method": "请选择登录方法喵~",
-        "bi_login_cookie": "cookie",
+        "bi_login_cookie": "曲奇饼干咪~ (cookie)",
         "bi_login_qrcode": "扫我身上的二维码喵~",
-        "bi_login_user_pass": "输入用户名和密码喵~",
+        "bi_login_user_pass": "输入用户名和密码咩~",
         "bi_login_web_sms": "网页版短信验证码喵~",
-        "bi_login_app_sms": "手机APP版短信验证码喵~",
-        "bi_login_sns": "第三方客户端喵~",
+        "bi_login_app_sms": "手机APP版短信验证码呜~",
+        "bi_login_sns": "第三方客户端nia~",
         "bi_input_cookie": "请给我曲奇饼干喵!: (cookie)",
         "bi_illegal_cookie": "曲奇饼干不好吃啊呸!",
         "eula": "欢迎使用BHYG软件，使用前请阅读EULA(https://github.com/biliticket/BHYG)。若您使用时遇到问题，请查阅biliticket文档(https://docs.bitf1a5h.eu.org/)\n特别提醒，根据EULA，严禁任何形式通过本软件盈利。若您同意本软件EULA，请键入：我已阅读并同意EULA，黄牛倒卖狗死妈\n",
@@ -711,10 +715,35 @@ i18n = {
         "rob_already_ok":     "已经抢到了啊喂！",
         "ticket_sto_less":    "库存不足咪",
         "unknown_error":      "未知错误咩:",
-        "whitelist": "当前处于白名单模式，你的机器码不在白名单",
-        "blacklist": "当前处于黑名单模式，你的机器码在黑名单",
-        "version_not_allowed": "当前版本不允许使用，请更新到最新版本",
-        "policy_error": "获取配置失败，正在重试…",
-        "policy_get_failed": "重试失败，非法运行，请确认可以访问bhyg.bitf1a5h.eu.org，即将退出",
+        "whitelist": "当前处于白名单模式喵~，你的机器不在白名单呜呜呜~",
+        "blacklist": "当前处于黑名单模式喵~，你的机器在黑名单呜呜呜~",
+        "version_not_allowed": "当前版本不允许使用，请更新到最新版本喵~",
+        "policy_error": "获取配置失败了喵~，正在重试……",
+        "policy_get_failed": "重试也失败了喵~，非法运行，请确认可以访问bhyg.bitf1a5h.eu.org，即将退出!",
     }
 }
+
+def set_language(force_reload: bool):
+    global i18n, i18n_lang
+    import os
+    import inquirer
+    if not force_reload and os.path.exists("language"): #加载语言文件
+        with open("language", "r", encoding="utf-8") as f:
+            i18n_lang = f.read()
+            print("Software language:", i18n_lang)
+            f.close
+    else: #加载语言文件不存在时, 创建一个语言文件
+        i18n_lang = inquirer.prompt([
+            inquirer.List(
+                name="lang_select",
+                message="Please select language",
+                choices=i18n_tuple,
+            )]
+        )["lang_select"]
+        with open("language", "w", encoding="utf-8") as f:
+            f.write(i18n_lang)
+            f.close
+            
+def i18n_gt():
+    global i18n, i18n_lang
+    return i18n[i18n_lang]
