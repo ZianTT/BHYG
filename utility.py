@@ -1,3 +1,4 @@
+# Copyright (c) 2023-2024 ZianTT, FriendshipEnder
 import inquirer
 import requests
 from loguru import logger
@@ -6,17 +7,22 @@ from utils import prompt, save, load
 
 from i18n import i18n
 
-
+from globals import *
 def utility(config):
+    global i18n_lang
+    from globals import i18n_lang
     import base64
     def add_buyer(headers):
-        name = input("请输入购票人姓名：")
-        id_type = prompt([inquirer.List("id_type", message="请选择证件类型",
-                                        choices=["0. 身份证", "1. 护照", "2. 港澳居民往来内地通行证",
-                                                 "3. 台湾居民往来大陆通行证"], default="身份证"),
+        name = input(i18n[i18n_lang]["buyer_name"])
+        id_type = prompt([inquirer.List("id_type", message=i18n[i18n_lang]["id_type"],
+                                        choices=[i18n[i18n_lang]["id_idcard"],
+                                                 i18n[i18n_lang]["id_passport"],
+                                                 i18n[i18n_lang]["id_Hong_Kong"],
+                                                 i18n[i18n_lang]["id_Taiwan"]],
+                                                 default=i18n[i18n_lang]["id_idcard"]),
                           ])
-        personal_id = input("请输入购票人证件号码：")
-        tel = input("请输入购票人手机号码：")
+        personal_id = input(i18n[i18n_lang]["in_id_serial_number"])
+        tel = input(i18n[i18n_lang]["in_phone_number"])
         data = {
             "name": name,
             "tel": tel,
@@ -28,72 +34,72 @@ def utility(config):
         logger.debug(data)
         response = requests.post("https://show.bilibili.com/api/ticket/buyer/create", headers=headers, data=data)
         if response.json()["errno"] == 0:
-            logger.info("添加成功")
+            logger.info(i18n[i18n_lang]["join_success"])
         else:
             logger.error(f"{response.json()['errno']}: {response.json()['msg']}")
             return add_buyer(headers)
 
     def modify_ua():
-        ua = input("请输入您要覆盖的UA：")
+        ua = input(i18n[i18n_lang]["modify_ua"])
         config["ua"] = ua
 
     def modify_gaia_vtoken():
-        gaia_vtoken = input("请输入您的gaia_vtoken：")
+        gaia_vtoken = input(i18n[i18n_lang]["modify_gaia_vtoken"])
         config["gaia_vtoken"] = gaia_vtoken
 
     def hunter_mode():
         config["hunter"] = 0
-        logger.info("猎手模式已开启（归零）")
+        logger.info(i18n[i18n_lang]["hunter_mode_on"])
 
     def hunter_mode_off():
         if "hunter" in config:
             config.pop("hunter")
-        logger.info("猎手模式已关闭")
+        logger.info(i18n[i18n_lang]["hunter_mode_off"])
 
     def share_mode(config):
         import json
         json.dump(config, open("share.json", "w"))
         import os
         os.remove("data")
-        logger.info("分享模式已启动")
-        logger.info("自动退出中……")
+        logger.info(i18n[i18n_lang]["share_mode"])
+        logger.info(i18n[i18n_lang]["auto_quit"])
         import sys
         sys.exit(0)
         return
 
     def pushplus_config(config):
-        token = input("请输入您的PushPlus Token(留空关闭)：")
+        token = input(i18n[i18n_lang]["pushplus_token"])
         if token == "":
             if "pushplus" in config:
                 config.pop("pushplus")
-            logger.info("PushPlus推送已关闭")
+            logger.info(i18n[i18n_lang]["pushplus_off"])
             save(config)
             return
         config["pushplus"] = token
-        logger.info("PushPlus推送已开启")
+        logger.info(i18n[i18n_lang]["pushplus_on"])
         save(config)
 
     def save_phone(config):
-        phone = input("请输入您的手机号码：")
+        phone = input(i18n[i18n_lang]["input_your_phone"])
         config["phone"] = phone
-        logger.info("手机号码已保存")
+        logger.info(i18n[i18n_lang]["save_your_phone"])
         save(config)
 
     def use_proxy(config):
-        choice = prompt([inquirer.List("proxy", message=i18n["zh"]["input_is_use_proxy"],
-                                       choices=[i18n["zh"]["yes"], i18n["zh"]["no"]], default=i18n["zh"]["no"])])[
+        choice = prompt([inquirer.List("proxy", message=i18n[i18n_lang]["input_is_use_proxy"],
+                                       choices=[i18n[i18n_lang]["yes"], i18n[i18n_lang]["no"]], default=i18n[i18n_lang]["no"])])[
             "proxy"]
-        if choice == i18n["zh"]["yes"]:
+        if choice == i18n[i18n_lang]["yes"]:
             while True:
                 try:
-                    config["proxy_auth"] = input(i18n["zh"]["input_proxy"]).split(" ")
+                    config["proxy_auth"] = input(i18n[i18n_lang]["input_proxy"]).split(" ")
                     assert len(config["proxy_auth"]) == 3
                     break
                 except:
-                    logger.error(i18n["zh"]["wrong_proxy_format"])
+                    logger.error(i18n[i18n_lang]["wrong_proxy_format"])
                     continue
             config["proxy_channel"] = prompt([
-                    inquirer.Text("proxy_channel", message=i18n["zh"]["input_proxy_channel"],validate=lambda _, x: x.isdigit())
+                    inquirer.Text("proxy_channel", message=i18n[i18n_lang]["input_proxy_channel"],validate=lambda _, x: x.isdigit())
             ])["proxy_channel"]
             config["proxy"] = True
         else:
@@ -101,20 +107,20 @@ def utility(config):
         save(config)
 
     def captcha_mode(config):
-        choice = prompt([inquirer.List("captcha", message=i18n["zh"]["input_use_captcha_mode"], choices=[
-            i18n["zh"]["local_gt"],
-            i18n["zh"]["rrocr"],
-            i18n["zh"]["manual"],
-        ], default=i18n["zh"]["manual"])])["captcha"]
-        if choice == i18n["zh"]["local_gt"]:
+        choice = prompt([inquirer.List("captcha", message=i18n[i18n_lang]["input_use_captcha_mode"], choices=[
+            i18n[i18n_lang]["local_gt"],
+            i18n[i18n_lang]["rrocr"],
+            i18n[i18n_lang]["manual"],
+        ], default=i18n[i18n_lang]["manual"])])["captcha"]
+        if choice == i18n[i18n_lang]["local_gt"]:
             config["captcha"] = "local_gt"
-        elif choice == i18n["zh"]["rrocr"]:
+        elif choice == i18n[i18n_lang]["rrocr"]:
             config["captcha"] = "rrocr"
-            config["rrocr"] = input("请输入RROCR KEY：")
-        elif choice == i18n["zh"]["manual"]:
+            config["rrocr"] = input(i18n[i18n_lang]["input_rrocr_key"])
+        elif choice == i18n[i18n_lang]["manual"]:
             config["captcha"] = "manual"
         else:
-            logger.error(i18n["zh"]["captcha_mode_not_supported"])
+            logger.error(i18n[i18n_lang]["captcha_mode_not_supported"])
         save(config)
 
     headers = {
@@ -125,42 +131,51 @@ def utility(config):
     select = prompt([
         inquirer.List(
             "select",
-            message="请选择您要使用的实用工具",
-            choices=["添加购票人", "覆盖默认UA", "覆盖gaia_vtoken", "开启猎手模式(计数清零)", "关闭猎手模式",
-                     "分享模式", "PushPlus推送", "预填绑定手机号", "代理设置", "选择验证码模式", "返回"],
+            message=  i18n[i18n_lang]["select_tool"       ],
+            choices=[ i18n[i18n_lang]["tool_add_buyer"    ],
+                      i18n[i18n_lang]["tool_modify_ua"    ],
+                      i18n[i18n_lang]["tool_modify_gaia"  ],
+                      i18n[i18n_lang]["tool_hunter_mode"  ],
+                      i18n[i18n_lang]["tool_hunter_off"   ],
+                      i18n[i18n_lang]["tool_share_mode"   ],
+                      i18n[i18n_lang]["tool_pushplus"     ],
+                      i18n[i18n_lang]["tool_phone_prefill"],
+                      i18n[i18n_lang]["tool_proxy_setting"],
+                      i18n[i18n_lang]["tool_capacha_mode" ],
+                      i18n[i18n_lang]["back"              ]],
         )])
-    if select["select"] == "添加购票人":
+    if select["select"] ==      i18n[i18n_lang]["tool_add_buyer"    ]:
         add_buyer(headers)
         return utility(config)
-    elif select["select"] == "覆盖默认UA":
+    elif select["select"] ==    i18n[i18n_lang]["tool_modify_ua"    ]:
         modify_ua()
         return utility(config)
-    elif select["select"] == "覆盖gaia_vtoken":
+    elif select["select"] ==    i18n[i18n_lang]["tool_modify_gaia"  ]:
         modify_gaia_vtoken()
         return utility(config)
-    elif select["select"] == "开启猎手模式(计数清零)":
+    elif select["select"] ==    i18n[i18n_lang]["tool_hunter_mode"  ]:
         hunter_mode()
         return utility(config)
-    elif select["select"] == "关闭猎手模式":
+    elif select["select"] ==    i18n[i18n_lang]["tool_hunter_off"   ]:
         hunter_mode_off()
         return utility(config)
-    elif select["select"] == "分享模式":
+    elif select["select"] ==    i18n[i18n_lang]["tool_share_mode"   ]:
         share_mode(config)
         return utility(config)
-    elif select["select"] == "PushPlus推送":
+    elif select["select"] ==    i18n[i18n_lang]["tool_pushplus"     ]:
         pushplus_config(config)
         return utility(config)
-    elif select["select"] == "预填绑定手机号":
+    elif select["select"] ==    i18n[i18n_lang]["tool_phone_prefill"]:
         save_phone(config)
         return utility(config)
-    elif select["select"] == "代理设置":
+    elif select["select"] ==    i18n[i18n_lang]["tool_proxy_setting"]:
         use_proxy(config)
         return utility(config)
-    elif select["select"] == "选择验证码模式":
+    elif select["select"] ==    i18n[i18n_lang]["tool_capacha_mode" ]:
         captcha_mode(config)
         return utility(config)
-    elif select["select"] == "返回":
+    elif select["select"] ==    i18n[i18n_lang]["back"              ]:
         return
     else:
-        logger.error("暂不支持此功能")
+        logger.error(i18n[i18n_lang]["tool_not_supported"])
         return utility()

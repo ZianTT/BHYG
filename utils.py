@@ -1,3 +1,4 @@
+# Copyright (c) 2023-2024 ZianTT, FriendshipEnder
 def prompt(prompt):
     import inquirer
     data = inquirer.prompt(prompt)
@@ -23,12 +24,16 @@ def save(data: dict):
 
 
 def load() -> dict:
+    from i18n import i18n
+    global i18n_lang
+    from globals import i18n_lang
     import base64
     from Crypto.Cipher import AES
     from Crypto.Util.Padding import pad, unpad
-    from loguru import logger
     import machineid
-    import json,os
+    import json
+    from loguru import logger
+    import os
     key = machineid.id().encode()[:16]
     try:
         with open("data", "r", encoding="utf-8") as f:
@@ -39,9 +44,9 @@ def load() -> dict:
         data = unpad(cipher.decrypt(cipher_text), AES.block_size).decode("utf-8")
         data = json.loads(data)
     except ValueError:
-        logger.error("数据错误，运行环境不符")
+        logger.error(i18n[i18n_lang]["data_error"])
         if os.path.exists("share.json"):
-            logger.info("检测到分享文件，正在迁移")
+            logger.info(i18n[i18n_lang]["migrate_share"])
             with open("share.json", "r", encoding="utf-8") as f:
                 data = json.load(f)
                 save(data)
@@ -50,5 +55,5 @@ def load() -> dict:
         else:
             data = {}
             os.remove("data")
-        logger.info("已销毁原数据")
+        logger.info(i18n[i18n_lang]["has_destroyed"])
     return data

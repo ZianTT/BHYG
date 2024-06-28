@@ -1,3 +1,4 @@
+# Copyright (c) 2023-2024 ZianTT, FriendshipEnder
 import json
 import time
 
@@ -6,7 +7,7 @@ import requests
 import bili_ticket_gt_python
 from loguru import logger
 
-
+from globals import *
 # REF: https://github.com/mikumifa/biliTickerBuy
 # REF: https://github.com/Amorter/biliTicker_gt
 # LICENSE: GPL-3.0
@@ -45,7 +46,7 @@ def run(gt, challenge, token, mode="local_gt", key=None):
             "appkey": key,
             "gt": gt,
             "challenge": challenge,
-            "referer": "https://show.bilibili.com"
+            "referer": "https://show.bilibili.com",
         }
         try:
             response = requests.post("http://api.rrocr.com/api/recognize.html", data=param).json()
