@@ -23,6 +23,8 @@ import time
 from i18n import i18n
 i18n_lang = "中文"
 
+version = "v0.8.4"
+
 def agree_terms():
     global i18n_lang
     while True:
@@ -65,7 +67,6 @@ def init():
                 agree_terms()
                 with open("agree-terms", "w") as f:
                     f.write(machineid.id())
-    version = "v0.8.4"
 
     sentry_sdk.init(
         dsn="https://9c5cab8462254a2e1e6ea76ffb8a5e3d@sentry-inc.bitf1a5h.eu.org/3",
@@ -86,7 +87,6 @@ def init():
     import machineid
     sentry_sdk.set_user({"hwid": machineid.id()[:16]})
     return version, sentry_sdk
-
 
 def check_update(version):
     global i18n_lang
@@ -112,44 +112,23 @@ def check_update(version):
             else:
                 name = "BHYG"
             find = False
-            force = False
             for distribution in data["assets"]:
                 if distribution["name"] == name:
                     logger.warning(
                         i18n[i18n_lang]["new_version_1"].format(data['tag_name'], distribution['browser_download_url'], distribution['size'] / 1024 / 1024))
                     if data['body'] != "":
                         logger.warning(i18n[i18n_lang]["new_version_notify"].format(data['body']))
-                    if "force" in data["body"] or "强制" in data["body"]:
-                        force = True
                     find = True
                     break
             if not find:
                 logger.warning(i18n[i18n_lang]["new_version_2"].format(data['tag_name'], data['html_url']))
                 if data['body'] != "":
                     logger.warning(i18n[i18n_lang]["new_version_notify"].format(data['body']))
-                    if "force" in data["body"] or "强制" in data["body"]:
-                        force = True    
                 find = True
-            if force:
-                logger.warning(i18n[i18n_lang]["force_update_1"])
-                logger.info(i18n[i18n_lang]["force_update_2"])
-                while True:
-                    pass
     except KeyboardInterrupt:
         logger.error(i18n[i18n_lang]["update_interrupted"])
-        raise KeyboardInterrupt
     except:
-        try:
-            logger.warning(i18n[i18n_lang]["update_fail"])
-            if not os.path.exists("skip-update"):
-                logger.error(i18n[i18n_lang]["force_require_update"])
-                while True:
-                    pass
-            else:
-                logger.warning(i18n[i18n_lang]["update_passed"])
-        except KeyboardInterrupt:
-            logger.error(i18n[i18n_lang]["update_interrupted"])
-            raise KeyboardInterrupt
+        logger.error(i18n[i18n_lang]["update_interrupted"])
 
 
 class HygException(Exception):
