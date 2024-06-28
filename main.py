@@ -339,22 +339,6 @@ def main():
                             buyer_infos[int(select)]["tel"],
                         )
                     )
-                    if int(buyer_infos[int(select)]["personal_id"][16]) % 2 == 0:
-                        female = True
-                    else:
-                        male = True
-                if easter_egg:
-                    if len(buyerids) == 1:
-                        logger.info("单身是这样的🤣不会吧不会吧，不会真有人一个人去逛漫展吧")
-                    else:
-                        if male and female:
-                            logger.error("小情侣不得house😡")
-                        elif male and not female:
-                            logger.error("我朝，有南通啊！")
-                            if len(buyerids) == 4:
-                                logger.error("我朝，开impart啊！")
-                        elif female and not male:
-                            logger.error("我朝，有女同啊！")
             else:
                 index = prompt([
                     inquirer.List("index", message=i18n["zh"]["select_buyer"], choices=[
