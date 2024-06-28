@@ -272,7 +272,7 @@ def load_config():
         user = user.json()
         if user["data"]["isLogin"]:
             logger.success("用户 " + user["data"]["uname"] + " 登录成功")
-            if user["data"]["vipStatus"] == 1:
+            if user["data"]["vipStatus"] != 0:
                 logger.info(
                     f"用户为大会员，距离到期还有{(user['data']['vipDueDate'] / 1000 - time.time()) / 60 / 60 / 24:.2f}天")
             import machineid
