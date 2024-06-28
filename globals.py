@@ -298,7 +298,7 @@ def load_config():
     skip = 0
     for i in range(10):
         try:
-            response = c.request(ntp_servers[i], timeout=2)
+            response = c.request(ntp_servers[i], timeout=1)
         except Exception:
             skip += 1
         else:

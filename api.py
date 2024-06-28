@@ -296,7 +296,7 @@ class BilibiliHyg:
                     data=riskParam,
                 ).json()
             if risk["data"]["type"] == "geetest":
-                logger.warning("类型：验证码 ")
+                logger.warning(i18n[i18n_lang]["type_captcha"])
                 gt, challenge, token = (
                     risk["data"]["geetest"]["gt"],
                     risk["data"]["geetest"]["challenge"],
@@ -304,25 +304,25 @@ class BilibiliHyg:
                 )
                 cap_data = self.gee_verify(gt, challenge, token)
                 while cap_data == False:
-                    logger.error("验证失败，请重新验证")
+                    logger.error(i18n[i18n_lang]["input_verify_fail"])
                     return self.get_token()
-                logger.info("验证成功")
+                logger.info(i18n[i18n_lang]["input_verify_success"])
             elif risk["data"]["type"] == "phone":
-                logger.warning("类型：手机验证")
+                logger.warning(i18n[i18n_lang]["type_mobile"])
                 token = risk["data"]["token"]
                 cap_data = self.phone_verify(token)
                 while cap_data == False:
-                    logger.error("验证失败，请重新验证")
+                    logger.error(i18n[i18n_lang]["input_verify_fail"])
                     return self.get_token()
             elif risk["data"]["type"] == "sms":
-                logger.warning("类型：短信验证")
-                logger.warning("暂不支持短信验证，请参考高级用户指南手动填入风控信息")
+                logger.warning(i18n[i18n_lang]["type_sms"])
+                logger.warning(i18n[i18n_lang]["unsupport_sms"])
             elif risk["data"]["type"] == "biliword":
-                logger.warning("类型：文字验证码")
-                logger.warning("暂不支持文字验证码验证，请参考高级用户指南手动填入风控信息")
+                logger.warning(i18n[i18n_lang]["type_sms"])
+                logger.warning(i18n[i18n_lang]["unsupport_text"])
             else:
-                logger.error("未知风控类型")
-                logger.warning("暂不支持该验证，请参考高级用户指南手动填入风控信息")
+                logger.error(i18n[i18n_lang]["unknown_wind"])
+                logger.warning(i18n[i18n_lang]["unsupport_captcha"])
             self.sdk.add_breadcrumb(
                 category="gaia",
                 message="Gaia passed",
@@ -382,7 +382,7 @@ class BilibiliHyg:
             requests.exceptions.ReadTimeout,
             requests.exceptions.ConnectionError,
         ):
-            logger.error("网络连接超时")
+            logger.error(i18n[i18n_lang]["network_timeout"])
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
@@ -393,9 +393,7 @@ class BilibiliHyg:
                 self.session.close()
             return self.create_order()
         if response.status_code == 412:
-            logger.error(
-                "可能被业务风控\n该种业务风控请及时暂停，否则可能会引起更大问题。"
-            )
+            logger.error(i18n[i18n_lang]["wind_control"])
             logger.info(response.text)
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
@@ -408,7 +406,7 @@ class BilibiliHyg:
                 return self.create_order()
             else:
                 self.risk = True
-                logger.error("暂停60s")
+                logger.error(i18n[i18n_lang]["pause_60s"])
                 time.sleep(60)
                 return {}
         return response.json()
@@ -444,33 +442,33 @@ class BilibiliHyg:
                 message=f'Success, orderid:{response["data"]["order_id"]}, payurl:https://pay.bilibili.com/payplatform-h5/pccashier.html?params="{urllib.parse.quote(json.dumps(response["data"]["payParam"], ensure_ascii=False))}',
                 level="info",
             )
-            logger.success("成功购票")
+            logger.success(i18n[i18n_lang]["pay_success"])
             order_id = response["data"]["order_id"]
             pay_url = response["data"]["payParam"]["code_url"]
             response["data"]["payParam"].pop("code_url")
             response["data"]["payParam"].pop("expire_time")
             response["data"]["payParam"].pop("pay_type")
             response["data"]["payParam"].pop("use_huabei")
-            logger.info("订单号：" + order_id)
+            logger.info(i18n[i18n_lang]["bill_serial"] + order_id)
             self.order_id = order_id
-            logger.info("请在微信/支付宝/QQ中扫描以下二维码，完成支付")
-            logger.info("二维码内容：" + pay_url)
+            logger.info(i18n[i18n_lang]["bill_pay_hint"])
+            logger.info(i18n[i18n_lang]["bill_qr"] + pay_url)
             qr = qrcode.QRCode()
             qr.add_data(pay_url)
             qr.print_ascii(invert=True)
             img = qr.make_image()
             img.show()
             logger.info(
-                "或打开 https://pay.bilibili.com/payplatform-h5/pccashier.html?params="
+                i18n[i18n_lang]["bill_open"] + " https://pay.bilibili.com/payplatform-h5/pccashier.html?params="
                 + urllib.parse.quote(
                     json.dumps(response["data"]["payParam"], ensure_ascii=False)
                 )
-                + " 完成支付"
+                + " " + i18n[i18n_lang]["bill_pay_ok"]
             )
-            logger.info("请手动完成支付")
+            logger.info(i18n[i18n_lang]["bill_manual"])
             return True
         else:
-            logger.error("购票失败")
+            logger.error(i18n[i18n_lang]["bill_fail"])
             return False
 
     def order_status(self, order_id):
@@ -490,14 +488,14 @@ class BilibiliHyg:
         if response["data"]["status"] == 1:
             return True
         elif response["data"]["status"] == 2:
-            logger.success("订单支付成功，祝您游玩愉快！")
+            logger.success(i18n[i18n_lang]["pay_ok"])
             return False
         elif response["data"]["status"] == 4:
-            logger.warning("订单已取消")
+            logger.warning(i18n[i18n_lang]["bill_cancel"])
             return False
         else:
             logger.warning(
-                "当前状态未知: "
+                i18n[i18n_lang]["status_unknown"] + ": "
                 + response["data"]["status_name"]
                 + response["data"]["sub_status_name"]
             )
@@ -511,34 +509,34 @@ class BilibiliHyg:
             "biliCSRF": self.headers["Cookie"][self.headers["Cookie"].index("bili_jct") + 9 : self.headers["Cookie"].index("bili_jct") + 41]
         }).json()
         if response["status"] == True:
-            logger.success("已退出登录")
+            logger.success(i18n[i18n_lang]["quit_login"])
         else:
-            logger.error("退出登录失败")
+            logger.error(i18n[i18n_lang]["logout_fail"])
 
     def try_create_order(self):
         if not self.waited:
-            logger.info("等待4.96秒")
+            logger.info(i18n[i18n_lang]["wait_4_96s"])
             time.sleep(4.96)
             self.waited = True
         result = self.create_order()
         if result == {}:
             return False
         if result["errno"] == 100009:
-            logger.warning("无票")
+            logger.warning(i18n[i18n_lang]["ticketless"])
             self.waited = False
         elif result["errno"] == 100017:
-            logger.warning("票种不可售")
+            logger.warning(i18n[i18n_lang]["ticket_unbuyable"])
             self.waited = False
         elif result["errno"] == 3:
-            logger.warning("慢一点（强制5秒）")
+            logger.warning(i18n[i18n_lang]["slowdown_5s"])
         elif result["errno"] == 100001:
-            logger.warning("小电视速率限制")
+            logger.warning(i18n[i18n_lang]["bili_speed_limit"])
         elif result["errno"] == 100041:
-            logger.warning("不是，哥们，你token呢？")
+            logger.warning(i18n[i18n_lang]["tokenless"])
         elif result["errno"] == 100016:
-            logger.error("项目不可售")
+            logger.error(i18n[i18n_lang]["not_salable"])
         elif result["errno"] == 0:
-            logger.success("成功尝试下单！正在检测是否为假票")
+            logger.success(i18n[i18n_lang]["bill_push_ok"])
             pay_token = result["data"]["token"]
             orderid = None
             if "orderId" in result["data"]:
@@ -550,33 +548,33 @@ class BilibiliHyg:
                     url = "https://www.pushplus.plus/send"
                     response = requests.post(url, json={
                         "token": self.config["pushplus"],
-                        "title": "BHYG通知",
-                        "content": f"抢票成功，等待支付，订单号{self.order_id}",
+                        "title": i18n[i18n_lang]["BHYG_notify"],
+                        "content": i18n[i18n_lang]["rob_ok_paying"]+self.order_id,
                     }).json()
                     if response["code"] == 200:
-                        logger.success(f"已发送通知，流水号 {response['data']}")
+                        logger.success(i18n[i18n_lang]["notify_ok"]+" "+response['data'])
                     else:
-                        logger.error(f"通知发送失败，返回信息 {response}")
+                        logger.error(i18n[i18n_lang]["notify_fail"]+" "+response)
                 if "hunter" in self.config:
                     return True
-                logger.info("订单未支付，正在等待")
+                logger.info(i18n[i18n_lang]["unpaid_bill"])
                 while self.order_status(self.order_id):
                     time.sleep(1)
                 self.sdk.capture_message("Exit by in-app exit")
                 return True
             else:
-                logger.error("假票，继续抢票")
+                logger.error(i18n[i18n_lang]["fake_ticket"])
         elif result["errno"] == 100051:
             self.token = self.get_token()
         elif result["errno"] == 100079 or result["errno"] == 100048:
             logger.info(result["msg"])
-            logger.success("已经抢到了啊喂！")
+            logger.success(i18n[i18n_lang]["rob_already_ok"])
             self.sdk.capture_message("Exit by in-app exit")
             return True
         elif result["errno"] == 219:
-            logger.info("库存不足")
+            logger.info(i18n[i18n_lang]["ticket_sto_less"])
         else:
-            logger.error("未知错误:" + str(result))
+            logger.error(i18n[i18n_lang]["unknown_error"] + str(result))
         return False
 
     @staticmethod
