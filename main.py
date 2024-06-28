@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-# Copyright (c) 2023 ZianTT
+# Copyright (c) 2023-2024 ZianTT, FriendshipEnder
 import json
 import os
 import threading
@@ -26,17 +26,18 @@ common_project_id = [
 
 
 def run(hyg):
+    global i18n_lang
     if hyg.config["mode"] == 'direct':
         while True:
             if hyg.try_create_order():
                 if "hunter" not in hyg.config:
                     hyg.sdk.capture_message("Pay success!")
-                    logger.success(i18n["zh"]["pay_success"])
+                    logger.success(i18n[i18n_lang]["pay_success"])
                     return
                 else:
                     hyg.config['hunter'] += 1
                     save(hyg.config)
-                    logger.success(i18n["zh"]["hunter_prompt"].format(hyg.config['hunter']))
+                    logger.success(i18n[i18n_lang]["hunter_prompt"].format(hyg.config['hunter']))
     elif hyg.config["mode"] == 'detect':
         while 1:
             hyg.risk = False
@@ -45,51 +46,51 @@ def run(hyg):
             status, clickable = hyg.get_ticket_status()
             if status == 2 or clickable:
                 if status == 1:
-                    logger.warning("未开放购票")
+                    logger.warning(i18n[i18n_lang]["not_begin"])
                 elif status == 3:
-                    logger.warning("已停售")
+                    logger.warning(i18n[i18n_lang]["has_end_buy"])
                 elif status == 5:
-                    logger.warning("不可售")
+                    logger.warning(i18n[i18n_lang]["cannot_buy"])
                 elif status == 102:
-                    logger.warning("已结束")
+                    logger.warning(i18n[i18n_lang]["has_end"])
                 while True:
                     if hyg.try_create_order():
                         if "hunter" not in hyg.config:
                             hyg.sdk.capture_message("Pay success!")
-                            logger.success("购票成功！")
+                            logger.success(i18n[i18n_lang]["pay_success"])
                             return
                         else:
                             hyg.config['hunter'] += 1
                             save(hyg.config)
-                            logger.success(f"猎手，你的战绩：{hyg.config['hunter']}张")
+                            logger.success(i18n[i18n_lang]["hunter_prompt"].format(hyg.config['hunter']))
                 break
             elif status == 1:
-                logger.warning("未开放购票")
+                logger.warning(i18n[i18n_lang]["not_begin"])
             elif status == 3:
-                logger.warning("已停售")
+                logger.warning(i18n[i18n_lang]["has_end_buy"])
             elif status == 4:
-                logger.warning("已售罄")
+                logger.warning(i18n[i18n_lang]["sold_out"])
             elif status == 5:
-                logger.warning("不可售")
+                logger.warning(i18n[i18n_lang]["cannot_buy"])
             elif status == 6:
-                logger.error("免费票，程序尚未适配")
+                logger.error(i18n[i18n_lang]["free_not_supported"])
                 sentry_sdk.capture_message("Exit by in-app exit")
                 return
             elif status == 8:
-                logger.warning("暂时售罄，即将放票")
+                logger.warning(i18n[i18n_lang]["pro_tem_sold_out"])
 
             elif status == -1:
                 continue
             else:
-                logger.error("未知状态:" + str(status))
+                logger.error(i18n[i18n_lang]["unk_status"] + str(status))
             time.sleep(hyg.config["status_delay"])
     elif hyg.config["mode"] == 'time':
-        logger.info("当前为定时抢票模式")
-        logger.info("等待到达开票时间...")
+        logger.info(i18n[i18n_lang]["now_mode_time_on"])
+        logger.info(i18n[i18n_lang]["now_waiting_time"])
         while hyg.get_time() < hyg.config["time"] - 60:
             time.sleep(10)
-            logger.info(f"等待中，距离开票时间还有{hyg.config['time'] - get_time():.2f}秒")
-        logger.info("唤醒！即将开始抢票！")  # Heads up, the wheels are spinning...
+            logger.info(i18n[i18n_lang]["now_waiting_info"].format(hyg.config['time'] - hyg.get_time()))
+        logger.info(i18n[i18n_lang]["now_wake_up"])  # Heads up, the wheels are spinning...
         while True:
             if hyg.get_time() >= hyg.config["time"]:
                 break
@@ -97,18 +98,38 @@ def run(hyg):
             if hyg.try_create_order():
                 if "hunter" not in hyg.config:
                     hyg.sdk.capture_message("Pay success!")
-                    logger.success("购票成功！")
+                    logger.success(i18n[i18n_lang]["pay_success"])
                     return
                 else:
                     hyg.config['hunter'] += 1
                     save(hyg.config)
-                    logger.success(f"猎手，你的战绩：{hyg.config['hunter']}张")
+                    logger.success(i18n[i18n_lang]["hunter_prompt"].format(hyg.config['hunter']))
 
 
 def main():
-    easter_egg = False
-    print(i18n["zh"]["start_up"])
-    global uid
+    global i18n_lang
+#    easter_egg = False
+#    user_male = False
+#    user_female = False
+    if os.path.exists("language"): #加载语言文件
+        with open("language", "r", encoding="utf-8") as f:
+            i18n_lang = f.read()
+            print("Software language:", i18n_lang)
+            f.close
+    else: #加载语言文件不存在时, 创建一个语言文件
+        i18n_lang = inquirer.prompt([
+            inquirer.List(
+                name="lang_select",
+                message="Please select language",
+                choices=["中文", "English", "中文(猫娘)"],
+            )]
+        )["lang_select"]
+        with open("language", "w", encoding="utf-8") as f:
+            f.write(i18n_lang)
+            f.close
+    print(i18n[i18n_lang]["start_up"])
+    global kdl_client
+    kdl_client = None
     try:
         version, sentry_sdk = init()
         session = requests.session()
@@ -116,6 +137,8 @@ def main():
         check_update(version)
 
         config = load_config()
+        if config == None:
+            return
         headers = {
             "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/618.1.15.10.15 (KHTML, like Gecko) Mobile/21F90 BiliApp/77900100 os/ios model/iPhone 15 mobi_app/iphone build/77900100 osVer/17.5.1 network/2 channel/AppStore c_locale/zh-Hans_CN s_locale/zh-Hans_CH disable_rcmd/0",
             "Cookie": config["cookie"],
@@ -124,34 +147,33 @@ def main():
             headers["User-Agent"] = config["user-agent"]
         session = requests.Session()
         if "mode" not in config:
-            mode_str = prompt([inquirer.List("mode", message=i18n["zh"]["choose_mode"], choices=[
-                i18n["zh"]["mode_time"], i18n["zh"]["mode_direct"], i18n["zh"]["mode_detect"]
-            ], default=i18n["zh"]["mode_time"])])["mode"]
-            if mode_str == i18n["zh"]["mode_direct"]:
+            mode_str = prompt([inquirer.List("mode", message=i18n[i18n_lang]["choose_mode"], choices=[
+                i18n[i18n_lang]["mode_time"], i18n[i18n_lang]["mode_direct"], i18n[i18n_lang]["mode_detect"]
+            ], default=i18n[i18n_lang]["mode_time"])])["mode"]
+            if mode_str == i18n[i18n_lang]["mode_direct"]:
                 config["mode"] = 'direct'
-                logger.info(i18n["zh"]["mode_direct_on"])
-            elif mode_str == i18n["zh"]["mode_detect"]:
+                logger.info(i18n[i18n_lang]["mode_direct_on"])
+            elif mode_str == i18n[i18n_lang]["mode_detect"]:
                 config["mode"] = 'detect'
-                logger.info(i18n["zh"]["mode_detect_on"])
+                logger.info(i18n[i18n_lang]["mode_detect_on"])
             else:
                 config["mode"] = 'time'
-                logger.info(i18n["zh"]["mode_time_on"])
+                logger.info(i18n[i18n_lang]["mode_time_on"])
         if "status_delay" not in config and config["mode"] == 'detect':
             config["status_delay"] = float(prompt([
                 inquirer.Text(
                     "status_delay",
-                    message=i18n["zh"]["input_status_delay"],
+                    message=i18n[i18n_lang]["input_status_delay"],
                     default="0.2",
                     validate=lambda _, x: float(x) >= 0
                 )])["status_delay"])
         if "proxy" not in config:
-            logger.info(i18n["zh"]["no_proxy_by_default"])
+            logger.info(i18n[i18n_lang]["no_proxy_by_default"])
             config["proxy"] = False
         if "captcha" not in config:
-            logger.info(i18n["zh"]["captcha_mode_gt_by_default"])
+            logger.info(i18n[i18n_lang]["captcha_mode_gt_by_default"])
             config["captcha"] = "local_gt"
             config["rrocr"] = None
-        kdl_client = None
         if config["proxy"] == True:
             auth = kdl.Auth(config["proxy_auth"][0], config["proxy_auth"][1])
             kdl_client = kdl.Client(auth)
@@ -164,13 +186,13 @@ def main():
             session.keep_alive = False
             session.get("https://show.bilibili.com")
             logger.info(
-                i18n["zh"]["test_proxy"].format(kdl_client.tps_current_ip(sign_type="hmacsha1"))
+                i18n[i18n_lang]["test_proxy"].format(kdl_client.tps_current_ip(sign_type="hmacsha1"))
             )
         if "again" not in config:
-            choice = prompt([inquirer.List("again", message=i18n["zh"]["input_is_allow_again"],
-                                           choices=[i18n["zh"]["yes"], i18n["zh"]["no"]], default=i18n["zh"]["yes"])])[
+            choice = prompt([inquirer.List("again", message=i18n[i18n_lang]["input_is_allow_again"],
+                                           choices=[i18n[i18n_lang]["yes"], i18n[i18n_lang]["no"]], default=i18n[i18n_lang]["yes"])])[
                 "again"]
-            if choice == i18n["zh"]["no"]:
+            if choice == i18n[i18n_lang]["no"]:
                 config["again"] = False
             else:
                 config["again"] = True
@@ -182,7 +204,7 @@ def main():
                 or "id_bind" not in config
         ):
             while True:
-                logger.info(i18n["zh"]["common_project_id"])
+                logger.info(i18n[i18n_lang]["common_project_id"])
                 for i in range(len(common_project_id)):
                     logger.info(
                         common_project_id[i]["name"]
@@ -190,9 +212,9 @@ def main():
                         + str(common_project_id[i]["id"])
                     )
                 if len(common_project_id) == 0:
-                    logger.info(i18n["zh"]["empty"])
+                    logger.info(i18n[i18n_lang]["empty"])
                 config["project_id"] = prompt([
-                    inquirer.Text("project_id", message=i18n["zh"]["input_project_id"],
+                    inquirer.Text("project_id", message=i18n[i18n_lang]["input_project_id"],
                                   validate=lambda _, x: x.isdigit())
                 ])["project_id"]
                 url = (
@@ -201,51 +223,51 @@ def main():
                 )
                 response = session.get(url, headers=headers)
                 if response.status_code == 412:
-                    logger.error(i18n["zh"]["not_handled_412"])
+                    logger.error(i18n[i18n_lang]["not_handled_412"])
                     if config["proxy"]:
                         logger.info(
-                            i18n["zh"]["manual_change_ip"].format(
+                            i18n[i18n_lang]["manual_change_ip"].format(
                                 kdl_client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
                         session.close()
                 response = response.json()
                 if response["errno"] == 3:
-                    logger.error(i18n["zh"]["project_id_not_found"])
+                    logger.error(i18n[i18n_lang]["project_id_not_found"])
                     continue
                 if response["data"] == {}:
-                    logger.error(i18n["zh"]["server_no_response"])
+                    logger.error(i18n[i18n_lang]["server_no_response"])
                     continue
                 if "screen_list" not in response['data']:
-                    logger.error(i18n["zh"]["no_screen"])
+                    logger.error(i18n[i18n_lang]["no_screen"])
                     continue
                 if len(response["data"]["screen_list"]) == 0:
-                    logger.error(i18n["zh"]["no_screen"])
+                    logger.error(i18n[i18n_lang]["no_screen"])
                     continue
                 break
-            logger.info(i18n["zh"]["project_name"].format(response["data"]["name"]))
+            logger.info(i18n[i18n_lang]["project_name"].format(response["data"]["name"]))
             config["id_bind"] = response["data"]["id_bind"]
             config["is_paper_ticket"] = response["data"]["has_paper_ticket"]
             screens = response["data"]["screen_list"]
             screen_id = prompt([
-                inquirer.List("screen_id", message=i18n["zh"]["select_screen"],
+                inquirer.List("screen_id", message=i18n[i18n_lang]["select_screen"],
                               choices=[f"{i}. {screens[i]['name']}" for i in range(len(screens))])
             ])["screen_id"].split(".")[0]
-            logger.info(i18n["zh"]["show_screen"].format(screens[int(screen_id)]["name"]))
+            logger.info(i18n[i18n_lang]["show_screen"].format(screens[int(screen_id)]["name"]))
             tickets = screens[int(screen_id)]["ticket_list"]  # type: ignore
             sku_id = prompt([
-                inquirer.List("sku_id", message=i18n["zh"]["select_sku"],
+                inquirer.List("sku_id", message=i18n[i18n_lang]["select_sku"],
                               choices=[f"{i}. {tickets[i]['desc']} {tickets[i]['price'] / 100}元" for i in
                                        range(len(tickets))])
             ])["sku_id"].split(".")[0]
-            logger.info(i18n["zh"]["show_sku"].format(tickets[int(sku_id)]["desc"]))
+            logger.info(i18n[i18n_lang]["show_sku"].format(tickets[int(sku_id)]["desc"]))
             config["screen_id"] = str(screens[int(screen_id)]["id"])
             config["sku_id"] = str(tickets[int(sku_id)]["id"])
             config["pay_money"] = str(tickets[int(sku_id)]["price"])
             config["ticket_desc"] = str(tickets[int(sku_id)]["desc"])
             config["time"] = int(tickets[int(sku_id)]["saleStart"])
             if tickets[int(sku_id)]["discount_act"] is not None:
-                logger.info(i18n["zh"]["show_act"].format(tickets[int(sku_id)]["discount_act"]["act_id"]))
+                logger.info(i18n[i18n_lang]["show_act"].format(tickets[int(sku_id)]["discount_act"]["act_id"]))
                 config["act_id"] = tickets[int(sku_id)]["discount_act"]["act_id"]
                 config["order_type"] = tickets[int(sku_id)]["discount_act"]["act_type"]
             else:
@@ -258,24 +280,26 @@ def main():
                 url = "https://show.bilibili.com/api/ticket/addr/list"
                 resp_ticket = session.get(url, headers=headers)
                 if resp_ticket.status_code == 412:
-                    logger.error(i18n["zh"]["not_handled_412"])
+                    logger.error(i18n[i18n_lang]["not_handled_412"])
                     if config["proxy"]:
                         logger.info(
-                            i18n["zh"]["manual_change_ip"].format(
+                            i18n[i18n_lang]["manual_change_ip"].format(
                                 kdl_client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
                         session.close()
                 addr_list = resp_ticket.json()["data"]["addr_list"]
                 if len(addr_list) == 0:
-                    logger.error("没有收货地址，请先添加收货地址")
+                    logger.error(i18n[i18n_lang]["add_address"])
                 else:
                     addr = prompt([
-                        inquirer.List("addr", message="请选择收货地址", choices=[f"{i}. {addr_list[i]['prov'] + addr_list[i]['city'] + addr_list[i]['area'] + addr_list[i]['addr']} {addr_list[i]['name']} {addr_list[i]['phone']}" for i in range(len(addr_list))])
+                        inquirer.List("addr", message=i18n[i18n_lang]["please_select_address"], \
+                        choices=[f"{i}. {addr_list[i]['prov'] + addr_list[i]['city'] + addr_list[i]['area'] + \
+                        addr_list[i]['addr']} {addr_list[i]['name']} {addr_list[i]['phone']}" for i in range(len(addr_list))])
                     ])["addr"].split(".")[0]
                     addr = addr_list[int(addr)]
-                    logger.info(
-                        f"已选择收货地址：{addr['prov'] + addr['city'] + addr['area'] + addr['addr']} {addr['name']} {addr['phone']}"
+                    logger.info( i18n[i18n_lang]["already_select_address"]
+                        .format(addr['prov'] + addr['city'] + addr['area'] + addr['addr'], addr['name'], addr['phone'])
                     )
                     config["deliver_info"] = json.dumps(
                         {
@@ -302,55 +326,81 @@ def main():
             url = "https://show.bilibili.com/api/ticket/buyer/list"
             response = session.get(url, headers=headers)
             if response.status_code == 412:
-                logger.error(i18n["zh"]["not_handled_412"])
+                logger.error(i18n[i18n_lang]["not_handled_412"])
             buyer_infos = response.json()["data"]["list"]
             config["buyer_info"] = []
             if len(buyer_infos) == 0:
-                logger.error(i18n["zh"]["buyer_empty"])
+                logger.error(i18n[i18n_lang]["buyer_empty"])
                 return
             else:
                 multiselect = True
             if config["id_bind"] == 1:
-                logger.info(i18n["zh"]["id_bind_single"])
+                logger.info(i18n[i18n_lang]["id_bind_single"])
                 multiselect = False
             if multiselect:
                 buyerids = prompt([
                     inquirer.Checkbox(
                         "buyerids",
-                        message=i18n["zh"]["select_buyer"],
+                        message=i18n[i18n_lang]["select_buyer"],
+#    "*"*(len(buyer_infos[int(select)]["name"])-1)+ buyer_infos[int(select)]["name"][-1],
+#    buyer_infos[int(select)]["personal_id"][:4]+ "**********"+ buyer_infos[int(select)]["personal_id"][-4:],
+#    buyer_infos[int(select)]["tel"][:3]+ "****"+ buyer_infos[int(select)]["tel"][-4:],
                         choices=[
-                            f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for
-                            i in range(len(buyer_infos))],
+                            "{}. {} {} {}".format(
+                                i,
+                                "*"*(len(buyer_infos[i]["name"])-1)+ buyer_infos[i]["name"][-1],
+                                buyer_infos[i]["personal_id"][:4]+ "**********"+ buyer_infos[i]["personal_id"][-4:],
+                                buyer_infos[i]["tel"][:3]+ "****"+ buyer_infos[i]["tel"][-4:],
+                            ) for i in range(len(buyer_infos))],
                         validate=lambda _, x: len(x) > 0
                     )
                 ])["buyerids"]
                 buyerids = [int(i.split(".")[0]) for i in buyerids]
                 config["buyer_info"] = []
-                female = False
-                male = False
                 for select in buyerids:
                     config["buyer_info"].append(
                         buyer_infos[int(select)]
                     )
                     logger.info(
-                        i18n["zh"]["selected_buyer"].format(
-                            buyer_infos[int(select)]["name"],
-                            buyer_infos[int(select)]["personal_id"],
-                            buyer_infos[int(select)]["tel"],
+                        i18n[i18n_lang]["selected_buyer"].format(
+                            "*"*(len(buyer_infos[int(select)]["name"])-1)+ buyer_infos[int(select)]["name"][-1],
+                            buyer_infos[int(select)]["personal_id"][:4]+ "**********"+ buyer_infos[int(select)]["personal_id"][-4:],
+                            buyer_infos[int(select)]["tel"][:3]+ "****"+ buyer_infos[int(select)]["tel"][-4:],
                         )
                     )
+#                    if int(buyer_infos[int(select)]["personal_id"][16]) % 2 == 0:
+#                        user_female = True
+#                    else:
+#                        user_male = True
+#                if easter_egg:
+#                    if len(buyerids) == 1:
+#                        logger.info("单身是这样的🤣 情(xiàn)侣(chōng)们只需要相互做搭子就可以逛的很开心, 可是一个人去逛漫展的人们需要考虑的事情就多了。")
+#                    else:
+#                        if user_male and user_female:
+#                            logger.error("小情侣不得house😡")
+#                        elif user_male and not user_female:
+#                            logger.error("我朝，有南通啊！")
+#                            if len(buyerids) == 4:
+#                                logger.error("我朝，开impart啊！")
+#                        elif user_female and not user_male:
+#                            logger.error("我朝，有女同啊！")
             else:
                 index = prompt([
-                    inquirer.List("index", message=i18n["zh"]["select_buyer"], choices=[
-                        f"{i}. {buyer_infos[i]['name']} {buyer_infos[i]['personal_id']} {buyer_infos[i]['tel']}" for i
-                        in range(len(buyer_infos))])
+                    inquirer.List("index", message=i18n[i18n_lang]["select_buyer"], choices=[
+                        "{}. {} {} {}".format(
+                            i,
+                            "*"*(len(buyer_infos[i]["name"])-1)+ buyer_infos[i]["name"][-1],
+                            buyer_infos[i]["personal_id"][:4]+ "**********"+ buyer_infos[i]["personal_id"][-4:],
+                            buyer_infos[i]["tel"][:3]+ "****"+ buyer_infos[i]["tel"][-4:],
+                        ) for i in range(len(buyer_infos))
+                    ])
                 ])["index"]
                 config["buyer_info"].append(buyer_infos[int(index.split(".")[0])])
                 logger.info(
-                    i18n["zh"]["selected_buyer"].format(
-                        buyer_infos[int(index.split(".")[0])]["name"],
-                        buyer_infos[int(index.split(".")[0])]["personal_id"],
-                        buyer_infos[int(index.split(".")[0])]["tel"],
+                    i18n[i18n_lang]["selected_buyer"].format(
+                        "*"*(len(buyer_infos[int(select)]["name"])-1)+ buyer_infos[int(select)]["name"][-1],
+                        buyer_infos[int(select)]["personal_id"][:4]+ "**********"+ buyer_infos[int(select)]["personal_id"][-4:],
+                        buyer_infos[int(select)]["tel"][:3]+ "****"+ buyer_infos[int(select)]["tel"][-4:],
                     )
                 )
             if "count" not in config:
@@ -359,14 +409,14 @@ def main():
         if config["id_bind"] == 0 and (
                 "buyer" not in config or "tel" not in config
         ):
-            logger.info("请添加联系人信息")
-            config["buyer"] = input("联系人姓名：")
+            logger.info(i18n[i18n_lang]["add_contact_info"])
+            config["buyer"] = input(i18n[i18n_lang]["add_contact_name"])
             config["tel"] = prompt([
-                inquirer.Text("tel", message="联系人手机号", validate=lambda _, x: len(x) == 11)
+                inquirer.Text("tel", message=i18n[i18n_lang]["add_contact_tel"], validate=lambda _, x: len(x) == 11)
             ])["tel"]
             if "count" not in config:
                 config["count"] = prompt([
-                    inquirer.Text("count", message="请输入票数", default="1",
+                    inquirer.Text("count", message=i18n[i18n_lang]["add_buy_tickets"], default="1",
                                   validate=lambda _, x: x.isdigit() and int(x) > 0)
                 ])["count"]
         if config["is_paper_ticket"]:
@@ -375,7 +425,8 @@ def main():
                     config["count"]
                 )
                 logger.info(
-                    f"共 {config['count']} 张 {config['ticket_desc']} 票，单张价格为 {int(config['pay_money']) / 100}，纸质票，邮费免去，总价为{config['all_price'] / 100}"
+                    i18n[i18n_lang]["show_all_price_paper_ticket"].format(config['count'],\
+                    config['ticket_desc'], int(config['pay_money']) / 100, 0, config['all_price'] / 100)
                 )
             else:
                 config["all_price"] = (
@@ -383,14 +434,15 @@ def main():
                         + config["express_fee"]
                 )
                 logger.info(
-                    f"共 {config['count']} 张 {config['ticket_desc']} 票，单张价格为 {int(config['pay_money']) / 100}，纸质票，邮费为 {config['express_fee'] / 100}，总价为{config['all_price'] / 100}"
+                    i18n[i18n_lang]["show_all_price_paper_ticket"].format(config['count'], config['ticket_desc'],\
+                    int(config['pay_money']) / 100, config['express_fee'] / 100, config['all_price'] / 100)
                 )
         else:
             config["all_price"] = int(config["pay_money"]) * int(
                 config["count"]
             )
             logger.info(
-                i18n["zh"]["show_all_price_e_ticket"].format(
+                i18n[i18n_lang]["show_all_price_e_ticket"].format(
                     config["count"],
                     config["ticket_desc"],
                     int(config["pay_money"]) / 100,
@@ -403,11 +455,11 @@ def main():
         BHYG.waited = True
         run(BHYG)
     except KeyboardInterrupt:
-        logger.info(i18n["zh"]["exit_manual"])
+        logger.info(i18n[i18n_lang]["exit_manual"])
         return
     except Exception as e:
         track = sentry_sdk.capture_exception(e)
-        logger.error(i18n["zh"]["error_occured"].format(str(e), str(track)))
+        logger.error(i18n[i18n_lang]["error_occured"].format(str(e), str(track)))
         return
     return
 
@@ -416,13 +468,13 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        logger.info(i18n["zh"]["exit_manual"])
+        logger.info(i18n[i18n_lang]["exit_manual"])
     from sentry_sdk import Hub
 
     client = Hub.current.client
     if client is not None:
         client.close(timeout=2.0)
-    logger.info(i18n["zh"]["exit_sleep_15s"])
+    logger.info(i18n[i18n_lang]["exit_sleep_15s"])
     try:
         time.sleep(15)
     except KeyboardInterrupt:

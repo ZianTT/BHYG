@@ -1,37 +1,26 @@
 # -*- mode: python ; coding: utf-8 -*-
-from PyInstaller.utils.hooks import copy_metadata
-import platform
+from PyInstaller.utils.hooks import collect_all
 
-datas = copy_metadata("readchar")
-if platform.system() == "Windows":
-    name = "BHYG-Windows"
-elif platform.system() == "Linux":
-    name = "BHYG-Linux"
-elif platform.system() == "Darwin":
-    print(platform.machine())
-    if "arm" in platform.machine():
-        name = "BHYG-macOS-Apple_Silicon"
-    elif "64" in platform.machine():
-        name = "BHYG-macOS-Intel"
-    else:
-        name = "BHYG-macOS"
-else:
-    name = "BHYG"
+datas = []
+binaries = []
+hiddenimports = ['plyer.platforms.win.notification']
+tmp_ret = collect_all('readchar')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+
 
 a = Analysis(
     ['main.py'],
     pathex=[],
-    binaries=[],
+    binaries=binaries,
     datas=datas,
-    hiddenimports=[],
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    excludes=[],
+    excludes=['PyQt5'],
     noarchive=False,
     optimize=0,
 )
-
 pyz = PYZ(a.pure)
 
 exe = EXE(
@@ -40,11 +29,11 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name=name,
+    name='main',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=False,
+    upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
     console=True,
