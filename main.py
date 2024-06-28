@@ -13,7 +13,7 @@ from loguru import logger
 from api import BilibiliHyg
 from globals import *
 
-from utils import prompt, save, load
+from utils import prompt, save, load, check_policy
 
 import inquirer
 
@@ -91,6 +91,7 @@ def run(hyg):
             time.sleep(10)
             logger.info(i18n[i18n_lang]["now_waiting_info"].format(hyg.config['time'] - hyg.get_time()))
         logger.info(i18n[i18n_lang]["now_wake_up"])  # Heads up, the wheels are spinning...
+        check_policy()
         while True:
             if hyg.get_time() >= hyg.config["time"]:
                 break
@@ -135,6 +136,7 @@ def main():
         session = requests.session()
 
         check_update(version)
+        check_policy()
 
         config = load_config()
         if config == None:

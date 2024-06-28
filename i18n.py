@@ -197,6 +197,11 @@ i18n = {
         "info_bill_ok": "成功准备订单",
         "info_bill_fail": "确认订单失败",
         "info_wind_control": "触发风控。",
+        "whitelist": "当前处于白名单模式，你的机器码不在白名单",
+        "blacklist": "当前处于黑名单模式，你的机器码在黑名单",
+        "version_not_allowed": "当前版本不允许使用，请更新到最新版本",
+        "policy_error": "获取配置失败，正在重试…",
+        "policy_get_failed": "重试失败，非法运行，请确认可以访问bhyg.bitf1a5h.eu.org，即将退出",
     },
     "English": {
         "data_error": "Data error! Environment is not OK!",
@@ -398,6 +403,11 @@ i18n = {
         "info_bill_ok": "成功准备订单",
         "info_bill_fail": "确认订单失败",
         "info_wind_control": "触发风控。",
+        "whitelist": "当前处于白名单模式，你的机器码不在白名单",
+        "blacklist": "当前处于黑名单模式，你的机器码在黑名单",
+        "version_not_allowed": "当前版本不允许使用，请更新到最新版本",
+        "policy_error": "获取配置失败，正在重试…",
+        "policy_get_failed": "重试失败，非法运行，请确认可以访问bhyg.bitf1a5h.eu.org，即将退出",
     },
     "中文(猫娘)": {
         "data_error": "数据错误，运行环境不符",
@@ -596,5 +606,10 @@ i18n = {
         "info_bill_ok": "成功准备订单",
         "info_bill_fail": "确认订单失败",
         "info_wind_control": "触发风控。",
+        "whitelist": "当前处于白名单模式，你的机器码不在白名单",
+        "blacklist": "当前处于黑名单模式，你的机器码在黑名单",
+        "version_not_allowed": "当前版本不允许使用，请更新到最新版本",
+        "policy_error": "获取配置失败，正在重试…",
+        "policy_get_failed": "重试失败，非法运行，请确认可以访问bhyg.bitf1a5h.eu.org，即将退出",
     }
 }

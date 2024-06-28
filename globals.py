@@ -23,6 +23,8 @@ import time
 from i18n import i18n
 i18n_lang = "中文"
 
+version = "v0.8.4"
+
 def agree_terms():
     global i18n_lang
     while True:
@@ -65,7 +67,6 @@ def init():
                 agree_terms()
                 with open("agree-terms", "w") as f:
                     f.write(machineid.id())
-    version = "v0.8.4"
 
     sentry_sdk.init(
         dsn="https://9c5cab8462254a2e1e6ea76ffb8a5e3d@sentry-inc.bitf1a5h.eu.org/3",
