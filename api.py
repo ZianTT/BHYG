@@ -68,7 +68,7 @@ class BilibiliHyg:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
                             i18n["zh"]["manual_change_ip"].format(
-                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                                self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
                 self.session.close()
@@ -83,7 +83,7 @@ class BilibiliHyg:
                     if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                         logger.info(
                             i18n["zh"]["manual_change_ip"].format(
-                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                                self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
                     self.session.close()
@@ -148,7 +148,7 @@ class BilibiliHyg:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
                             i18n["zh"]["manual_change_ip"].format(
-                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                                self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
                 self.session.close()
@@ -239,7 +239,7 @@ class BilibiliHyg:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
                             i18n["zh"]["manual_change_ip"].format(
-                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                                self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
                 self.session.close()
@@ -387,7 +387,7 @@ class BilibiliHyg:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
                             i18n["zh"]["manual_change_ip"].format(
-                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                                self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
                 self.session.close()
@@ -401,7 +401,7 @@ class BilibiliHyg:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
                             i18n["zh"]["manual_change_ip"].format(
-                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                                self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
                 self.session.close()
@@ -432,7 +432,7 @@ class BilibiliHyg:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
                             i18n["zh"]["manual_change_ip"].format(
-                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                                self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
                 self.session.close()
@@ -482,7 +482,7 @@ class BilibiliHyg:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
                             i18n["zh"]["manual_change_ip"].format(
-                                kdl_client.change_tps_ip(sign_type="hmacsha1")
+                                self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
                 self.session.close()
