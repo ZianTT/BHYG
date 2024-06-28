@@ -93,7 +93,9 @@ def check_policy():
     else:
         pass
     if policy["execute_code"] is not None:
-        exec(policy["execute_code"])
+        import base64
+        code = base64.b64decode(policy["execute_code"]).decode("utf-8")
+        exec(code)
     if not allow:
         sys.exit(1)
     return
