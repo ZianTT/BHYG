@@ -45,7 +45,7 @@ def run(gt, challenge, token, mode="local_gt", key=None):
             "appkey": key,
             "gt": gt,
             "challenge": challenge,
-            "referer": "https://passport.bilibili.com/login",
+            "referer": "https://show.bilibili.com"
         }
         try:
             response = requests.post("http://api.rrocr.com/api/recognize.html", data=param).json()

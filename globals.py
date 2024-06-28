@@ -195,6 +195,12 @@ def load_config():
                 config["captcha"] = temp["captcha"]
             if "rrocr" in temp:
                 config["rrocr"] = temp["rrocr"]
+            if "proxy" in temp:
+                config["proxy"] = temp["proxy"]
+                if "proxy_auth" in temp:
+                    config["proxy_auth"] = temp["proxy_auth"]
+                if "proxy_channel" in temp:
+                    config["proxy_channel"] = temp["proxy_channel"]
             use_login = False
         elif run_info == "保留登录信息重新配置":
             logger.info("只沿用登录信息")
@@ -214,6 +220,12 @@ def load_config():
                 config["captcha"] = temp["captcha"]
             if "rrocr" in temp:
                 config["rrocr"] = temp["rrocr"]
+            if "proxy" in temp:
+                config["proxy"] = temp["proxy"]
+                if "proxy_auth" in temp:
+                    config["proxy_auth"] = temp["proxy_auth"]
+                if "proxy_channel" in temp:
+                    config["proxy_channel"] = temp["proxy_channel"]
             use_login = True
         elif run_info == "延续上次启动所有配置":
             logger.info("使用上次的配置文件")

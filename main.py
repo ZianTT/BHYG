@@ -307,6 +307,7 @@ def main():
             config["buyer_info"] = []
             if len(buyer_infos) == 0:
                 logger.error(i18n["zh"]["buyer_empty"])
+                return
             else:
                 multiselect = True
             if config["id_bind"] == 1:

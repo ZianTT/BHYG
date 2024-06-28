@@ -162,7 +162,7 @@ class BilibiliHyg:
         time_start = time.time()
         self.captcha_data = run(gt, challenge, token, mode = self.config["captcha"], key = self.config["rrocr"])
         delta = time.time() - time_start
-        sdk.metrics.distribution(
+        self.sdk.metrics.distribution(
             key="gt_solve_time",
             value=delta*1000,
             unit="millisecond"
