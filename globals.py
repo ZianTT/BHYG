@@ -173,6 +173,8 @@ def load_config():
             config = {}
             if "pushplus" in temp:
                 config["pushplus"] = temp["pushplus"]
+            if "webhook" in temp:
+                config["webhook"] = temp["webhook"]
             if "ua" in temp:
                 config["ua"] = temp["pushplus"]
             if "captcha" in temp:
@@ -198,6 +200,8 @@ def load_config():
                 config["cookie"] = temp["cookie"]
             if "pushplus" in temp:
                 config["pushplus"] = temp["pushplus"]
+            if "webhook" in temp:
+                config["webhook"] = temp["webhook"]
             if "phone" in temp:
                 config["phone"] = temp["phone"]
             if "captcha" in temp:

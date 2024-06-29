@@ -76,6 +76,18 @@ def utility(config):
         config["pushplus"] = token
         logger.info(i18n_gt()["pushplus_on"])
         save(config)
+    
+    def webhook_config(config):
+        webhook = input(i18n_gt()["webhook"])
+        if webhook == "":
+            if "webhook" in config:
+                config.pop("webhook")
+            logger.info(i18n_gt()["webhook_off"])
+            save(config)
+            return
+        config["webhook"] = webhook
+        logger.info(i18n_gt()["webhook_on"])
+        save(config)
 
     def save_phone(config):
         phone = input(i18n_gt()["input_your_phone"])
@@ -140,6 +152,7 @@ def utility(config):
                       i18n_gt()["tool_phone_prefill"],
                       i18n_gt()["tool_proxy_setting"],
                       i18n_gt()["tool_capacha_mode" ],
+                      i18n_gt()["tool_webhook"      ],
                       i18n_gt()["back"              ]],
         )])
     if select["select"] ==      i18n_gt()["tool_add_buyer"    ]:
@@ -171,6 +184,9 @@ def utility(config):
         return utility(config)
     elif select["select"] ==    i18n_gt()["tool_capacha_mode" ]:
         captcha_mode(config)
+        return utility(config)
+    elif select["select"] ==    i18n_gt()["tool_webhook"      ]:
+        webhook_config(config)
         return utility(config)
     elif select["select"] ==    i18n_gt()["back"              ]:
         return
