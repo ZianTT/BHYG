@@ -43,9 +43,11 @@ class BilibiliHyg:
         if self.config["mode"] == 'time':
             logger.info(i18n_gt()["now_mode_time_on"])
             logger.info(i18n_gt()["get_token_15min"])
-            while self.get_time() < self.config["time"]-3:
+            while self.get_time() < self.config["time"]-15:
                 time.sleep(10)
                 logger.info(i18n_gt()["now_waiting_info"].format((self.config["time"]-self.get_time())))
+            while self.get_time() < self.config["time"]:
+                pass
         logger.info(i18n_gt()["get_token_finish"])
         self.token = self.get_token()
         logger.info(i18n_gt()["will_pay_bill"])
