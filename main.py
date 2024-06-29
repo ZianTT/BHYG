@@ -174,14 +174,6 @@ def main():
             logger.info(
                 i18n_gt()["test_proxy"].format(kdl_client.tps_current_ip(sign_type="hmacsha1"))
             )
-        if "again" not in config:
-            choice = prompt([inquirer.List("again", message=i18n_gt()["input_is_allow_again"],
-                                           choices=[i18n_gt()["yes"], i18n_gt()["no"]], default=i18n_gt()["yes"])])[
-                "again"]
-            if choice == i18n_gt()["no"]:
-                config["again"] = False
-            else:
-                config["again"] = True
         if (
                 "project_id" not in config
                 or "screen_id" not in config

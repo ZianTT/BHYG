@@ -373,8 +373,7 @@ class BilibiliHyg:
             data["deliver_info"] = self.config["deliver_info"]
         if "act_id" in self.config:
             data["act_id"] = self.config["act_id"]
-        if self.config["again"]:
-            data["again"] = 1
+        data["again"] = 1
 
         try:
             response = self.session.post(url, headers=self.headers, data=data)
