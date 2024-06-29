@@ -12,8 +12,12 @@ from loguru import logger
 from i18n import i18n
 
 from utils import save, load
+from globals import *
 
 class BilibiliHyg:
+    global sdk
+    global i18n_lang
+    from globals import i18n_lang
     def __init__(self, config, sdk,client,session):
         self.waited = False
         # self.sdk = sdk
@@ -39,14 +43,14 @@ class BilibiliHyg:
         if self.client != None:
             self.ip = self.client.tps_current_ip(sign_type="hmacsha1")
         if self.config["mode"] == 'time':
-            logger.info("当前为定时抢票模式")
-            logger.info("等待到达开票时间前15分钟以获取token...")
+            logger.info(i18n[i18n_lang]["now_mode_time_on"])
+            logger.info(i18n[i18n_lang]["get_token_15min"])
             while self.get_time() < self.config["time"]-900:
                 time.sleep(10)
-                logger.info("距离开票时间还有{:.2f}秒".format((self.config["time"]-self.get_time())))
-        logger.info("准备完毕，获取token中...")
+                logger.info(i18n[i18n_lang]["now_waiting_info"].format((self.config["time"]-self.get_time())))
+        logger.info(i18n[i18n_lang]["get_token_finish"])
         self.token = self.get_token()
-        logger.info("即将开始下单")
+        logger.info(i18n[i18n_lang]["will_pay_bill"])
 
     def get_time(self):
         return float(time.time() + self.config["time_offset"])
@@ -63,11 +67,11 @@ class BilibiliHyg:
             requests.exceptions.ReadTimeout,
             requests.exceptions.ConnectionError,
         ):
-            logger.error("网络连接超时")
+            logger.error(i18n[i18n_lang]["network_timeout"])
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                            i18n["zh"]["manual_change_ip"].format(
+                            i18n[i18n_lang]["manual_change_ip"].format(
                                 self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
@@ -76,13 +80,11 @@ class BilibiliHyg:
             return -1, 0
         try:
             if response.status_code == 412:
-                logger.error(
-                    "可能被业务风控\n该种业务风控请及时暂停，否则可能会引起更大问题。"
-                )
+                logger.error(i18n[i18n_lang]["wind_control"])
                 if self.config["proxy"]:
                     if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                         logger.info(
-                            i18n["zh"]["manual_change_ip"].format(
+                            i18n[i18n_lang]["manual_change_ip"].format(
                                 self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
@@ -90,12 +92,10 @@ class BilibiliHyg:
                     return self.get_ticket_status()
                 else:
                     self.risk = True
-                    logger.error(
-                        "你也可以尝试更换网络环境，如重启流量（飞行模式开关）重新拨号（重启光猫）等"
-                    )
-                    input("请确认排除问题后按三下回车继续")
-                    input("请再按两下回车继续")
-                    input("请再按一下回车继续")
+                    logger.error(i18n[i18n_lang]["net_method"])
+                    input(i18n[i18n_lang]["res_3_returns"])
+                    input(i18n[i18n_lang]["res_2_returns"])
+                    input(i18n[i18n_lang]["res_1_return"])
                     return -1, 0
             screens = response.json()["data"]["screen_list"]
             # 找到 字段id为screen_id的screen
@@ -105,7 +105,7 @@ class BilibiliHyg:
                     screen = screens[i]
                     break
             if screen == {}:
-                logger.error("未找到场次")
+                logger.error(i18n[i18n_lang]["no_found_screen"])
                 return -1, 0
             # 找到 字段id为sku_id的sku
             skus = screen["ticket_list"]
@@ -115,11 +115,11 @@ class BilibiliHyg:
                     sku = skus[i]
                     break
             if sku == {}:
-                logger.error("未找到票档")
+                logger.error(i18n[i18n_lang]["no_found_sku"])
                 return -1, 0
             return int(sku["sale_flag_number"]), sku["clickable"]
         except:
-            logger.error("可能被风控")
+            logger.error(i18n[i18n_lang]["may_wind_control"])
             return -1, 0
 
     def get_prepare(self):
@@ -143,11 +143,11 @@ class BilibiliHyg:
             data["act_id"] = self.config["act_id"]
         response = self.session.post(url, headers=self.headers, data=data)
         if response.status_code == 412:
-            logger.error(i18n["zh"]["not_handled_412"])
+            logger.error(i18n[i18n_lang]["not_handled_412"])
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                            i18n["zh"]["manual_change_ip"].format(
+                            i18n[i18n_lang]["manual_change_ip"].format(
                                 self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
@@ -192,7 +192,7 @@ class BilibiliHyg:
         if "phone" in self.config:
             phone = self.config["phone"]
         else:
-            phone = input("请输入手机号：")
+            phone = input(i18n[i18n_lang]["input_phone_num"]+": ")
         self.captcha_data = {
             "code": phone,
         }
@@ -208,7 +208,7 @@ class BilibiliHyg:
                         data=self.captcha_data,
         ).json()["data"]["is_valid"]
         if not success:
-            logger.error("验证失败")
+            logger.error(i18n[i18n_lang]["input_verify_fail"])
             if "phone" in self.config:
                 self.config.pop("phone")
             return False
@@ -234,34 +234,34 @@ class BilibiliHyg:
         )
         response = self.session.get(url, headers=self.headers)
         if response.status_code == 412:
-            logger.error(i18n["zh"]["not_handled_412"])
+            logger.error(i18n[i18n_lang]["not_handled_412"])
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                            i18n["zh"]["manual_change_ip"].format(
+                            i18n[i18n_lang]["manual_change_ip"].format(
                                 self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
                 self.session.close()
                 return self.confirm_info(token)
         response = response.json()
-        logger.info("信息已确认")
+        logger.info(i18n[i18n_lang]["info_confirmed"])
         logger.debug(response)
         self.config["order_type"] = response["data"]["order_type"]
         if response["data"]["act"] is not None:
-            logger.info("检测到优惠活动")
+            logger.info(i18n[i18n_lang]["info_discount"])
             self.config["act_id"] = response["data"]["act"]["act_id"]
         return
 
     def get_token(self):
         info = self.get_prepare()
         if info == {}:
-            logger.warning("未开放购票或被风控，请检查配置问题，休息1s")
+            logger.warning(i18n[i18n_lang]["info_no_ticket"])
             time.sleep(1)
             self.get_token()
         if info["token"]:
             logger.success(
-                "成功准备订单"
+                i18n[i18n_lang]["info_bill_ok"]
                 + "https://show.bilibili.com/platform/confirmOrder.html?token="
                 + info["token"]
             )
@@ -273,15 +273,16 @@ class BilibiliHyg:
             try:
                 self.confirm_info(info["token"])
             except:
-                logger.error("确认订单失败")
+                logger.error(i18n[i18n_lang]["info_bill_fail"])
             return info["token"]
         else:
-            logger.warning("触发风控。")
+            logger.warning(i18n[i18n_lang]["info_wind_control"])
             # self.sdk.add_breadcrumb(
             #     category="gaia",
             #     message="Gaia found",
             #     level="info",
             # )
+
             riskParam = info["ga_data"]["riskParams"]
             # https://api.bilibili.com/x/gaia-vgate/v1/register
             risk = self.session.post(
@@ -386,7 +387,7 @@ class BilibiliHyg:
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                            i18n["zh"]["manual_change_ip"].format(
+                            i18n[i18n_lang]["manual_change_ip"].format(
                                 self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
@@ -400,7 +401,7 @@ class BilibiliHyg:
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                            i18n["zh"]["manual_change_ip"].format(
+                            i18n[i18n_lang]["manual_change_ip"].format(
                                 self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
@@ -427,11 +428,11 @@ class BilibiliHyg:
         logger.debug(url)
         response = self.session.get(url, headers=self.headers)
         if response.status_code == 412:
-            logger.error(i18n["zh"]["not_handled_412"])
+            logger.error(i18n[i18n_lang]["not_handled_412"])
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                            i18n["zh"]["manual_change_ip"].format(
+                            i18n[i18n_lang]["manual_change_ip"].format(
                                 self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
@@ -477,11 +478,11 @@ class BilibiliHyg:
         url = "https://show.bilibili.com/api/ticket/order/info?order_id=" + str(order_id)
         response = self.session.get(url, headers=self.headers)
         if response.status_code == 412:
-            logger.error(i18n["zh"]["not_handled_412"])
+            logger.error(i18n[i18n_lang]["not_handled_412"])
             if self.config["proxy"]:
                 if self.ip == self.client.tps_current_ip(sign_type="hmacsha1"):
                     logger.info(
-                            i18n["zh"]["manual_change_ip"].format(
+                            i18n[i18n_lang]["manual_change_ip"].format(
                                 self.client.change_tps_ip(sign_type="hmacsha1")
                             )
                         )
