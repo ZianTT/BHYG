@@ -4,7 +4,7 @@ import time
 
 import requests
 
-import bili_ticket_gt_python
+
 from loguru import logger
 
 from globals import *
@@ -12,21 +12,11 @@ from globals import *
 # REF: https://github.com/Amorter/biliTicker_gt
 # LICENSE: GPL-3.0
 
-class Validator():
-    def __init__(self):
-        self.click = bili_ticket_gt_python.ClickPy()
-        pass
-
-    def validate(self, gt, challenge) -> str:
-        try:
-            validate = self.click.simple_match_retry(gt, challenge)
-            return validate
-        except Exception as e:
-            return ""
 
 
 def run(gt, challenge, token, mode="local_gt", key=None):
     if mode == "local_gt":
+        import bili_ticket_gt_python
         try:
             validator = Validator()
             validate_string = validator.validate(gt, challenge)
@@ -80,7 +70,24 @@ def run(gt, challenge, token, mode="local_gt", key=None):
         }
         return data
     else:
+
         logger.critical("暂不支持该验证码模式")
+        
+
+
+class Validator():
+    import bili_ticket_gt_python
+    def __init__(self):
+        import bili_ticket_gt_python
+        self.click = bili_ticket_gt_python.ClickPy()
+        pass
+
+    def validate(self, gt, challenge) -> str:
+        try:
+            validate = self.click.simple_match_retry(gt, challenge)
+            return validate
+        except Exception as e:
+            return ""
 
 
 if __name__ == "__main__":
