@@ -543,11 +543,11 @@ class BilibiliHyg:
                 orderid = result["data"]["orderId"]
             if self.fake_ticket(pay_token, order_id = orderid):
                 # self.logout()
-                if "pushplus" in self.config:
+                if "pushplus" in self.config or "webhook" in self.config:
                     # https://www.pushplus.plus/send/
-                    url = "https://www.pushplus.plus/send"
+                    url = self.config["webhook"] if "webhook" in self.config else "https://www.pushplus.plus/send"
                     response = requests.post(url, json={
-                        "token": self.config["pushplus"],
+                        "token": self.config["pushplus"] if "pushplus" in self.config else "",
                         "title": i18n_gt()["BHYG_notify"],
                         "content": i18n_gt()["rob_ok_paying"]+self.order_id,
                     }).json()
