@@ -21,7 +21,7 @@ from utils import prompt, save, load
 import time
 from i18n import *
 
-version = "v0.8.4"
+version = "v0.8.5"
 
 def agree_terms():
     while True:
