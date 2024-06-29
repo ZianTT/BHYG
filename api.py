@@ -43,7 +43,7 @@ class BilibiliHyg:
         if self.config["mode"] == 'time':
             logger.info(i18n_gt()["now_mode_time_on"])
             logger.info(i18n_gt()["get_token_15min"])
-            while self.get_time() < self.config["time"]-900:
+            while self.get_time() < self.config["time"]-3:
                 time.sleep(10)
                 logger.info(i18n_gt()["now_waiting_info"].format((self.config["time"]-self.get_time())))
         logger.info(i18n_gt()["get_token_finish"])
@@ -256,7 +256,7 @@ class BilibiliHyg:
         if info == {}:
             logger.warning(i18n_gt()["info_no_ticket"])
             time.sleep(1)
-            self.get_token()
+            return self.get_token()
         if info["token"]:
             logger.success(
                 i18n_gt()["info_bill_ok"]
@@ -272,6 +272,7 @@ class BilibiliHyg:
                 self.confirm_info(info["token"])
             except:
                 logger.error(i18n_gt()["info_bill_fail"])
+                return self.get_token()
             return info["token"]
         else:
             logger.warning(i18n_gt()["info_wind_control"])
