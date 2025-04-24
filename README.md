@@ -2,7 +2,9 @@
 
 ## 公告
 
-已关闭源码，后续随缘开放下载。
+由于api改变，风控加强等原因，本项目正在进行积极重构，预计将于六月中下旬完成，敬请期待。Legacy版本暂不开放源码，感谢理解。
+
+本项目是[biliticket](https://github.com/biliticket)计划的一部分。
 
 ## Star History
 
