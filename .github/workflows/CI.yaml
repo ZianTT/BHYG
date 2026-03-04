@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-22.04, macos-15-intel, macos-latest]
+        # os: [windows-latest, ubuntu-latest, macos-15-intel, macos-latest, windows-11-arm]
+        include:
+          - os: windows-latest
+            build: BHYG-Windows.exe
+          - os: ubuntu-22.04
+            build: BHYG-Linux
+          - os: macos-15-intel
+            build: BHYG-macOS-Intel.bin
+          - os: macos-latest
+            build: BHYG-macOS-Apple_Silicon.bin
+          # - os: windows-11-arm
+          #   build: BHYG-Windows-arm.exe
+    runs-on: ${{ matrix.os }}
+    env:
+      version: ${{ github.ref_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.13
+          cache: 'pip'
+          cache-dependency-path: |
+            **/requirements*.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        working-directory: ./SB
+
+      - name: Install Cython
+        run: pip install Cython
+        working-directory: ./SB
+
+      - name: Nuitka Build
+        uses: Nuitka/Nuitka-Action@main
+        with:
+          script-name: loader.py
+          mode: onefile
+          include-data-dir: ./locale=locale
+          output-file: ${{ github.ref_name }}-${{ matrix.build }}
+          working-directory: ./SB
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          archive: false
+          path: SB/build/${{ github.ref_name }}-${{ matrix.build }}
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: SB/build/${{ github.ref_name }}-${{ matrix.build }}
