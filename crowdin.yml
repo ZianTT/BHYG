@@ -1,3 +1,7 @@
 files:
   - source: /locale/zh_CN.json
     translation: /locale/%locale_with_underscore%.json
+    languages_mapping:
+     zh_TW:zh_Hant
+     ja:ja_JP
+     neko:neko
