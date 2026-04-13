@@ -27,7 +27,7 @@ from push import do_push
 from typing import final
 
 POLICY_BASE = "https://not.available.in.oss.invalid"
-VERSION = "v1.12.1 OSS"
+VERSION = "v1.12.3 OSS"
 
 USE_CAPTCHA = False
 
@@ -126,6 +126,7 @@ class BHYG(metaclass=ProtectedMeta):
             self.config["uid_buyer"] = {}
         if "order_interval" not in self.config:
             self.config["order_interval"] = 0.3
+        self.click = None
         if USE_CAPTCHA:
             try:
                 logger.info(self.i18n("setting_up_captcha_system"))
@@ -603,7 +604,7 @@ class BHYG(metaclass=ProtectedMeta):
             if (
                 self.config["buyer"] == ""
                 or self.config["tel"] == ""
-                or len(self.config["tel"]) != 11
+                or len(self.config.get("tel", "")) != 11
             ):
                 return False
         elif self.config["id_bind"] == 1 or self.config["id_bind"] == 2:
@@ -952,7 +953,7 @@ class BHYG(metaclass=ProtectedMeta):
                     logger.debug(prereq_resp.headers)
                     while (
                         reserve_begin_time
-                        + self.config.get("after_sale_begin_delay", 0)
+                        + self.config.get("after_sale_begin_delay", 300)
                         > time.time()
                     ):
                         continue
@@ -1212,7 +1213,7 @@ class BHYG(metaclass=ProtectedMeta):
             )
         logger.debug("Order create response:")
         logger.debug(resp)
-        if resp["code"] == 0:
+        if resp["code"] == 0 and "defaultBBR" not in resp.get("message", ""):
             logger.success(self.i18n("order_create_success"))
             # TODO: After success event
             logger.debug("Order create success, doing after success event...")
@@ -1316,8 +1317,14 @@ class BHYG(metaclass=ProtectedMeta):
                 else:
                     logger.error(self.i18n("push_failed"))
             return True
+        elif resp["code"] == 0 and "defaultBBR" in resp.get("message", ""):
+            logger.warning(self.i18n("request_default_bbr"))
         elif resp["code"] == -114514:
             logger.error(self.i18n("request_failed").format(message=resp["message"]))
+        elif resp["code"] == 504:
+            logger.error(self.i18n("504_gateway_timeout"))
+        elif resp["code"] == 503:
+            logger.error(self.i18n("503_service_unavailable"))
         # MODEL: STAGE 0
         elif resp["code"] == 412:
             self.count_412 += 1
@@ -1407,12 +1414,12 @@ class BHYG(metaclass=ProtectedMeta):
         )
         buyers = ""
         if self.config.get("id_bind", None) == 0:
-            buyers = self.config["buyer"]
+            buyers = self.config.get("buyer", "未知")
         elif self.config.get("id_bind", None) == 1 or self.config.get("id_bind", None) == 2:
             buyers = ", ".join(
                 [
                     f"{buyer['name'][0]}{'*' * (len(buyer['name']) - 1)}"
-                    for buyer in self.config["id_buyer"]
+                    for buyer in self.config.get("id_buyer", [])
                 ]
             )
         else:
@@ -1510,7 +1517,7 @@ class BHYG(metaclass=ProtectedMeta):
                 logger.debug(prereq_resp.headers)
                 while (
                     self.config["sale_start_time"]
-                    + self.config.get("after_sale_begin_delay", 0)
+                    + self.config.get("after_sale_begin_delay", 300)
                     > time.time()
                 ):
                     continue
@@ -1874,7 +1881,7 @@ class BHYG(metaclass=ProtectedMeta):
 
         info_msg_lines.append(
             self.i18n("cc_saledelay").format(
-                delay=self.config.get("after_sale_begin_delay", 0)
+                delay=self.config.get("after_sale_begin_delay", 300)
             )
         )
 
