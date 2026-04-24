@@ -27,7 +27,7 @@ from push import do_push
 from typing import final
 
 POLICY_BASE = "https://not.available.in.oss.invalid"
-VERSION = "v1.12.3 OSS"
+VERSION = "v1.12.4 OSS"
 
 USE_CAPTCHA = False
 
