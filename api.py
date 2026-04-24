@@ -1171,7 +1171,7 @@ class BHYG(metaclass=ProtectedMeta):
         if self.config["hotProject"]:
             data["ctoken"] = (
                 self.client.generate_ctoken(
-                    timer=10 + 2 * int(time.time()) - 2 * int(self.token_gen)
+                    timer=10 + 2 * int(time.time()) - 2 * int(self.token_gen if hasattr(self, "token_gen") else time.time())
                 )
                 if self.config.get("ctoken", "") == ""
                 else self.config.get("ctoken", "")
