@@ -702,6 +702,7 @@ class BHYG(metaclass=ProtectedMeta):
                     data["ptoken"] = ""
                 data["ptoken"] = data["ptoken"].replace("=", "")
                 logger.debug(f"Prepared Token: {data['token']} {data['ptoken']}")
+                self.token_gen = time.time()
                 break
             elif resp["code"] == -401:
                 logger.warning(self.i18n("gaia_detected"))
@@ -1171,7 +1172,7 @@ class BHYG(metaclass=ProtectedMeta):
         if self.config["hotProject"]:
             data["ctoken"] = (
                 self.client.generate_ctoken(
-                    timer=10 + 2 * int(time.time()) - 2 * int(self.token_gen if hasattr(self, "token_gen") else time.time())
+                    timer=10 + 2 * int(time.time()) - 2 * int(self.token_gen)
                 )
                 if self.config.get("ctoken", "") == ""
                 else self.config.get("ctoken", "")
