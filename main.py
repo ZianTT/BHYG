@@ -23,8 +23,8 @@ BANNER = """
 3 年过去，愿初心仍在。
 """
 
-REGULAR_PROJECT_ID_MSG = "常用ProjectId:\n上海·星铁LAND2026: 115413"
-DEFAULT_PID = 115413
+REGULAR_PROJECT_ID_MSG = "常用ProjectId:\n上海·BILIBILI MACRO LINK 2026: 1001701"
+DEFAULT_PID = 1001701
 
 def is_terminal_available():
     try:
