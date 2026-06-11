@@ -397,6 +397,8 @@ class BilibiliClient:
 
 
     def generate_ctoken(self, m1=-1, m2=-1, m3=-1, m4=-1, m5=-1, m6=-1, m7=-1, m8=-1, m9=-1, touchend=-1, visibilitychange=-1, beforeunload=-1, timer=-1, ticket_collection_t=0, openWindow=-1):
+        # COPYRIGHT 2026 ZianTT. ALL RIGHT RESERVED.
+        # UNAUTHORIZED COPY AND COMMERCIALIZATION ARE NOT ALLOWED
         def m(t, env_data):
             idx1 = t % 16
             idx2 = (3 * t) % 16
@@ -498,6 +500,7 @@ class BilibiliClient:
         token_bytes += b"\x00"
         token_bytes += data["m9"].to_bytes(1, byteorder='big')
         token_bytes += b"\x00"
+        # COPYRIGHT 2026 ZianTT. ALL RIGHT RESERVED.
         return base64.b64encode(token_bytes).decode('utf-8')
 
     def decode_ctoken(self, ctoken):
