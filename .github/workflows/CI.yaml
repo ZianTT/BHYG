@@ -56,6 +56,8 @@ jobs:
           mode: onefile
           include-data-dir: ./locale=locale
           output-file: ${{ github.ref_name }}-${{ matrix.build }}
+          include-package:
+            sentry_sdk.integrations
 
       - name: Add executable attr
         run: chmod +x build/*
