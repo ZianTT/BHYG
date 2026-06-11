@@ -461,7 +461,6 @@ def main():
         ]
         # main_menu.insert(4, client.i18n("solve_captcha"))
         main_menu.insert(4, client.i18n("lottery"))
-        main_menu.insert(4, client.i18n("switch_use_prepare"))
         main_menu.insert(4, client.i18n("bws"))
         main_menu.insert(4, client.i18n("change_check_stock_interval"))
         main_menu.insert(4, client.i18n("change_check_stock_available_dalay"))
@@ -521,19 +520,6 @@ def main():
                     client.save_config()
                 elif action == client.i18n("check_order"):
                     client.check_order()
-                elif action == client.i18n("switch_use_prepare"):
-                    use_prepare = questionary.select(
-                        client.i18n("switch_use_prepare"),
-                        choices=[
-                            client.i18n("yes"),
-                            client.i18n("no"),
-                        ],
-                    ).ask()
-                    if use_prepare == client.i18n("yes"):
-                        client.config["use_prepare_token"] = True
-                    else:
-                        client.config["use_prepare_token"] = False
-                    client.save_config()
                 elif action == client.i18n("bws"):
                     client.rush_bws()
                 elif action == client.i18n("change_after_sale_begin_delay"):

@@ -1,3 +1,4 @@
+import base64
 import hmac
 import time
 import uuid
@@ -374,96 +375,105 @@ class BilibiliClient:
         token = token.translate(str.maketrans(map_orig, map_real))
         return token
 
-    def generate_ctoken(
-        self,
-        touchend=-1,
-        visibilitychange=-1,
-        openWindow=-1,
-        timer=-1,
-        ticket_collection_t=0,
-        scrollX=0,
-        scrollY=0,
-        innerWidth=255,
-        innerHeight=255, 
-        outerWidth=255,
-        outerHeight=255,
-        screenX=0,
-        screenY=0,
-        screenWidth=255,
-        screenHeight=255,
-        screenAvailWidth=255
-    ):
-        random.seed(time.time()*1000)
-        import base64
+    def _get_env_data(self):
+        return [
+            0,
+            0,
+            random.randint(1000, 2000),
+            random.randint(800, 1200),
+            random.randint(1600, 2400),
+            random.randint(800, 1200),
+            0,
+            0,
+            random.randint(1600, 2400),
+            random.randint(800, 1200),
+            random.randint(1600, 2400),
+            random.randint(10, 50),
+            random.randint(100, 200),
+            random.randint(50, 100),
+            20,
+            int(time.time() * 1000) % 256
+        ]
+
+
+    def generate_ctoken(self, m1=-1, m2=-1, m3=-1, m4=-1, m5=-1, m6=-1, m7=-1, m8=-1, m9=-1, touchend=-1, visibilitychange=-1, beforeunload=-1, timer=-1, ticket_collection_t=0, openWindow=-1):
+        def m(t, env_data):
+            idx1 = t % 16
+            idx2 = (3 * t) % 16
+            result = (env_data[idx1] + env_data[idx2] + 17 * t) & 255
+            return result
         if touchend == -1:
             touchend = random.randint(30, 50)
         if visibilitychange == -1:
             visibilitychange = random.randint(10, 50)
-        if openWindow == -1:
-            openWindow = random.randint(10, 50)
+        if beforeunload == -1:
+            if openWindow != -1:
+                beforeunload = openWindow
+            else:
+                beforeunload = random.randint(10, 50)
         if timer == -1:
             timer = random.randint(1, 10)
+        env_data = self._get_env_data()
+        if m1 == -1:
+            m1 = m(1, env_data)
+        if m2 == -1:
+            m2 = m(2, env_data)
+        if m3 == -1:
+            m3 = m(3, env_data)
+        if m4 == -1:
+            m4 = m(4, env_data)
+        if m5 == -1:
+            m5 = m(5, env_data)
+        if m6 == -1:
+            m6 = m(6, env_data)
+        if m7 == -1:
+            m7 = m(7, env_data)
+        if m8 == -1:
+            m8 = m(8, env_data)
+        if m9 == -1:
+            m9 = m(9, env_data)
+        token_bytes = b""
         data = {
+            "m1": m1,
+            "m2": m2,
+            "m3": m3,
+            "m4": m4,
+            "m5": m5,
+            "m6": m6,
+            "m7": m7,
+            "m8": m8,
+            "m9": m9,
             "touchend": touchend,
             "visibilitychange": visibilitychange,
-            "openWindow": openWindow,
+            "beforeunload": beforeunload,
             "timer": timer,
             "ticket_collection_t": ticket_collection_t,
-            "scrollX": scrollX,
-            "scrollY": scrollY,
-            "innerWidth": innerWidth,
-            "innerHeight": innerHeight,
-            "outerWidth": outerWidth,
-            "outerHeight": outerHeight,
-            "screenX": screenX,
-            "screenY": screenY,
-            "screenWidth": screenWidth,
-            "screenHeight": screenHeight,
-            "screenAvailWidth": screenAvailWidth
         }
-        token_bytes = b""
-        # ff 00 22 00 ff 12 ff ff 04 a8 00 00 ff 00 00 ff
-        # 15 00 02 00 ff 00 ff ff 00 53 00 00 ff 00 00 ff
+        token_bytes += data["m1"].to_bytes(1, byteorder='big')
+        token_bytes += b"\x00"
         try:
             token_bytes += data["touchend"].to_bytes(1, byteorder='big')
-            token_bytes += b"\x00"
         except OverflowError:
-            token_bytes += b"\xff\x00"
-        try:
-            token_bytes += data["scrollX"].to_bytes(1, byteorder='big')
-            token_bytes += b"\x00"
-        except OverflowError:
-            token_bytes += b"\xff\x00"
+            token_bytes += b"\xff"
+        token_bytes += b"\x00"
+        token_bytes += data["m2"].to_bytes(1, byteorder='big')
+        token_bytes += b"\x00"
         try:
             token_bytes += data["visibilitychange"].to_bytes(1, byteorder='big')
-            token_bytes += b"\x00"
         except OverflowError:
-            token_bytes += b"\xff\x00"
+            token_bytes += b"\xff"
+        token_bytes += b"\x00"
+        token_bytes += data["m3"].to_bytes(1, byteorder='big')
+        token_bytes += b"\x00"
+        token_bytes += data["m4"].to_bytes(1, byteorder='big')
+        token_bytes += b"\x00"
         try:
-            token_bytes += data["scrollY"].to_bytes(1, byteorder='big')
-            token_bytes += b"\x00"
+            token_bytes += data["beforeunload"].to_bytes(1, byteorder='big')
         except OverflowError:
-            token_bytes += b"\xff\x00"
-        try:
-            token_bytes += data["innerWidth"].to_bytes(1, byteorder='big')
-            token_bytes += b"\x00"
-        except OverflowError:
-            token_bytes += b"\xff\x00"
-        try:
-            token_bytes += data["openWindow"].to_bytes(1, byteorder='big')
-            token_bytes += b"\x00"
-        except OverflowError:
-            token_bytes += b"\xff\x00"
-        try:
-            token_bytes += data["innerHeight"].to_bytes(1, byteorder='big')
-            token_bytes += b"\x00"
-        except OverflowError:
-            token_bytes += b"\xff\x00"
-        try:
-            token_bytes += data["outerWidth"].to_bytes(1, byteorder='big')
-            token_bytes += b"\x00"
-        except OverflowError:
-            token_bytes += b"\xff\x00"
+            token_bytes += b"\xff"
+        token_bytes += b"\x00"
+        token_bytes += data["m5"].to_bytes(1, byteorder='big')
+        token_bytes += b"\x00"
         try:
             temp_timer = data["timer"].to_bytes(2, byteorder='big')
             token_bytes += temp_timer[0].to_bytes(1, byteorder='big')
@@ -480,26 +490,14 @@ class BilibiliClient:
             token_bytes += b"\x00"
         except OverflowError:
             token_bytes += b"\xff\x00\xff\x00"
-        try:
-            token_bytes += data["outerHeight"].to_bytes(1, byteorder='big')
-            token_bytes += b"\x00"
-        except OverflowError:
-            token_bytes += b"\xff\x00"
-        try:
-            token_bytes += data["screenX"].to_bytes(1, byteorder='big')
-            token_bytes += b"\x00"
-        except OverflowError:
-            token_bytes += b"\xff\x00"
-        try:
-            token_bytes += data["screenY"].to_bytes(1, byteorder='big')
-            token_bytes += b"\x00"
-        except OverflowError:
-            token_bytes += b"\xff\x00"
-        try:
-            token_bytes += data["screenWidth"].to_bytes(1, byteorder='big')
-            token_bytes += b"\x00"
-        except OverflowError:
-            token_bytes += b"\xff\x00"
+        token_bytes += data["m6"].to_bytes(1, byteorder='big')
+        token_bytes += b"\x00"
+        token_bytes += data["m7"].to_bytes(1, byteorder='big')
+        token_bytes += b"\x00"
+        token_bytes += data["m8"].to_bytes(1, byteorder='big')
+        token_bytes += b"\x00"
+        token_bytes += data["m9"].to_bytes(1, byteorder='big')
+        token_bytes += b"\x00"
         return base64.b64encode(token_bytes).decode('utf-8')
 
     def decode_ctoken(self, ctoken):

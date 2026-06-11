@@ -676,20 +676,17 @@ class BHYG(metaclass=ProtectedMeta):
                 "count": self.config["count"],
                 "sku_id": self.config["sku_id"],
                 "buyer_info": self.config["project_buyer_info"],
-                "token": self.client.generate_ctoken(
-                    touchend=random.randint(1, 5),
-                    visibilitychange=random.randint(1, 3),
-                    openWindow=random.randint(1, 3),
-                ),
                 "ignoreRequestLimit": True,
                 "ticket_agent": "",
                 "newRisk": True,
                 "requestSource": "neul-next",
             }
-            if data["token"] == "":
-                data.pop("token")
-                if self.config["hotProject"]:
-                    logger.warning(self.i18n("hot_project_no_token"))
+            if self.config["hotProject"]:
+                data["token"] = self.client.generate_ctoken(
+                    touchend=random.randint(1, 5),
+                    beforeunload=random.randint(1, 3),
+                    openWindow=random.randint(1, 3),
+                )
             resp = self.client.post(
                 f"https://show.bilibili.com/api/ticket/order/prepare?project_id={self.config['project_id']}",
                 json=data,
