@@ -526,7 +526,7 @@ def main():
                     delay = questionary.text(
                         client.i18n("change_after_sale_begin_delay_prompt"),
                         default=str(
-                            int(client.config.get("after_sale_begin_delay", 300) * 1000)
+                            int(client.config.get("after_sale_begin_delay", 0.3) * 1000)
                         ),
                         validate=lambda text: text.isdigit(),
                     ).ask()
