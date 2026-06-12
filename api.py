@@ -1467,7 +1467,7 @@ class BHYG(metaclass=ProtectedMeta):
         }
         response = self.client.post(url, json=data)
         logger.debug(response)
-        time.sleep(self.config.get("stock_check_interval", 0))
+        time.sleep(self.config.get("check_stock_interval", 0))
         if response["code"] != 0:
             return False
         else:
