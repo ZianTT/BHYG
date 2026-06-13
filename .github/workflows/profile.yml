@@ -32,7 +32,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          uvx gh-profiler@latest ${{ steps.meta.outputs.login }} --concise > profiler.txt
+          uvx gh-profiler@latest ${{ steps.meta.outputs.login }} > profiler.txt
           echo
           echo "======================== Full profile ========================="
           echo
@@ -50,8 +50,6 @@ jobs:
             echo '```text'
             cat profiler.txt
             echo '```'
-            echo
-            echo '<a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}">Full profile</a>'
           } > body.txt
 
           jq -Rs '{body: .}' body.txt > payload.json
