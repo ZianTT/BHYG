@@ -1200,7 +1200,7 @@ class BHYG(metaclass=ProtectedMeta):
 
         if self.config.get("ip", None) is not None:
             resp = self.client.post(
-                f"{self.order_base}/api/ticket/order/createV2?project_id={self.config["project_id"]}{'&ptoken=' + ptoken if self.config['hotProject'] else ''}",
+                f"{self.order_base}/api/ticket/order/createV2?project_id={self.config['project_id']}{'&ptoken=' + ptoken if self.config['hotProject'] else ''}",
                 ip=self.config["ip"],
                 json=data,
             )
