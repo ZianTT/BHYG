@@ -1,0 +1,61 @@
+name: Profile contributors
+
+on:
+  issues:
+    types: [opened, reopened]
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  profile-author:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: astral-sh/setup-uv@v6
+      - name: Determine target login and issue number
+        id: meta
+        run: |
+          if [ "${{ github.event_name }}" = "issues" ]; then
+            echo "login=${{ github.event.issue.user.login }}" >> "$GITHUB_OUTPUT"
+            echo "number=${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "login=${{ github.event.pull_request.user.login }}" >> "$GITHUB_OUTPUT"
+            echo "number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run gh-profiler (=== Expand this to see full profile output ===)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          uvx gh-profiler@latest ${{ steps.meta.outputs.login }} --concise > profiler.txt
+          echo
+          echo "======================== Full profile ========================="
+          echo
+          uvx gh-profiler@latest ${{ steps.meta.outputs.login }}
+          echo
+          echo "==============================================================="
+
+      - name: Comment on issue or PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            echo "Profile summary:"
+            echo
+            echo '```text'
+            cat profiler.txt
+            echo '```'
+            echo
+            echo '<a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/job/${{ job.check_run_id }}">Full profile</a>'
+          } > body.txt
+
+          jq -Rs '{body: .}' body.txt > payload.json
+
+          gh api \
+            repos/${{ github.repository }}/issues/${{ steps.meta.outputs.number }}/comments \
+            --input payload.json
