@@ -643,27 +643,6 @@ class BHYG(metaclass=ProtectedMeta):
         return self.prepare_token()
         # NOT AVAILABLE IN OSS
         raise Exception("NOT AVAILABLE IN OSS")
-        logger.debug("Generating token...")
-        logger.info(self.i18n("generating_token"))
-        self.token = self.client.generate_token(
-            self.config["project_id"],
-            self.config["screen_id"],
-            self.config["sku_id"],
-            self.config["count"],
-            self.config["order_type"],
-        )
-        self.ptoken = self.client.generate_ptoken(
-            self.client.generate_ctoken(
-                touchend=random.randint(1, 5),
-                # visibilitychange=random.randint(1, 3),
-                openWindow=random.randint(1, 3),
-            ),
-            self.client.uid,
-            int(time.time()),
-        )
-        self.token_gen = time.time()
-        self.token_exp = time.time() + 600
-        return self.token, self.ptoken
 
     def prepare_token(self):
         # TODO: Use prepare API to generate token.
@@ -1382,27 +1361,6 @@ class BHYG(metaclass=ProtectedMeta):
         if resp["code"] in range(200, 299):
             self.last_order_time = time.time()
         return False
-
-    def analyse(self, log):
-        data = log.split(",")
-        import base64
-
-        if len(data) == 3:
-            ctoken = base64.b64decode(data[1])
-            if len(data[2]) % 4 != 0:
-                data[2] += "=" * (4 - len(data[2]) % 4)
-            ptoken = base64.b64decode(data[2])
-            ctoken_new = b""
-            ptoken_new = b""
-            for i in range(0, 32, 2):
-                ctoken_new += bytes([ctoken[i]])
-                ptoken_new += bytes([ptoken[i + 1]])
-            # transfer to hex string
-            ctoken_new = ctoken_new.hex()
-            ptoken_new = ptoken_new.hex()
-            code = data[0]
-        with open("analyse.csv", "a", encoding="utf-8") as f:
-            f.write(f"{code},{ctoken_new},{ptoken_new}\n")
 
     def test_push(self):
         push_config = (

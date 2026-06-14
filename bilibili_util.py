@@ -542,14 +542,6 @@ class BilibiliClient:
         }
         return data
 
-    def generate_ptoken(self,ctoken, uid, timestamp):
-        import base64
-        ctoken_bytes = base64.b64decode(ctoken)
-        token_bytes = b"\x00"
-        # NOT AVAILABLE IN OSS
-        raise Exception("NOT AVAILABLE IN OSS")
-        return base64.b64encode(token_bytes).decode('utf-8')
-
     def get(self, url: str, **kwargs) -> httpx.Response:
         try:
             resp = self.session.get(url, **kwargs)
