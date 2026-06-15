@@ -158,6 +158,37 @@ class BHYG(metaclass=ProtectedMeta):
             else:
                 continue
 
+    def clear_ticket_selection_after_account_switch(self):
+        ticket_keys = [
+            "project_id",
+            "hotProject",
+            "project_buyer_info",
+            "id_bind",
+            "is_changfan",
+            "screen_id",
+            "sale_start_time",
+            "pay_money",
+            "sku_id",
+            "count",
+            "order_type",
+            "ticket_name",
+            "linkgood_id",
+            "ctoken",
+            "ptoken",
+        ]
+        cleared = any(key in self.config for key in ticket_keys)
+        for key in ticket_keys:
+            self.config.pop(key, None)
+        self.config["id_buyer"] = []
+        self.config["buyer"] = ""
+        self.config["tel"] = ""
+        self.voucher = ""
+        for attr in ["token", "ptoken", "token_exp", "token_gen", "timer"]:
+            if hasattr(self, attr):
+                delattr(self, attr)
+        if cleared:
+            logger.warning("切换账号后票务配置已失效，请重新选择票务信息和购买人")
+
     
     def switch_account(self, on_start=False):
         self.ensure_config_folder()
@@ -201,6 +232,7 @@ class BHYG(metaclass=ProtectedMeta):
                     if is_login:
                         logger.success(self.i18n("qr_code_login_success"))
                         logger.debug("QR Code Login Success")
+                        self.clear_ticket_selection_after_account_switch()
                         self.save_config()
                         return
                     if not retry:
@@ -214,6 +246,7 @@ class BHYG(metaclass=ProtectedMeta):
             return
         self.config["uid"] = int(uid)
         self.load_session()
+        self.clear_ticket_selection_after_account_switch()
         self.save_config()
 
     def select_language(self):
