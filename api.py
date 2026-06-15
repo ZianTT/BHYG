@@ -615,9 +615,9 @@ class BHYG(metaclass=ProtectedMeta):
             if self.client.uid is not None and self.client.uid != 0:
                 for buyer in self.config["id_buyer"]:
                     buyer_id = str(buyer["id"])
-                    buyer_uid = self.config["uid_buyer"].get(
-                        buyer_id, self.config["uid_buyer"].get(buyer["id"], None)
-                    )
+                    buyer_uid = self.config["uid_buyer"].get(buyer_id)
+                    if buyer_uid is None:
+                        buyer_uid = self.config["uid_buyer"].get(buyer["id"], None)
                     if buyer_uid is not None:
                         if buyer_uid != self.client.uid:
                             logger.debug(
