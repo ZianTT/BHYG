@@ -182,7 +182,9 @@ class BHYG(metaclass=ProtectedMeta):
             logger.error(self.i18n("canceled"))
             return
         if uid == self.i18n("qr_code"):
-            url, key = self.client.gen_qr_url()
+            new_client = BilibiliClient()
+            new_client.init_show_cookies()
+            url, key = new_client.gen_qr_url()
             if not url:
                 logger.error(self.i18n("qr_code_generate_failed"))
                 return
@@ -197,8 +199,9 @@ class BHYG(metaclass=ProtectedMeta):
             logger.info(self.i18n("qr_code_scan"))
             while True:
                 try:
-                    is_login, retry = self.client.check_qr_status(key)
+                    is_login, retry = new_client.check_qr_status(key)
                     if is_login:
+                        self.client = new_client
                         logger.success(self.i18n("qr_code_login_success"))
                         logger.debug("QR Code Login Success")
                         self.save_config()
