@@ -389,7 +389,7 @@ def select_buyer():
                     "id_type": buyer["id_type"],
                 }
             )
-            client.config["uid_buyer"][buyer["id"]] = buyer["uid"]
+            client.config["uid_buyer"][str(buyer["id"])] = buyer["uid"]
         logger.debug("Selected buyers: {}".format(client.config["id_buyer"]))
         if client.config.get("is_changfan", False):
             client.config["buyer"] = questionary.text(

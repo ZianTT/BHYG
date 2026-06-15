@@ -614,10 +614,14 @@ class BHYG(metaclass=ProtectedMeta):
                 return False
             if self.client.uid is not None and self.client.uid != 0:
                 for buyer in self.config["id_buyer"]:
-                    if self.config["uid_buyer"].get(buyer["id"], None) is not None:
-                        if self.config["uid_buyer"][buyer["id"]] != self.client.uid:
+                    buyer_id = str(buyer["id"])
+                    buyer_uid = self.config["uid_buyer"].get(
+                        buyer_id, self.config["uid_buyer"].get(buyer["id"], None)
+                    )
+                    if buyer_uid is not None:
+                        if buyer_uid != self.client.uid:
                             logger.debug(
-                                f"UID mismatch: {self.config['uid_buyer'][buyer['id']]}!= {self.client.uid}"
+                                f"UID mismatch: {buyer_uid}!= {self.client.uid}"
                             )
                             logger.warning(self.i18n("buyer_uid_not_match"))
                             return False
