@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    tags:
+      - "*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-22.04, macos-15-intel, macos-latest]
+        # os: [windows-latest, ubuntu-latest, macos-15-intel, macos-latest, windows-11-arm]
+        include:
+          - os: windows-latest
+            build: BHYG-Windows.exe
+            bdist_client: OSS-Windows
+          - os: ubuntu-22.04
+            build: BHYG-Linux
+            bdist_client: OSS-Linux
+          - os: macos-15-intel
+            build: BHYG-macOS-Intel.bin
+            bdist_client: OSS-Mac(Intel)
+          - os: macos-latest
+            build: BHYG-macOS-Apple_Silicon.bin
+            bdist_client: OSS-Mac
+    runs-on: ${{ matrix.os }}
+    env:
+      version: ${{ github.ref_name }}
+    steps:
+      - name: Checkout
+        run: |
+          git clone https://ZianTT:${{ secrets.SBCI_TOKEN }}@git.origami.pub/LightXi-BHYG/BHYG
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.13
+          cache: 'pip'
+          cache-dependency-path: |
+            **/requirements*.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        working-directory: ./BHYG
+
+      - name: Install Cython
+        run: pip install Cython
+        working-directory: ./BHYG
+
+      - name: Nuitka Build
+        uses: Nuitka/Nuitka-Action@main
+        with:
+          script-name: loader.py
+          mode: onefile
+          include-data-dir: ./locale=locale
+          output-file: ${{ github.ref_name }}-${{ matrix.build }}
+          working-directory: ./BHYG
+          include-package:
+            sentry_sdk.integrations
+
+      - name: Upload Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: BHYG/build/${{ github.ref_name }}-${{ matrix.build }}
+
+      - name: Upload to BDist
+        shell: bash
+        env:
+          BDIST_UPLOAD_URL: ${{ vars.BDIST_UPLOAD_URL || 'https://dist.rakuyoudesu.com/ci/upload' }}
+          BDIST_UPLOAD_TOKEN: ${{ secrets.BDIST_UPLOAD_TOKEN }}
+          BDIST_CLIENT: ${{ matrix.bdist_client }}
+          BDIST_FILENAME: ${{ github.ref_name }}-${{ matrix.build }}
+          BDIST_FILE: BHYG/build/${{ github.ref_name }}-${{ matrix.build }}
+        run: |
+          attempts=5
+          delay=10
+
+          for attempt in $(seq 1 "$attempts"); do
+            echo "Uploading $BDIST_FILENAME to BDist (attempt $attempt/$attempts)"
+            if curl --fail-with-body --show-error --silent --location --http1.1 \
+              --connect-timeout 30 \
+              --max-time 600 \
+              -X POST "$BDIST_UPLOAD_URL" \
+              -H "Authorization: Bearer $BDIST_UPLOAD_TOKEN" \
+              -F "client=$BDIST_CLIENT" \
+              -F "filename=$BDIST_FILENAME" \
+              -F "file=@$BDIST_FILE"; then
+              exit 0
+            fi
+
+            status=$?
+            if [ "$attempt" -eq "$attempts" ]; then
+              echo "::error::BDist upload failed after $attempts attempts; last curl exit code: $status"
+              exit 1
+            fi
+
+            sleep "$delay"
+            delay=$((delay * 2))
+          done
